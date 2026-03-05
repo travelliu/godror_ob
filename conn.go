@@ -28,8 +28,8 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/godror/godror/dsn"
-	"github.com/godror/godror/slog"
+	"github.com/travelliu/godror_ob/dsn"
+	"github.com/travelliu/godror_ob/slog"
 )
 
 const getConnection = "--GET_CONNECTION--"
@@ -117,19 +117,19 @@ func (c *conn) handleDeadline(ctx context.Context) (cleanup func(), err error) {
 		if logger != nil {
 			logger.Debug("setCallTimeout", "ms", ms)
 		}
-		if C.dpiConn_setCallTimeout(c.dpiConn, ms) != C.DPI_FAILURE {
+		if C.ob_dpiConn_setCallTimeout(c.dpiConn, ms) != C.DPI_FAILURE {
 			// nosemgrep: trailofbits.go.missing-runlock-on-rwmutex.missing-runlock-on-rwmutex
 			return true
 		}
 		if logger != nil {
 			logger.Warn("setCallTimeout failed!")
 		}
-		_ = C.dpiConn_setCallTimeout(c.dpiConn, 0)
+		_ = C.ob_dpiConn_setCallTimeout(c.dpiConn, 0)
 		// nosemgrep: trailofbits.go.missing-runlock-on-rwmutex.missing-runlock-on-rwmutex
 		return false
 	}() {
 		return func() {
-			_ = C.dpiConn_setCallTimeout(c.dpiConn, 0)
+			_ = C.ob_dpiConn_setCallTimeout(c.dpiConn, 0)
 		}, nil
 
 	}
@@ -156,7 +156,7 @@ func (c *conn) Break() error {
 	if c.dpiConn == nil {
 		return nil
 	}
-	if err := c.checkExec(func() C.int { return C.dpiConn_breakExecution(c.dpiConn) }); err != nil {
+	if err := c.checkExec(func() C.int { return C.ob_dpiConn_breakExecution(c.dpiConn) }); err != nil {
 		if logger != nil {
 			logger.Error("Break", "error", err)
 		}
@@ -189,7 +189,7 @@ func (c *conn) Ping(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = c.checkExec(func() C.int { return C.dpiConn_ping(c.dpiConn) })
+	err = c.checkExec(func() C.int { return C.ob_dpiConn_ping(c.dpiConn) })
 	cleanup()
 	if err != nil {
 		return maybeBadConn(fmt.Errorf("Ping: %w", err), c)
@@ -244,11 +244,11 @@ func (c *conn) closeNotLocking() error {
 	}
 	clear(c.objTypes)
 
-	// dpiConn_release decrements dpiConn's reference counting,
+	// ob_dpiConn_release decrements dpiConn's reference counting,
 	// and closes it when it reaches zero.
 	//
 	// To track reference counting, use DPI_DEBUG_LEVEL=2
-	C.dpiConn_release(dpiConn)
+	C.ob_dpiConn_release(dpiConn)
 	return nil
 }
 
@@ -370,13 +370,13 @@ func (c *conn) prepareContextNotLocked(ctx context.Context, query string) (drive
 	}()
 	st := &statement{conn: c, query: query}
 	err := c.checkExec(func() C.int {
-		return C.dpiConn_prepareStmt(c.dpiConn, 0, cSQL, C.uint32_t(len(query)), nil, 0,
+		return C.ob_dpiConn_prepareStmt(c.dpiConn, 0, cSQL, C.uint32_t(len(query)), nil, 0,
 			(**C.dpiStmt)(unsafe.Pointer(&st.dpiStmt)))
 	})
 	if err != nil {
 		return nil, maybeBadConn(fmt.Errorf("prepare: %s: %w", query, err), c)
 	}
-	if err := c.checkExec(func() C.int { return C.dpiStmt_getInfo(st.dpiStmt, &st.dpiStmtInfo) }); err != nil {
+	if err := c.checkExec(func() C.int { return C.ob_dpiStmt_getInfo(st.dpiStmt, &st.dpiStmtInfo) }); err != nil {
 		err = maybeBadConn(fmt.Errorf("getStmtInfo: %w", err), c)
 		st.Close()
 		return nil, err
@@ -397,18 +397,18 @@ func (c *conn) endTran(isCommit bool) error {
 	c.tranParams = tranParams{}
 
 	var err error
-	//msg := "Commit"
+	// msg := "Commit"
 	if isCommit {
-		if err = c.checkExec(func() C.int { return C.dpiConn_commit(c.dpiConn) }); err != nil {
+		if err = c.checkExec(func() C.int { return C.ob_dpiConn_commit(c.dpiConn) }); err != nil {
 			err = maybeBadConn(fmt.Errorf("Commit: %w", err), c)
 		}
 	} else {
-		//msg = "Rollback"
-		if err = c.checkExec(func() C.int { return C.dpiConn_rollback(c.dpiConn) }); err != nil {
+		// msg = "Rollback"
+		if err = c.checkExec(func() C.int { return C.ob_dpiConn_rollback(c.dpiConn) }); err != nil {
 			err = maybeBadConn(fmt.Errorf("Rollback: %w", err), c)
 		}
 	}
-	//fmt.Printf("%p.%s\n", c, msg)
+	// fmt.Printf("%p.%s\n", c, msg)
 	return err
 }
 
@@ -435,10 +435,10 @@ func (c *conn) newVar(vi varInfo) (*C.dpiVar, []C.dpiData, error) {
 	var v *C.dpiVar
 	logger := getLogger(context.TODO())
 	if logger != nil {
-		logger.Debug("dpiConn_newVar", "conn", c.dpiConn, "typ", int(vi.Typ), "natTyp", int(vi.NatTyp), "sliceLen", vi.SliceLen, "bufSize", vi.BufSize, "isArray", isArray, "objType", vi.ObjectType, "v", v)
+		logger.Debug("ob_dpiConn_newVar", "conn", c.dpiConn, "typ", int(vi.Typ), "natTyp", int(vi.NatTyp), "sliceLen", vi.SliceLen, "bufSize", vi.BufSize, "isArray", isArray, "objType", vi.ObjectType, "v", v)
 	}
 	if err := c.checkExec(func() C.int {
-		return C.dpiConn_newVar(
+		return C.ob_dpiConn_newVar(
 			c.dpiConn, vi.Typ, vi.NatTyp, C.uint32_t(vi.SliceLen),
 			C.uint32_t(vi.BufSize), 1,
 			isArray, vi.ObjectType,
@@ -459,7 +459,7 @@ func (c *conn) ServerVersion() (VersionInfo, error) {
 	var v C.dpiVersionInfo
 	var release *C.char
 	var releaseLen C.uint32_t
-	if err := c.checkExec(func() C.int { return C.dpiConn_getServerVersion(c.dpiConn, &release, &releaseLen, &v) }); err != nil {
+	if err := c.checkExec(func() C.int { return C.ob_dpiConn_getServerVersion(c.dpiConn, &release, &releaseLen, &v) }); err != nil {
 		if c.params.IsPrelim {
 			return c.Server, nil
 		}
@@ -467,7 +467,7 @@ func (c *conn) ServerVersion() (VersionInfo, error) {
 	}
 	c.Server.set(&v)
 	c.Server.ServerRelease = string(bytes.Replace(
-		//((*[1024]byte)(unsafe.Pointer(release)))[:releaseLen:releaseLen],
+		// ((*[1024]byte)(unsafe.Pointer(release)))[:releaseLen:releaseLen],
 		([]byte)(unsafe.Slice((*byte)(unsafe.Pointer(release)), releaseLen)),
 		[]byte{'\n'}, []byte{';', ' '}, -1))
 
@@ -541,7 +541,7 @@ func (c *conn) initTZ() error {
 		c.tzValid = true
 		return nil
 	}
-	//fmt.Printf("initTZ BEG key=%q drv=%p timezones=%v\n", key, c.drv, c.drv.timezones)
+	// fmt.Printf("initTZ BEG key=%q drv=%p timezones=%v\n", key, c.drv, c.drv.timezones)
 	// {SESSION,DB}TIMEZONE is useless, false, and misdirecting!
 	// https://stackoverflow.com/questions/52531137/sysdate-and-dbtimezone-different-in-oracle-database
 	// https://stackoverflow.com/questions/29271224/how-to-handle-day-light-saving-in-oracle-database/29272926#29272926
@@ -550,7 +550,7 @@ func (c *conn) initTZ() error {
 	defer cancel()
 	st, err := c.prepareContextNotLocked(ctx, qry)
 	if err != nil {
-		//fmt.Printf("initTZ END key=%q drv=%p timezones=%v err=%v\n", key, c.drv, c.drv.timezones, err)
+		// fmt.Printf("initTZ END key=%q drv=%p timezones=%v err=%v\n", key, c.drv, c.drv.timezones, err)
 		return fmt.Errorf("prepare %s: %w", qry, err)
 	}
 	defer st.Close()
@@ -559,14 +559,14 @@ func (c *conn) initTZ() error {
 		if logger != nil {
 			logger.Error("query", "qry", qry, "error", err)
 		}
-		//fmt.Printf("initTZ END key=%q drv=%p timezones=%v err=%v\n", key, c.drv, c.drv.timezones, err)
+		// fmt.Printf("initTZ END key=%q drv=%p timezones=%v err=%v\n", key, c.drv, c.drv.timezones, err)
 		return fmt.Errorf("execute %s: %w", qry, err)
 	}
 	defer rows.Close()
 	var dbTZ, dbOSTZ string
 	vals := []driver.Value{dbTZ, dbOSTZ}
 	if err = rows.Next(vals); err != nil && err != io.EOF {
-		//fmt.Printf("initTZ END key=%q drv=%p timezones=%v err=%v\n", key, c.drv, c.drv.timezones, err)
+		// fmt.Printf("initTZ END key=%q drv=%p timezones=%v err=%v\n", key, c.drv, c.drv.timezones, err)
 		return fmt.Errorf("%s.Next: %w", qry, err)
 	}
 	dbTZ = vals[0].(string)
@@ -576,7 +576,7 @@ func (c *conn) initTZ() error {
 	}
 
 	tzLoc, tzOff, err := calculateTZ(dbTZ, dbOSTZ, noTZCheck, logger)
-	//fmt.Printf("calculateTZ(%q, %q): %p=%v, %v, %v\n", dbTZ, timezone, tz.Location, tz.Location, tz.offSecs, err)
+	// fmt.Printf("calculateTZ(%q, %q): %p=%v, %v, %v\n", dbTZ, timezone, tz.Location, tz.Location, tz.offSecs, err)
 	if logger != nil {
 		logger.Debug("calculateTZ", "timezone", dbOSTZ, "tz", tz, "error", err)
 	}
@@ -594,7 +594,7 @@ func (c *conn) initTZ() error {
 		if logger != nil {
 			logger.Error("initTZ", "error", err)
 		}
-		//fmt.Printf("initTZ END key=%q drv=%p timezones=%v err=%v\n", key, c.drv, c.drv.timezones, err)
+		// fmt.Printf("initTZ END key=%q drv=%p timezones=%v err=%v\n", key, c.drv, c.drv.timezones, err)
 		panic(err)
 	}
 
@@ -614,7 +614,7 @@ func (c *conn) initTZ() error {
 		}
 		c.drv.timezones[key] = tz
 	}
-	//fmt.Printf("initTZ END key=%q drv=%p timezones=%v err=%v\n", key, c.drv, c.drv.timezones, err)
+	// fmt.Printf("initTZ END key=%q drv=%p timezones=%v err=%v\n", key, c.drv, c.drv.timezones, err)
 	return nil
 }
 
@@ -678,7 +678,7 @@ func IsBadConn(err error) bool {
 		1033, // ORACLE initialization or shutdown in progress
 		1034: // ORACLE not available
 		fallthrough
-	case //cases from https://github.com/oracle/odpi/blob/master/src/dpiError.c#L61-L94
+	case // cases from https://github.com/oracle/odpi/blob/master/src/dpiError.c#L61-L94
 		22,    // invalid session ID; access denied
 		28,    // your session has been killed
 		31,    // your session has been marked for kill
@@ -746,16 +746,16 @@ func (c *conn) setTraceTag(tt TraceTag) error {
 		var res C.int
 		switch f[0] {
 		case "action":
-			res = C.dpiConn_setAction(c.dpiConn, s, length)
+			res = C.ob_dpiConn_setAction(c.dpiConn, s, length)
 		case "module":
-			res = C.dpiConn_setModule(c.dpiConn, s, length)
+			res = C.ob_dpiConn_setModule(c.dpiConn, s, length)
 		case "info":
-			res = C.dpiConn_setClientInfo(c.dpiConn, s, length)
+			res = C.ob_dpiConn_setClientInfo(c.dpiConn, s, length)
 		case "identifier":
 			// This resets/reroutes global contexts, so DO NOT USE IT!
-			// res = C.dpiConn_setClientIdentifier(c.dpiConn, s, length)
+			// res = C.ob_dpiConn_setClientIdentifier(c.dpiConn, s, length)
 		case "op":
-			res = C.dpiConn_setDbOp(c.dpiConn, s, length)
+			res = C.ob_dpiConn_setDbOp(c.dpiConn, s, length)
 		}
 		if s != nil {
 			C.free(unsafe.Pointer(s))
@@ -896,7 +896,7 @@ const (
 //
 // See https://docs.oracle.com/en/database/oracle/oracle-database/18/lnoci/database-startup-and-shutdown.html#GUID-44B24F65-8C24-4DF3-8FBF-B896A4D6F3F3
 func (c *conn) Startup(mode StartupMode) error {
-	if err := c.checkExec(func() C.int { return C.dpiConn_startupDatabase(c.dpiConn, C.dpiStartupMode(mode)) }); err != nil {
+	if err := c.checkExec(func() C.int { return C.ob_dpiConn_startupDatabase(c.dpiConn, C.dpiStartupMode(mode)) }); err != nil {
 		return fmt.Errorf("startup(%v): %w", mode, err)
 	}
 	return nil
@@ -916,7 +916,7 @@ const (
 	ShutdownImmediate = ShutdownMode(C.DPI_MODE_SHUTDOWN_IMMEDIATE)
 	// ShutdownAbort - all uncommitted transactions are terminated and are not rolled back. This is the fastest way to shut down the database but the next database startup may require instance recovery.
 	ShutdownAbort = ShutdownMode(C.DPI_MODE_SHUTDOWN_ABORT)
-	// ShutdownFinal shuts down the database. This mode should only be used in the second call to dpiConn_shutdownDatabase().
+	// ShutdownFinal shuts down the database. This mode should only be used in the second call to ob_dpiConn_shutdownDatabase().
 	ShutdownFinal = ShutdownMode(C.DPI_MODE_SHUTDOWN_FINAL)
 )
 
@@ -925,7 +925,7 @@ const (
 //
 // See https://docs.oracle.com/en/database/oracle/oracle-database/18/lnoci/database-startup-and-shutdown.html#GUID-44B24F65-8C24-4DF3-8FBF-B896A4D6F3F3
 func (c *conn) Shutdown(mode ShutdownMode) error {
-	if err := c.checkExec(func() C.int { return C.dpiConn_shutdownDatabase(c.dpiConn, C.dpiShutdownMode(mode)) }); err != nil {
+	if err := c.checkExec(func() C.int { return C.ob_dpiConn_shutdownDatabase(c.dpiConn, C.dpiShutdownMode(mode)) }); err != nil {
 		return fmt.Errorf("shutdown(%v): %w", mode, err)
 	}
 	return nil
@@ -993,7 +993,7 @@ func (c *conn) IsValid() bool {
 	//
 	//     ORA-24459: OCISessionGet()
 	//
-	// See https://github.com/godror/godror/issues/57 for example.
+	// See https://github.com/travelliu/godror_ob/issues/57 for example.
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	_ = c.closeNotLocking()
@@ -1005,7 +1005,7 @@ func (c *conn) isHealthy() bool {
 	dpiConnOK := true
 	c.mu.Lock()
 	var isHealthy C.int
-	if C.dpiConn_getIsHealthy(c.dpiConn, &isHealthy) == C.DPI_FAILURE {
+	if C.ob_dpiConn_getIsHealthy(c.dpiConn, &isHealthy) == C.DPI_FAILURE {
 		dpiConnOK = false
 	} else {
 		dpiConnOK = isHealthy == 1
@@ -1039,7 +1039,7 @@ func (c *conn) getLogger(ctx context.Context) *slog.Logger {
 func (c *conn) GetCurrentSchema(name string) (string, error) {
 	var cs *C.char
 	var length C.uint
-	if err := c.checkExec(func() C.int { return C.dpiConn_getCurrentSchema(c.dpiConn, &cs, &length) }); err != nil {
+	if err := c.checkExec(func() C.int { return C.ob_dpiConn_getCurrentSchema(c.dpiConn, &cs, &length) }); err != nil {
 		return "", err
 	}
 	s := C.GoStringN(cs, C.int(length))
@@ -1048,9 +1048,9 @@ func (c *conn) GetCurrentSchema(name string) (string, error) {
 }
 func (c *conn) SetCurrentSchema(name string) error {
 	cs := C.CString(name)
-	err := c.checkExec(func() C.int { return C.dpiConn_setCurrentSchema(c.dpiConn, cs, C.uint(len(name))) })
+	err := c.checkExec(func() C.int { return C.ob_dpiConn_setCurrentSchema(c.dpiConn, cs, C.uint(len(name))) })
 	C.free(unsafe.Pointer(cs))
 	return err
 }
 
-//TODO[tgulacsi]: dpiConn_getMaxOpenCursors, dpiConn_getTransactionInProgress
+// TODO[tgulacsi]: ob_dpiConn_getMaxOpenCursors, ob_dpiConn_getTransactionInProgress

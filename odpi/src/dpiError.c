@@ -31,11 +31,11 @@
 #include "dpiErrorMessages.h"
 
 //-----------------------------------------------------------------------------
-// dpiError__getInfo() [INTERNAL]
+// ob_dpiError__getInfo() [INTERNAL]
 //   Get the error state from the error structure. Returns DPI_FAILURE as a
 // convenience to the caller.
 //-----------------------------------------------------------------------------
-int dpiError__getInfo(dpiError *error, dpiErrorInfo *info)
+int ob_dpiError__getInfo(dpiError *error, dpiErrorInfo *info)
 {
     if (!info)
         return DPI_FAILURE;
@@ -64,19 +64,19 @@ int dpiError__getInfo(dpiError *error, dpiErrorInfo *info)
 
 
 //-----------------------------------------------------------------------------
-// dpiError__initHandle() [INTERNAL]
+// ob_dpiError__initHandle() [INTERNAL]
 //   Retrieve the OCI error handle to use for error handling, from a pool of
 // error handles common to the environment handle stored on the error. This
 // environment also controls the encoding of OCI errors (which uses the CHAR
 // encoding of the environment).
 //-----------------------------------------------------------------------------
-int dpiError__initHandle(dpiError *error)
+int ob_dpiError__initHandle(dpiError *error)
 {
-    if (dpiHandlePool__acquire(error->env->errorHandles, &error->handle,
+    if (ob_dpiHandlePool__acquire(error->env->errorHandles, &error->handle,
             error) < 0)
         return DPI_FAILURE;
     if (!error->handle) {
-        if (dpiOci__handleAlloc(error->env->handle, &error->handle,
+        if (ob_dpiOci__handleAlloc(error->env->handle, &error->handle,
                 DPI_OCI_HTYPE_ERROR, "allocate OCI error", error) < 0)
             return DPI_FAILURE;
     }
@@ -85,11 +85,11 @@ int dpiError__initHandle(dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiError__set() [INTERNAL]
+// ob_dpiError__set() [INTERNAL]
 //   Set the error buffer to the specified DPI error. Returns DPI_FAILURE as a
 // convenience to the caller.
 //-----------------------------------------------------------------------------
-int dpiError__set(dpiError *error, const char *action, dpiErrorNum errorNum,
+int ob_dpiError__set(dpiError *error, const char *action, dpiErrorNum errorNum,
         ...)
 {
     va_list varArgs;
@@ -109,8 +109,8 @@ int dpiError__set(dpiError *error, const char *action, dpiErrorNum errorNum,
         va_end(varArgs);
         error->buffer->messageLength =
                 (uint32_t) strlen(error->buffer->message);
-        if (dpiDebugLevel & DPI_DEBUG_LEVEL_ERRORS)
-            dpiDebug__print("internal error %.*s (%s / %s)\n",
+        if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_ERRORS)
+            ob_dpiDebug__print("internal error %.*s (%s / %s)\n",
                     error->buffer->messageLength, error->buffer->message,
                     error->buffer->fnName, action);
     }
@@ -119,7 +119,7 @@ int dpiError__set(dpiError *error, const char *action, dpiErrorNum errorNum,
 
 
 //-----------------------------------------------------------------------------
-// dpiError__setFromOCI() [INTERNAL]
+// ob_dpiError__setFromOCI() [INTERNAL]
 //   Called when an OCI error has occurred and sets the error structure with
 // the contents of that error. Note that trailing newlines and spaces are
 // truncated from the message if they exist. If the connection is not NULL a
@@ -128,32 +128,32 @@ int dpiError__set(dpiError *error, const char *action, dpiErrorNum errorNum,
 // status of the call is DPI_OCI_SUCCESS_WITH_INFO, which is treated as a
 // successful call.
 //-----------------------------------------------------------------------------
-int dpiError__setFromOCI(dpiError *error, int status, dpiConn *conn,
+int ob_dpiError__setFromOCI(dpiError *error, int status, dpiConn *conn,
         const char *action)
 {
     uint32_t callTimeout, serverStatus;
 
     // special error cases
     if (status == DPI_OCI_INVALID_HANDLE)
-        return dpiError__set(error, action, DPI_ERR_INVALID_HANDLE, "OCI");
+        return ob_dpiError__set(error, action, DPI_ERR_INVALID_HANDLE, "OCI");
     else if (!error)
         return DPI_FAILURE;
     else if (!error->handle)
-        return dpiError__set(error, action, DPI_ERR_ERR_NOT_INITIALIZED);
+        return ob_dpiError__set(error, action, DPI_ERR_ERR_NOT_INITIALIZED);
     else if (status != DPI_OCI_ERROR && status != DPI_OCI_NO_DATA &&
             status != DPI_OCI_SUCCESS_WITH_INFO)
-        return dpiError__set(error, action,
+        return ob_dpiError__set(error, action,
                 DPI_ERR_UNEXPECTED_OCI_RETURN_VALUE, status,
                 error->buffer->fnName);
 
     // fetch OCI error
     error->buffer->action = action;
     strcpy(error->buffer->encoding, error->env->encoding);
-    if (dpiOci__errorGet(error->handle, DPI_OCI_HTYPE_ERROR,
+    if (ob_dpiOci__errorGet(error->handle, DPI_OCI_HTYPE_ERROR,
             error->env->charsetId, action, error) < 0)
         return DPI_FAILURE;
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_ERRORS)
-        dpiDebug__print("OCI error %.*s (%s / %s)\n",
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_ERRORS)
+        ob_dpiDebug__print("OCI error %.*s (%s / %s)\n",
                 error->buffer->messageLength, error->buffer->message,
                 error->buffer->fnName, action);
     if (status == DPI_OCI_SUCCESS_WITH_INFO) {
@@ -165,7 +165,7 @@ int dpiError__setFromOCI(dpiError *error, int status, dpiConn *conn,
     // if the attribute cannot be read properly, simply leave it as false;
     // otherwise, that error will mask the one that we really want to see
     error->buffer->isRecoverable = 0;
-    dpiOci__attrGet(error->handle, DPI_OCI_HTYPE_ERROR,
+    ob_dpiOci__attrGet(error->handle, DPI_OCI_HTYPE_ERROR,
             (void*) &error->buffer->isRecoverable, 0,
             DPI_OCI_ATTR_ERROR_IS_RECOVERABLE, NULL, error);
 
@@ -176,7 +176,7 @@ int dpiError__setFromOCI(dpiError *error, int status, dpiConn *conn,
         // first check the attribute specifically designed to check the health
         // of the connection, if possible
         if (conn->serverHandle) {
-            if (dpiOci__attrGet(conn->serverHandle, DPI_OCI_HTYPE_SERVER,
+            if (ob_dpiOci__attrGet(conn->serverHandle, DPI_OCI_HTYPE_SERVER,
                     &serverStatus, NULL, DPI_OCI_ATTR_SERVER_STATUS,
                     "get server status", error) < 0 ||
                     serverStatus != DPI_OCI_SERVER_NORMAL) {
@@ -220,7 +220,7 @@ int dpiError__setFromOCI(dpiError *error, int status, dpiConn *conn,
 
         // if session is marked as dead, return a unified error message
         if (conn->deadSession)
-            return dpiError__wrap(error, DPI_ERR_CONN_CLOSED,
+            return ob_dpiError__wrap(error, DPI_ERR_CONN_CLOSED,
                     error->buffer->code);
 
         // check for call timeout and return a unified message instead
@@ -230,11 +230,11 @@ int dpiError__setFromOCI(dpiError *error, int status, dpiConn *conn,
             case 12161: // TNS:internal error: partial data received
                 callTimeout = 0;
                 if (conn->env->versionInfo->versionNum >= 18)
-                    dpiOci__attrGet(conn->handle, DPI_OCI_HTYPE_SVCCTX,
+                    ob_dpiOci__attrGet(conn->handle, DPI_OCI_HTYPE_SVCCTX,
                             (void*) &callTimeout, 0, DPI_OCI_ATTR_CALL_TIMEOUT,
                             NULL, error);
                 if (callTimeout > 0)
-                    return dpiError__wrap(error, DPI_ERR_CALL_TIMEOUT,
+                    return ob_dpiError__wrap(error, DPI_ERR_CALL_TIMEOUT,
                             callTimeout, error->buffer->code);
                 break;
         }
@@ -246,11 +246,11 @@ int dpiError__setFromOCI(dpiError *error, int status, dpiConn *conn,
 
 
 //-----------------------------------------------------------------------------
-// dpiError__setFromOS() [INTERNAL]
+// ob_dpiError__setFromOS() [INTERNAL]
 //   Set the error buffer to a general OS error. Returns DPI_FAILURE as a
 // convenience to the caller.
 //-----------------------------------------------------------------------------
-int dpiError__setFromOS(dpiError *error, const char *action)
+int ob_dpiError__setFromOS(dpiError *error, const char *action)
 {
     char *message;
 
@@ -259,11 +259,11 @@ int dpiError__setFromOS(dpiError *error, const char *action)
     size_t messageLength = 0;
 
     message = NULL;
-    if (dpiUtils__getWindowsError(GetLastError(), &message, &messageLength,
+    if (ob_dpiUtils__getWindowsError(GetLastError(), &message, &messageLength,
             error) < 0)
         return DPI_FAILURE;
-    dpiError__set(error, action, DPI_ERR_OS, message);
-    dpiUtils__freeMemory(message);
+    ob_dpiError__set(error, action, DPI_ERR_OS, message);
+    ob_dpiUtils__freeMemory(message);
 
 #else
 
@@ -278,7 +278,7 @@ int dpiError__setFromOS(dpiError *error, const char *action)
         (void) sprintf(buffer, "unable to get OS error %d", err);
         message = buffer;
     }
-    dpiError__set(error, action, DPI_ERR_OS, message);
+    ob_dpiError__set(error, action, DPI_ERR_OS, message);
 
 #endif
     return DPI_FAILURE;
@@ -286,13 +286,13 @@ int dpiError__setFromOS(dpiError *error, const char *action)
 
 
 //-----------------------------------------------------------------------------
-// dpiError__wrap() [INTERNAL]
+// ob_dpiError__wrap() [INTERNAL]
 //   Set the error buffer to the specified DPI error but retain the error that
 // was already set and concatenate it to the new error. It is assumed that the
 // error that is wrapping accepts one argument: the original error number that
 // was raised. Returns DPI_FAILURE as a convenience to the caller.
 // -----------------------------------------------------------------------------
-int dpiError__wrap(dpiError *error, dpiErrorNum errorNum, ...)
+int ob_dpiError__wrap(dpiError *error, dpiErrorNum errorNum, ...)
 {
     uint32_t origMessageLength;
     char *origMessage, *ptr;
@@ -327,8 +327,8 @@ int dpiError__wrap(dpiError *error, dpiErrorNum errorNum, ...)
     }
 
     // log message, if applicable
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_ERRORS)
-        dpiDebug__print("internal error %.*s (%s / %s)\n",
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_ERRORS)
+        ob_dpiDebug__print("internal error %.*s (%s / %s)\n",
                 error->buffer->messageLength, error->buffer->message,
                 error->buffer->fnName, error->buffer->action);
 

@@ -8,7 +8,7 @@ struct godrorHwrap {
 };
 typedef struct godrorHwrap godrorHwrap;
 
-void *godrorWrapHandle(uintptr_t handle);
-int godrorTokenCallbackHandlerDebug(void* context, dpiAccessToken *token);
+void *ob_godrorWrapHandle(uintptr_t handle);
+int godrorObTokenCallbackHandlerDebug(void* context, dpiAccessToken *token);
 
 #endif

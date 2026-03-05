@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godror/godror"
+	"github.com/travelliu/godror_ob"
 )
 
 func TestObjOpenClose(t *testing.T) {
@@ -102,7 +102,7 @@ func TestObjOpenClose(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		//defer objType.Close()
+		// defer objType.Close()
 
 		obj, err := objType.NewObject()
 		if err != nil {

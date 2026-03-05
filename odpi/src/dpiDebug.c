@@ -34,7 +34,7 @@
 #define DPI_DEBUG_TIME_FORMAT           "%.2d:%.2d:%.2d.%.3d"
 
 // debug level (populated by environment variable DPI_DEBUG_LEVEL)
-unsigned long dpiDebugLevel = 0;
+unsigned long ob_dpiDebugLevel = 0;
 
 // debug prefix format (populated by environment variable DPI_DEBUG_PREFIX)
 static char dpiDebugPrefixFormat[64] = "ODPI [%i] %d %t: ";
@@ -44,12 +44,12 @@ static FILE *dpiDebugStream = NULL;
 
 
 //-----------------------------------------------------------------------------
-// dpiDebug__getFormatWithPrefix() [INTERNAL]
+// ob_dpiDebug__getFormatWithPrefix() [INTERNAL]
 //   Adjust the provided format to include the prefix requested by the user.
 // This method is not permitted to fail, so if there is not enough space, the
 // prefix is truncated as needed -- although this is a very unlikely scenario.
 //-----------------------------------------------------------------------------
-static void dpiDebug__getFormatWithPrefix(const char *format,
+static void ob_dpiDebug__getFormatWithPrefix(const char *format,
         char *formatWithPrefix, size_t maxFormatWithPrefixSize)
 {
     char *sourcePtr, *targetPtr;
@@ -141,28 +141,28 @@ static void dpiDebug__getFormatWithPrefix(const char *format,
 
 
 //-----------------------------------------------------------------------------
-// dpiDebug__initialize() [INTERNAL]
+// ob_dpiDebug__initialize() [INTERNAL]
 //   Initialize debugging infrastructure. This reads the environment variables
 // and populates the global variables used for determining which messages to
 // print and what prefix should be placed in front of each message.
 //-----------------------------------------------------------------------------
-void dpiDebug__initialize(void)
+void ob_dpiDebug__initialize(void)
 {
     char *envValue;
 
     // determine the value of the environment variable DPI_DEBUG_LEVEL and
     // convert to an integer; if the value in the environment variable is not a
     // valid integer, it is ignored
-    envValue = getenv("DPI_DEBUG_LEVEL");
+    envValue = getenv("OB_DPI_DEBUG_LEVEL");
     if (envValue)
-        dpiDebugLevel = (unsigned long) strtol(envValue, NULL, 10);
+        ob_dpiDebugLevel = (unsigned long) strtol(envValue, NULL, 10);
 
     // determine the value of the environment variable DPI_DEBUG_PREFIX and
     // store it in the static buffer available for it; a static buffer is used
     // since this runs during startup and may not fail; if the value of the
     // environment variable is too large for the buffer, the value is ignored
     // and the default value is used instead
-    envValue = getenv("DPI_DEBUG_PREFIX");
+    envValue = getenv("OB_DPI_DEBUG_PREFIX");
     if (envValue && strlen(envValue) < sizeof(dpiDebugPrefixFormat))
         strcpy(dpiDebugPrefixFormat, envValue);
 
@@ -171,24 +171,24 @@ void dpiDebug__initialize(void)
 
     // for any debugging level > 0 print a message indicating that tracing
     // has started
-    if (dpiDebugLevel) {
-        dpiDebug__print("ODPI-C %s\n", DPI_VERSION_STRING);
-        dpiDebug__print("debugging messages initialized at level %lu\n",
-                dpiDebugLevel);
+    if (ob_dpiDebugLevel) {
+        ob_dpiDebug__print("ODPI-C %s\n", DPI_VERSION_STRING);
+        ob_dpiDebug__print("debugging messages initialized at level %lu\n",
+                ob_dpiDebugLevel);
     }
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDebug__print() [INTERNAL]
+// ob_dpiDebug__print() [INTERNAL]
 //   Print the specified debugging message with a newly calculated prefix.
 //-----------------------------------------------------------------------------
-void dpiDebug__print(const char *format, ...)
+void ob_dpiDebug__print(const char *format, ...)
 {
     char formatWithPrefix[512];
     va_list varArgs;
 
-    dpiDebug__getFormatWithPrefix(format, formatWithPrefix,
+    ob_dpiDebug__getFormatWithPrefix(format, formatWithPrefix,
             sizeof(formatWithPrefix));
     va_start(varArgs, format);
     (void) vfprintf(dpiDebugStream, formatWithPrefix, varArgs);

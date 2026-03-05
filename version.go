@@ -17,7 +17,7 @@ import (
 func init() {
 	if info, ok := debug.ReadBuildInfo(); ok && info != nil {
 		for _, m := range info.Deps {
-			if m == nil || m.Path != "github.com/godror/godror" {
+			if m == nil || m.Path != "github.com/travelliu/godror_ob" {
 				continue
 			}
 			for m.Replace != nil {

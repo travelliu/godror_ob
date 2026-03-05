@@ -82,7 +82,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"github.com/godror/godror/slog"
+	"github.com/travelliu/godror_ob/slog"
 	"io"
 	"math"
 	"runtime"
@@ -93,7 +93,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/godror/godror/dsn"
+	"github.com/travelliu/godror_ob/dsn"
 )
 
 const (
@@ -134,7 +134,7 @@ const (
 	DefaultWaitTimeout = dsn.DefaultWaitTimeout
 	// DefaultMaxLifeTime is the maximum time in seconds till a pooled session may exist
 	DefaultMaxLifeTime = dsn.DefaultMaxLifeTime
-	//DefaultStandaloneConnection holds the default for standaloneConnection.
+	// DefaultStandaloneConnection holds the default for standaloneConnection.
 	DefaultStandaloneConnection = dsn.DefaultStandaloneConnection
 
 	SysDBA    = dsn.SysDBA
@@ -193,7 +193,7 @@ func freeAccessToken(accessToken *C.dpiAccessToken) {
 var defaultDrv = &drv{}
 
 func init() {
-	sql.Register("godror", defaultDrv)
+	sql.Register("oceanbase_ora", defaultDrv)
 	// It cannot be longer than 30 bytes !
 	if len(DriverName) > 30 {
 		DriverName = DriverName[:30]
@@ -232,7 +232,7 @@ func (d *drv) Close() error {
 	}
 
 	go func() {
-		if C.dpiContext_destroy(dpiCtx) == C.DPI_FAILURE {
+		if C.ob_dpiContext_destroy(dpiCtx) == C.DPI_FAILURE {
 			done <- fmt.Errorf("error destroying dpiContext %p", dpiCtx)
 		}
 		close(done)
@@ -262,7 +262,7 @@ func (p *connPool) Purge() {
 	p.dpiPool = nil
 	if dpiPool != nil {
 		UnRegisterTokenCallback(p.wrapTokenCallBackCtx)
-		C.dpiPool_close(dpiPool, C.DPI_MODE_POOL_CLOSE_FORCE)
+		C.ob_dpiPool_close(dpiPool, C.DPI_MODE_POOL_CLOSE_FORCE)
 	}
 }
 
@@ -270,7 +270,7 @@ func (p *connPool) Close() error {
 	dpiPool := p.dpiPool
 	p.dpiPool = nil
 	if dpiPool != nil {
-		C.dpiPool_release(dpiPool)
+		C.ob_dpiPool_release(dpiPool)
 	}
 	return nil
 }
@@ -327,14 +327,14 @@ func (d *drv) init(configDir, libDir string) error {
 	}
 	logger := getLogger(context.TODO())
 	if logger != nil {
-		logger.Debug("dpiContext_createWithParams", "params", ctxParams)
+		logger.Debug("ob_dpiContext_createWithParams", "params", ctxParams)
 	}
 
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
 	var errInfo C.dpiErrorInfo
-	if C.dpiContext_createWithParams(C.uint(DpiMajorVersion), C.uint(DpiMinorVersion),
+	if C.ob_dpiContext_createWithParams(C.uint(DpiMajorVersion), C.uint(DpiMinorVersion),
 		ctxParams,
 		(**C.dpiContext)(unsafe.Pointer(&d.dpiContext)), &errInfo,
 	) == C.DPI_FAILURE {
@@ -342,7 +342,7 @@ func (d *drv) init(configDir, libDir string) error {
 	}
 
 	var v C.dpiVersionInfo
-	if C.dpiContext_getClientVersion(d.dpiContext, &v) == C.DPI_FAILURE {
+	if C.ob_dpiContext_getClientVersion(d.dpiContext, &v) == C.DPI_FAILURE {
 		return fmt.Errorf("getClientVersion: %w", d.getError())
 	}
 	d.clientVersion.set(&v)
@@ -374,7 +374,7 @@ func (d *drv) initCommonCreateParams(P *C.dpiCommonCreateParams, enableEvents bo
 	accessToken *C.dpiAccessToken) error {
 	// initialize ODPI-C structure for common creation parameters
 	if err := d.checkExec(func() C.int {
-		return C.dpiContext_initCommonCreateParams(d.dpiContext, P)
+		return C.ob_dpiContext_initCommonCreateParams(d.dpiContext, P)
 	}); err != nil {
 		return fmt.Errorf("initCommonCreateParams: %w", err)
 	}
@@ -452,10 +452,10 @@ func (d *drv) createConn(pool *connPool, P commonAndConnParams) (*conn, bool, er
 		Dest *string
 		f    func() C.int
 	}{
-		{"DbDomain", &c.DomainName, func() C.int { return C.dpiConn_getDbDomain(c.dpiConn, &cs, &length) }},
-		{"Edition", &c.Edition, func() C.int { return C.dpiConn_getEdition(c.dpiConn, &cs, &length) }},
-		{"DbName", &c.DBName, func() C.int { return C.dpiConn_getDbName(c.dpiConn, &cs, &length) }},
-		{"ServiceName", &c.ServiceName, func() C.int { return C.dpiConn_getServiceName(c.dpiConn, &cs, &length) }},
+		{"DbDomain", &c.DomainName, func() C.int { return C.ob_dpiConn_getDbDomain(c.dpiConn, &cs, &length) }},
+		{"Edition", &c.Edition, func() C.int { return C.ob_dpiConn_getEdition(c.dpiConn, &cs, &length) }},
+		{"DbName", &c.DBName, func() C.int { return C.ob_dpiConn_getDbName(c.dpiConn, &cs, &length) }},
+		{"ServiceName", &c.ServiceName, func() C.int { return C.ob_dpiConn_getServiceName(c.dpiConn, &cs, &length) }},
 	} {
 		if err := c.checkExec(td.f); err != nil {
 			if logger != nil {
@@ -564,7 +564,7 @@ func (d *drv) acquireConn(pool *connPool, P commonAndConnParams) (*C.dpiConn, bo
 	// initialize ODPI-C structure for connection creation parameters
 	var connCreateParams C.dpiConnCreateParams
 	if err := d.checkExec(func() C.int {
-		return C.dpiContext_initConnCreateParams(d.dpiContext, &connCreateParams)
+		return C.ob_dpiContext_initConnCreateParams(d.dpiContext, &connCreateParams)
 	}); err != nil {
 		return nil, false, nil, fmt.Errorf("initConnCreateParams: %w", err)
 	}
@@ -625,19 +625,19 @@ func (d *drv) acquireConn(pool *connPool, P commonAndConnParams) (*C.dpiConn, bo
 			case int:
 				columns[i].oracleTypeNum = C.DPI_ORACLE_TYPE_NUMBER
 				columns[i].nativeTypeNum = C.DPI_NATIVE_TYPE_INT64
-				C.dpiData_setInt64(&tempData, C.int64_t(value))
+				C.ob_dpiData_setInt64(&tempData, C.int64_t(value))
 			case string:
 				columns[i].oracleTypeNum = C.DPI_ORACLE_TYPE_VARCHAR
 				columns[i].nativeTypeNum = C.DPI_NATIVE_TYPE_BYTES
 				cs := C.CString(value)
 				tbd = append(tbd, func() { C.free(unsafe.Pointer(cs)) })
-				C.dpiData_setBytes(&tempData, cs, C.uint32_t(len(value)))
+				C.ob_dpiData_setBytes(&tempData, cs, C.uint32_t(len(value)))
 			case []byte:
 				columns[i].oracleTypeNum = C.DPI_ORACLE_TYPE_RAW
 				columns[i].nativeTypeNum = C.DPI_NATIVE_TYPE_BYTES
 				cs := (*C.char)(C.CBytes(value))
 				tbd = append(tbd, func() { C.free(unsafe.Pointer(cs)) })
-				C.dpiData_setBytes(&tempData, cs, C.uint32_t(len(value)))
+				C.ob_dpiData_setBytes(&tempData, cs, C.uint32_t(len(value)))
 			default:
 				for _, f := range tbd {
 					f()
@@ -684,7 +684,7 @@ func (d *drv) acquireConn(pool *connPool, P commonAndConnParams) (*C.dpiConn, bo
 	var dc *C.dpiConn
 	if err := d.checkExec(func() C.int {
 		if logger != nil {
-			logger.Debug("dpiConn_create",
+			logger.Debug("ob_dpiConn_create",
 				slog.String("dpiContext", fmt.Sprintf("%#v", d.dpiContext)),
 				slog.String("username", username), slog.Int("usernameLen", len(username)),
 				slog.String("password", password), slog.Int("passwordLen", len(password)),
@@ -695,8 +695,8 @@ func (d *drv) acquireConn(pool *connPool, P commonAndConnParams) (*C.dpiConn, bo
 				slog.String("pool", fmt.Sprintf("%#v", pool)),
 			)
 		}
-		// fmt.Printf("dpiConn_create(dpiContext=%#v, username=%q[%d], password=%q[%d], connectString=%q[%d], commonCreateParams=%#v, connCreateParams=%#v, dpiConn=%#v) pool=%#v\n", d.dpiContext, username, C.uint32_t(len(username)), password, C.uint32_t(len(password)), P.ConnectString, C.uint32_t(len(P.ConnectString)), commonCreateParamsPtr, connCreateParams, dc, pool)
-		return C.dpiConn_create(
+		// fmt.Printf("ob_dpiConn_create(dpiContext=%#v, username=%q[%d], password=%q[%d], connectString=%q[%d], commonCreateParams=%#v, connCreateParams=%#v, dpiConn=%#v) pool=%#v\n", d.dpiContext, username, C.uint32_t(len(username)), password, C.uint32_t(len(password)), P.ConnectString, C.uint32_t(len(P.ConnectString)), commonCreateParamsPtr, connCreateParams, dc, pool)
+		return C.ob_dpiConn_create(
 			d.dpiContext,
 			cUsername, C.uint32_t(len(username)),
 			cPassword, C.uint32_t(len(password)),
@@ -711,7 +711,7 @@ func (d *drv) acquireConn(pool *connPool, P commonAndConnParams) (*C.dpiConn, bo
 		if pool != nil {
 			if connCreateParams.numShardingKeyColumns != 0 {
 				var ec interface{ Code() int }
-				if errors.As(err, &ec) && ec.Code() == 24459 { //  https://github.com/godror/godror/issues/379#issuecomment-3107438057
+				if errors.As(err, &ec) && ec.Code() == 24459 { //  https://github.com/travelliu/godror_ob/issues/379#issuecomment-3107438057
 					return nil, false, nil, fmt.Errorf("sharding=%+v for pooled connection failed: %w", P.ShardingKey, err)
 				}
 			}
@@ -722,7 +722,7 @@ func (d *drv) acquireConn(pool *connPool, P commonAndConnParams) (*C.dpiConn, bo
 		return nil, false, nil, fmt.Errorf("user=%q standalone params=%+v: %w",
 			username, connCreateParams, err)
 	}
-	//use the information from ODPI driver if new connection has been created or it is only pooled
+	// use the information from ODPI driver if new connection has been created or it is only pooled
 	isNew := connCreateParams.outNewSession == 1
 	return dc, isNew, cleanup, nil
 }
@@ -850,7 +850,7 @@ func (d *drv) createPool(P commonAndPoolParams) (*connPool, error) {
 	// initialize ODPI-C structure for pool creation parameters
 	var poolCreateParams C.dpiPoolCreateParams
 	if err := d.checkExec(func() C.int {
-		return C.dpiContext_initPoolCreateParams(d.dpiContext, &poolCreateParams)
+		return C.ob_dpiContext_initPoolCreateParams(d.dpiContext, &poolCreateParams)
 	}); err != nil {
 		return nil, fmt.Errorf("initPoolCreateParams: %w", err)
 	}
@@ -915,7 +915,7 @@ func (d *drv) createPool(P commonAndPoolParams) (*connPool, error) {
 	}
 
 	if P.TokenCB != nil {
-		//typedef int (*dpiAccessTokenCallback)(void *context,
+		// typedef int (*dpiAccessTokenCallback)(void *context,
 		//    dpiAccessToken *accessToken);
 		wrapTokenCBCtx = RegisterTokenCallback(&poolCreateParams, P.TokenCB, P.TokenCBCtx)
 	}
@@ -939,14 +939,14 @@ func (d *drv) createPool(P commonAndPoolParams) (*connPool, error) {
 	var dp *C.dpiPool
 	logger := P.Logger
 	if logger != nil && logger.Enabled(context.TODO(), slog.LevelDebug) {
-		logger.Debug("C.dpiPool_create",
+		logger.Debug("C.ob_dpiPool_create",
 			"user", P.Username,
 			"ConnectString", P.ConnectString,
 			"common", commonCreateParams,
 			"pool", fmt.Sprintf("%#v", poolCreateParams))
 	}
 	if err := d.checkExec(func() C.int {
-		return C.dpiPool_create(
+		return C.ob_dpiPool_create(
 			d.dpiContext,
 			cUsername, C.uint32_t(len(P.Username)),
 			cPassword, C.uint32_t(P.Password.Len()),
@@ -970,7 +970,7 @@ func (d *drv) createPool(P commonAndPoolParams) (*connPool, error) {
 			stmtCacheSize = C.uint32_t(P.StmtCacheSize)
 		}
 	}
-	C.dpiPool_setStmtCacheSize(dp, stmtCacheSize)
+	C.ob_dpiPool_setStmtCacheSize(dp, stmtCacheSize)
 
 	return &connPool{dpiPool: dp, params: P, wrapTokenCallBackCtx: wrapTokenCBCtx}, nil
 }
@@ -1006,19 +1006,19 @@ func (d *drv) getPoolStats(p *connPool) (stats PoolStats, err error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	var u C.uint32_t
-	if C.dpiPool_getBusyCount(p.dpiPool, &u) != C.DPI_FAILURE {
+	if C.ob_dpiPool_getBusyCount(p.dpiPool, &u) != C.DPI_FAILURE {
 		stats.Busy = uint32(u)
 	}
-	if C.dpiPool_getOpenCount(p.dpiPool, &u) != C.DPI_FAILURE {
+	if C.ob_dpiPool_getOpenCount(p.dpiPool, &u) != C.DPI_FAILURE {
 		stats.Open = uint32(u)
 	}
-	if C.dpiPool_getMaxLifetimeSession(p.dpiPool, &u) != C.DPI_FAILURE {
+	if C.ob_dpiPool_getMaxLifetimeSession(p.dpiPool, &u) != C.DPI_FAILURE {
 		stats.MaxLifetime = time.Duration(u) * time.Second
 	}
-	if C.dpiPool_getTimeout(p.dpiPool, &u) != C.DPI_FAILURE {
+	if C.ob_dpiPool_getTimeout(p.dpiPool, &u) != C.DPI_FAILURE {
 		stats.Timeout = time.Duration(u) * time.Second
 	}
-	if C.dpiPool_getWaitTimeout(p.dpiPool, &u) != C.DPI_FAILURE {
+	if C.ob_dpiPool_getWaitTimeout(p.dpiPool, &u) != C.DPI_FAILURE {
 		stats.WaitTimeout = time.Duration(u) * time.Millisecond
 		return stats, nil
 	}
@@ -1074,6 +1074,7 @@ func (oe *OraErr) Message() string {
 	}
 	return oe.message
 }
+
 func (oe *OraErr) Error() string {
 	if oe == nil {
 		return ""
@@ -1188,7 +1189,7 @@ func (d *drv) getError() error {
 		return &OraErr{code: 12153, message: "getError on in dpiContext: " + driver.ErrBadConn.Error()}
 	}
 	var errInfo C.dpiErrorInfo
-	C.dpiContext_getError(dpiContext, &errInfo)
+	C.ob_dpiContext_getError(dpiContext, &errInfo)
 	return fromErrorInfo(errInfo)
 }
 func b2i(b bool) uint8 {

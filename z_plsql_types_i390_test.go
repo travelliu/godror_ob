@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	godror "github.com/godror/godror"
+	godror "github.com/travelliu/godror_ob"
 )
 
 func TestPlSqlNestedObj(t *testing.T) {

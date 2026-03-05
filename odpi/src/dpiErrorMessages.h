@@ -90,7 +90,7 @@ static const char* const dpiErrorMessages[DPI_ERR_MAX - DPI_ERR_NO_ERR] = {
     "DPI-1061: edition is not supported when a new password is specified", // DPI_ERR_NO_EDITION_WITH_NEW_PASSWORD
     "DPI-1062: unexpected OCI return value %d in function %s", // DPI_ERR_UNEXPECTED_OCI_RETURN_VALUE
     "DPI-1063: modes DPI_MODE_EXEC_BATCH_ERRORS and DPI_MODE_EXEC_ARRAY_DML_ROWCOUNTS can only be used with insert, update, delete and merge statements", // DPI_ERR_EXEC_MODE_ONLY_FOR_DML
-    "DPI-1064: array variables are not supported with dpiStmt_executeMany()", // DPI_ERR_ARRAY_VAR_NOT_SUPPORTED
+    "DPI-1064: array variables are not supported with ob_dpiStmt_executeMany()", // DPI_ERR_ARRAY_VAR_NOT_SUPPORTED
     "DPI-1065: events mode is required to subscribe to events in the database", // DPI_ERR_EVENTS_MODE_REQUIRED
     "DPI-1066: Oracle Database is at version %d.%d but version %d.%d or higher is needed", // DPI_ERR_ORACLE_DB_TOO_OLD
     "DPI-1067: call timeout of %u ms exceeded with ORA-%05d", // DPI_ERR_CALL_TIMEOUT
@@ -111,6 +111,6 @@ static const char* const dpiErrorMessages[DPI_ERR_MAX - DPI_ERR_NO_ERR] = {
     "DPI-1082: invalid connection pool configuration for token based authentication. Both homogeneous and externalAuth fields in the dpiPoolCreateParams structure must be set to 1", //DPI_ERR_POOL_TOKEN_BASED_AUTH
     "DPI-1083: invalid standalone connection configuration for token based authentication. The externalAuth field in the dpiConnCreateParams structure must be set to 1", // DPI_ERR_STANDALONE_TOKEN_BASED_AUTH
     "DPI-1084: unsupported vector format %d", // DPI_ERR_UNSUPPORTED_VECTOR_FORMAT
-    "DPI-1085: SODA document has JSON content. Call dpiJson_getJsonContent() instead.", // DPI_ERR_SODA_DOC_IS_JSON
-    "DPI-1086: SODA document does not have JSON content. Call dpiJson_getContent() instead.", // DPI_ERR_SODA_DOC_IS_NOT_JSON
+    "DPI-1085: SODA document has JSON content. Call ob_dpiJson_getJsonContent() instead.", // DPI_ERR_SODA_DOC_IS_JSON
+    "DPI-1086: SODA document does not have JSON content. Call ob_dpiJson_getContent() instead.", // DPI_ERR_SODA_DOC_IS_NOT_JSON
 };

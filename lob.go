@@ -152,7 +152,7 @@ func (dlr *dpiLobReader) ChunkSize() int {
 		return int(dlr.chunkSize)
 	}
 	if err := dlr.checkExec(func() C.int {
-		return C.dpiLob_getChunkSize(dlr.dpiLob, &dlr.chunkSize)
+		return C.ob_dpiLob_getChunkSize(dlr.dpiLob, &dlr.chunkSize)
 	}); err != nil {
 		dlr.chunkSize = 0
 		return -1
@@ -172,7 +172,7 @@ func (dlr *dpiLobReader) Read(p []byte) (int, error) {
 	if dlr.buf == nil {
 		if dlr.chunkSize == 0 {
 			if err := dlr.checkExec(func() C.int {
-				return C.dpiLob_getChunkSize(dlr.dpiLob, &dlr.chunkSize)
+				return C.ob_dpiLob_getChunkSize(dlr.dpiLob, &dlr.chunkSize)
 			}); err != nil {
 				return 0, fmt.Errorf("getChunkSize: %w", err)
 			}
@@ -236,10 +236,10 @@ func (dlr *dpiLobReader) getSize() error {
 	var err error
 	runtime.LockOSThread()
 	if err = dlr.checkExecNoLOT(func() C.int {
-		return C.dpiLob_getSize(dlr.dpiLob, &dlr.sizePlusOne)
+		return C.ob_dpiLob_getSize(dlr.dpiLob, &dlr.sizePlusOne)
 	}); err != nil {
 		err = fmt.Errorf("getSize: %w", err)
-		C.dpiLob_close(dlr.dpiLob)
+		C.ob_dpiLob_close(dlr.dpiLob)
 		dlr.dpiLob = nil
 	}
 	runtime.UnlockOSThread()
@@ -265,7 +265,7 @@ func (dlr *dpiLobReader) read(p []byte) (int, error) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	// For CLOB, sizePlusOne and offset counts the CHARACTERS!
-	// See https://oracle.github.io/odpi/doc/public_functions/dpiLob.html dpiLob_readBytes
+	// See https://oracle.github.io/odpi/doc/public_functions/dpiLob.html ob_dpiLob_readBytes
 	var lobType C.dpiOracleTypeNum
 	if dlr.sizePlusOne == 0 { // first read
 		// never read size before
@@ -279,7 +279,7 @@ func (dlr *dpiLobReader) read(p []byte) (int, error) {
 
 		dlr.IsClob = false
 		if err := dlr.checkExecNoLOT(func() C.int {
-			return C.dpiLob_getType(dlr.dpiLob, &lobType)
+			return C.ob_dpiLob_getType(dlr.dpiLob, &lobType)
 		}); err != nil {
 			return 0, err
 		} else if lobType == C.DPI_ORACLE_TYPE_CLOB || lobType == C.DPI_ORACLE_TYPE_NCLOB {
@@ -289,7 +289,7 @@ func (dlr *dpiLobReader) read(p []byte) (int, error) {
 	n := C.uint64_t(len(p))
 	amount := n
 	if dlr.IsClob {
-		amount /= 4 // dpiLob_readBytes' amount is the number of CHARACTERS for CLOBs.
+		amount /= 4 // ob_dpiLob_readBytes' amount is the number of CHARACTERS for CLOBs.
 	}
 	if logger != nil {
 		logger.Debug("Read", "offset", dlr.offset, "sizePlusOne", dlr.sizePlusOne, "n", n, "amount", amount, "lobType", lobType)
@@ -302,7 +302,7 @@ func (dlr *dpiLobReader) read(p []byte) (int, error) {
 	}
 	rd := func() error {
 		return dlr.drv.checkExecNoLOT(func() C.int {
-			return C.dpiLob_readBytes(dlr.dpiLob, dlr.offset+1, amount, (*C.char)(unsafe.Pointer(&p[0])), &n)
+			return C.ob_dpiLob_readBytes(dlr.dpiLob, dlr.offset+1, amount, (*C.char)(unsafe.Pointer(&p[0])), &n)
 		})
 	}
 	if err := rd(); err != nil {
@@ -320,13 +320,13 @@ func (dlr *dpiLobReader) read(p []byte) (int, error) {
 			}
 		}
 		if err != nil {
-			C.dpiLob_close(dlr.dpiLob)
+			C.ob_dpiLob_close(dlr.dpiLob)
 			dlr.dpiLob = nil
 			if dlr.finished = codeErr != nil && codeErr.Code() == 1403; dlr.finished {
 				dlr.offset += n
 				return int(n), io.EOF
 			}
-			return int(n), fmt.Errorf("dpiLob_readbytes(lob=%p offset=%d n=%d amount=%d): %w", dlr.dpiLob, dlr.offset, len(p), amount, err)
+			return int(n), fmt.Errorf("ob_dpiLob_readbytes(lob=%p offset=%d n=%d amount=%d): %w", dlr.dpiLob, dlr.offset, len(p), amount, err)
 		}
 	}
 	if logger != nil {
@@ -359,7 +359,7 @@ func (dlr *dpiLobReader) read(p []byte) (int, error) {
 	}
 	var err error
 	if amount != 0 && n == 0 || !dlr.IsClob && dlr.offset+1 >= dlr.sizePlusOne {
-		C.dpiLob_close(dlr.dpiLob)
+		C.ob_dpiLob_close(dlr.dpiLob)
 		dlr.dpiLob = nil
 		dlr.finished = true
 		err = io.EOF
@@ -380,7 +380,7 @@ func (dlr *dpiLobReader) ReadAt(p []byte, off int64) (int, error) {
 	}
 	n := C.uint64_t(len(p))
 	err := dlr.checkExec(func() C.int {
-		return C.dpiLob_readBytes(dlr.dpiLob, C.uint64_t(off+1), n, (*C.char)(unsafe.Pointer(&p[0])), &n)
+		return C.ob_dpiLob_readBytes(dlr.dpiLob, C.uint64_t(off+1), n, (*C.char)(unsafe.Pointer(&p[0])), &n)
 	})
 	if err != nil {
 		err = fmt.Errorf("readBytes at %d for %d: %w", off, n, dlr.getError())
@@ -411,7 +411,7 @@ func (dlw *dpiLobWriter) Write(p []byte) (int, error) {
 	lob := dlw.dpiLob
 	if !dlw.opened {
 		if err := dlw.drv.checkExecNoLOT(func() C.int {
-			return C.dpiLob_openResource(lob)
+			return C.ob_dpiLob_openResource(lob)
 		}); err != nil {
 			return 0, fmt.Errorf("openResources(%p): %w", lob, err)
 		}
@@ -420,7 +420,7 @@ func (dlw *dpiLobWriter) Write(p []byte) (int, error) {
 
 	n := C.uint64_t(len(p))
 	if err := dlw.drv.checkExecNoLOT(func() C.int {
-		return C.dpiLob_writeBytes(lob, dlw.offset+1, (*C.char)(unsafe.Pointer(&p[0])), n)
+		return C.ob_dpiLob_writeBytes(lob, dlw.offset+1, (*C.char)(unsafe.Pointer(&p[0])), n)
 	}); err != nil {
 		err = fmt.Errorf("writeBytes(%p, offset=%d, data=%d): %w", lob, dlw.offset, n, err)
 		dlw.dpiLob = nil
@@ -450,8 +450,8 @@ func closeLob(d interface{ getError() error }, lob *C.dpiLob) error {
 	defer runtime.UnlockOSThread()
 
 	var isOpen C.int
-	if C.dpiLob_getIsResourceOpen(lob, &isOpen) != C.DPI_FAILURE && isOpen == 1 {
-		if C.dpiLob_closeResource(lob) == C.DPI_FAILURE {
+	if C.ob_dpiLob_getIsResourceOpen(lob, &isOpen) != C.DPI_FAILURE && isOpen == 1 {
+		if C.ob_dpiLob_closeResource(lob) == C.DPI_FAILURE {
 			if err := d.getError(); err != nil {
 				var codeErr interface{ Code() int }
 				if errors.As(err, &codeErr) && codeErr.Code() != 22289 { // cannot perform %s operation on an unopened file or LOB
@@ -460,7 +460,7 @@ func closeLob(d interface{ getError() error }, lob *C.dpiLob) error {
 			}
 		}
 	}
-	C.dpiLob_release(lob)
+	C.ob_dpiLob_release(lob)
 	return nil
 }
 
@@ -481,7 +481,7 @@ func (c *conn) NewTempLob(isClob bool) (*DirectLob, error) {
 		typ = C.DPI_ORACLE_TYPE_CLOB
 	}
 	lob := DirectLob{drv: c.drv, isClob: isClob}
-	if err := c.checkExec(func() C.int { return C.dpiConn_newTempLob(c.dpiConn, typ, &lob.dpiLob) }); err != nil {
+	if err := c.checkExec(func() C.int { return C.ob_dpiConn_newTempLob(c.dpiConn, typ, &lob.dpiLob) }); err != nil {
 		return nil, fmt.Errorf("newTempLob: %w", err)
 	}
 	return &lob, nil
@@ -510,7 +510,7 @@ func (dl *DirectLob) Size() (int64, error) {
 		return 0, nil
 	}
 	if err := dl.drv.checkExec(func() C.int {
-		return C.dpiLob_getSize(dl.dpiLob, &n)
+		return C.ob_dpiLob_getSize(dl.dpiLob, &n)
 	}); err != nil {
 		var coder interface{ Code() int }
 		if errors.As(err, &coder) && coder.Code() == 22922 || strings.Contains(err.Error(), "invalid dpiLob handle") {
@@ -524,7 +524,7 @@ func (dl *DirectLob) Size() (int64, error) {
 // Trim the LOB to the given size.
 func (dl *DirectLob) Trim(size int64) error {
 	if err := dl.drv.checkExec(func() C.int {
-		return C.dpiLob_trim(dl.dpiLob, C.uint64_t(size))
+		return C.ob_dpiLob_trim(dl.dpiLob, C.uint64_t(size))
 	}); err != nil {
 		return fmt.Errorf("trim: %w", err)
 	}
@@ -535,7 +535,7 @@ func (dl *DirectLob) Trim(size int64) error {
 // The LOB is cleared first.
 func (dl *DirectLob) Set(p []byte) error {
 	if err := dl.drv.checkExec(func() C.int {
-		return C.dpiLob_setFromBytes(dl.dpiLob, (*C.char)(unsafe.Pointer(&p[0])), C.uint64_t(len(p)))
+		return C.ob_dpiLob_setFromBytes(dl.dpiLob, (*C.char)(unsafe.Pointer(&p[0])), C.uint64_t(len(p)))
 	}); err != nil {
 		return fmt.Errorf("setFromBytes: %w", err)
 	}
@@ -564,7 +564,7 @@ func (dl *DirectLob) ReadAt(p []byte, offset int64) (int, error) {
 		}
 	}
 	if err := dl.drv.checkExec(func() C.int {
-		return C.dpiLob_readBytes(dl.dpiLob, C.uint64_t(offset)+1, n, (*C.char)(unsafe.Pointer(&p[0])), &n)
+		return C.ob_dpiLob_readBytes(dl.dpiLob, C.uint64_t(offset)+1, n, (*C.char)(unsafe.Pointer(&p[0])), &n)
 	}); err != nil {
 		return int(n), fmt.Errorf("readBytes: %w", err)
 	}
@@ -578,7 +578,7 @@ func (dl *DirectLob) WriteAt(p []byte, offset int64) (int, error) {
 
 	if !dl.opened {
 		if err := dl.drv.checkExecNoLOT(func() C.int {
-			return C.dpiLob_openResource(dl.dpiLob)
+			return C.ob_dpiLob_openResource(dl.dpiLob)
 		}); err != nil {
 			return 0, fmt.Errorf("openResources(%p): %w", dl.dpiLob, err)
 		}
@@ -587,7 +587,7 @@ func (dl *DirectLob) WriteAt(p []byte, offset int64) (int, error) {
 
 	n := C.uint64_t(len(p))
 	if err := dl.drv.checkExecNoLOT(func() C.int {
-		return C.dpiLob_writeBytes(dl.dpiLob, C.uint64_t(offset)+1, (*C.char)(unsafe.Pointer(&p[0])), n)
+		return C.ob_dpiLob_writeBytes(dl.dpiLob, C.uint64_t(offset)+1, (*C.char)(unsafe.Pointer(&p[0])), n)
 	}); err != nil {
 		return int(n), fmt.Errorf("writeBytes: %w", err)
 	}
@@ -599,7 +599,7 @@ func (dl *DirectLob) GetFileName() (dir, file string, err error) {
 	var directoryAliasLength, fileNameLength C.uint32_t
 	var directoryAlias, fileName *C.char
 	if err := dl.drv.checkExec(func() C.int {
-		return C.dpiLob_getDirectoryAndFileName(dl.dpiLob,
+		return C.ob_dpiLob_getDirectoryAndFileName(dl.dpiLob,
 			&directoryAlias,
 			&directoryAliasLength,
 			&fileName,

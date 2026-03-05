@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"testing"
 
-	godror "github.com/godror/godror"
+	godror "github.com/travelliu/godror_ob"
 )
 
 func TestQRCN(t *testing.T) {
@@ -49,7 +49,7 @@ func TestQRCN(t *testing.T) {
 				t.Log("See \"https://docs.oracle.com/database/121/ADFNS/adfns_cqn.htm#ADFNS553\"")
 				var User string
 				_ = testDb.QueryRow("SELECT USER FROM DUAL").Scan(&User)
-				//t.Log("GRANT EXECUTE ON DBMS_CQ_NOTIFICATION TO "+User)
+				// t.Log("GRANT EXECUTE ON DBMS_CQ_NOTIFICATION TO "+User)
 				t.Log("GRANT CHANGE NOTIFICATION TO " + User + ";")
 				t.Skip(err.Error())
 			}

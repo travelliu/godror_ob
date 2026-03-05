@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	godror "github.com/godror/godror"
+	godror "github.com/travelliu/godror_ob"
 
 	"github.com/google/go-cmp/cmp"
 )

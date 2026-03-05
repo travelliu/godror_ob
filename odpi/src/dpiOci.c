@@ -50,30 +50,30 @@ typedef struct {
 
 
 // forward declarations of internal functions only used in this file
-static void *dpiOci__allocateMem(void *unused, size_t size);
-static void dpiOci__freeMem(void *unused, void *ptr);
-static int dpiOci__loadLibValidate(dpiContextCreateParams *params,
+static void *ob_dpiOci__allocateMem(void *unused, size_t size);
+static void ob_dpiOci__freeMem(void *unused, void *ptr);
+static int ob_dpiOci__loadLibValidate(dpiContextCreateParams *params,
         dpiOciLoadLibParams *loadParams, dpiVersionInfo *versionInfo,
         dpiError *error);
-static int dpiOci__loadLibWithDir(dpiOciLoadLibParams *loadParams,
+static int ob_dpiOci__loadLibWithDir(dpiOciLoadLibParams *loadParams,
         const char *dirName, size_t dirNameLength, int scanAllNames,
         dpiError *error);
-static int dpiOci__loadLibWithName(dpiOciLoadLibParams *loadParams,
+static int ob_dpiOci__loadLibWithName(dpiOciLoadLibParams *loadParams,
         const char *libName, dpiError *error);
-static int dpiOci__loadSymbol(const char *symbolName, void **symbol,
+static int ob_dpiOci__loadSymbol(const char *symbolName, void **symbol,
         dpiError *error);
-static void *dpiOci__reallocMem(void *unused, void *ptr, size_t newSize);
+static void *ob_dpiOci__reallocMem(void *unused, void *ptr, size_t newSize);
 
 
 // macro to simplify code for loading each symbol
 #define DPI_OCI_LOAD_SYMBOL(symbolName, symbol) \
-    if (!symbol && dpiOci__loadSymbol(symbolName, (void**) &symbol, \
+    if (!symbol && ob_dpiOci__loadSymbol(symbolName, (void**) &symbol, \
             error) < 0) \
         return DPI_FAILURE;
 
 // macro to ensure that an error handle is available
 #define DPI_OCI_ENSURE_ERROR_HANDLE(error) \
-    if (!error->handle && dpiError__initHandle(error) < 0) \
+    if (!error->handle && ob_dpiError__initHandle(error) < 0) \
         return DPI_FAILURE;
 
 // macros to simplify code for checking results of OCI calls
@@ -81,7 +81,7 @@ static void *dpiOci__reallocMem(void *unused, void *ptr, size_t newSize);
     (status != DPI_OCI_SUCCESS && status != DPI_OCI_SUCCESS_WITH_INFO)
 #define DPI_OCI_CHECK_AND_RETURN(error, status, conn, action) \
     if (status != DPI_OCI_SUCCESS) \
-        return dpiError__setFromOCI(error, status, conn, action); \
+        return ob_dpiError__setFromOCI(error, status, conn, action); \
     return DPI_SUCCESS;
 
 // macro to get the default mode to use when binding
@@ -93,412 +93,412 @@ static void *dpiOci__reallocMem(void *unused, void *ptr, size_t newSize);
 
 
 // typedefs for all OCI functions used by ODPI-C
-typedef int (*dpiOciFnType__aqDeq)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__aqDeq)(void *svchp, void *errhp,
         const char *queue_name, void *deqopt, void *msgprop, void *payload_tdo,
         void **payload, void **payload_ind, void **msgid, uint32_t flags);
-typedef int (*dpiOciFnType__aqDeqArray)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__aqDeqArray)(void *svchp, void *errhp,
         const char *queue_name, void *deqopt, uint32_t *iters, void **msgprop,
         void *payload_tdo, void **payload, void **payload_ind, void **msgid,
         void *ctxp, void *deqcbfp, uint32_t flags);
-typedef int (*dpiOciFnType__aqEnq)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__aqEnq)(void *svchp, void *errhp,
         const char *queue_name, void *enqopt, void *msgprop, void *payload_tdo,
         void **payload, void **payload_ind, void **msgid, uint32_t flags);
-typedef int (*dpiOciFnType__aqEnqArray)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__aqEnqArray)(void *svchp, void *errhp,
         const char *queue_name, void *enqopt, uint32_t *iters, void **msgprop,
         void *payload_tdo, void **payload, void **payload_ind, void **msgid,
         void *ctxp, void *enqcbfp, uint32_t flags);
-typedef int (*dpiOciFnType__arrayDescriptorAlloc)(const void *parenth,
+typedef int (*ob_dpiOciFnType__arrayDescriptorAlloc)(const void *parenth,
         void **descpp, const uint32_t type, uint32_t array_size,
         const size_t xtramem_sz, void **usrmempp);
-typedef int (*dpiOciFnType__arrayDescriptorFree)(void **descp,
+typedef int (*ob_dpiOciFnType__arrayDescriptorFree)(void **descp,
         const uint32_t type);
-typedef int (*dpiOciFnType__attrGet)(const void  *trgthndlp,
+typedef int (*ob_dpiOciFnType__attrGet)(const void  *trgthndlp,
         uint32_t trghndltyp, void *attributep, uint32_t *sizep,
         uint32_t attrtype, void *errhp);
-typedef int (*dpiOciFnType__attrSet)(void *trgthndlp, uint32_t trghndltyp,
+typedef int (*ob_dpiOciFnType__attrSet)(void *trgthndlp, uint32_t trghndltyp,
         void *attributep, uint32_t size, uint32_t attrtype, void *errhp);
-typedef int (*dpiOciFnType__bindByName)(void *stmtp, void **bindp, void *errhp,
+typedef int (*ob_dpiOciFnType__bindByName)(void *stmtp, void **bindp, void *errhp,
         const char *placeholder, int32_t placeh_len, void *valuep,
         int32_t value_sz, uint16_t dty, void *indp, uint16_t *alenp,
         uint16_t *rcodep, uint32_t maxarr_len, uint32_t *curelep,
         uint32_t mode);
-typedef int (*dpiOciFnType__bindByName2)(void *stmtp, void **bindp,
+typedef int (*ob_dpiOciFnType__bindByName2)(void *stmtp, void **bindp,
         void *errhp, const char *placeholder, int32_t placeh_len, void *valuep,
         int64_t value_sz, uint16_t dty, void *indp, uint32_t *alenp,
         uint16_t *rcodep, uint32_t maxarr_len, uint32_t *curelep,
         uint32_t mode);
-typedef int (*dpiOciFnType__bindByPos)(void *stmtp, void **bindp, void *errhp,
+typedef int (*ob_dpiOciFnType__bindByPos)(void *stmtp, void **bindp, void *errhp,
         uint32_t position, void *valuep, int32_t value_sz, uint16_t dty,
         void *indp, uint16_t *alenp, uint16_t *rcodep, uint32_t maxarr_len,
         uint32_t *curelep, uint32_t mode);
-typedef int (*dpiOciFnType__bindByPos2)(void *stmtp, void **bindp, void *errhp,
+typedef int (*ob_dpiOciFnType__bindByPos2)(void *stmtp, void **bindp, void *errhp,
         uint32_t position, void *valuep, int64_t value_sz, uint16_t dty,
         void *indp, uint32_t *alenp, uint16_t *rcodep, uint32_t maxarr_len,
         uint32_t *curelep, uint32_t mode);
-typedef int (*dpiOciFnType__bindDynamic)(void *bindp, void *errhp, void *ictxp,
+typedef int (*ob_dpiOciFnType__bindDynamic)(void *bindp, void *errhp, void *ictxp,
         void *icbfp, void *octxp, void *ocbfp);
-typedef int (*dpiOciFnType__bindObject)(void *bindp, void *errhp,
+typedef int (*ob_dpiOciFnType__bindObject)(void *bindp, void *errhp,
         const void *type, void **pgvpp, uint32_t *pvszsp, void **indpp,
         uint32_t *indszp);
-typedef int (*dpiOciFnType__break)(void *hndlp, void *errhp);
-typedef void (*dpiOciFnType__clientVersion)(int *major_version,
+typedef int (*ob_dpiOciFnType__break)(void *hndlp, void *errhp);
+typedef void (*ob_dpiOciFnType__clientVersion)(int *major_version,
         int *minor_version, int *update_num, int *patch_num,
         int *port_update_num);
-typedef int (*dpiOciFnType__collAppend)(void *env, void *err, const void *elem,
+typedef int (*ob_dpiOciFnType__collAppend)(void *env, void *err, const void *elem,
         const void *elemind, void *coll);
-typedef int (*dpiOciFnType__collAssignElem)(void *env, void *err,
+typedef int (*ob_dpiOciFnType__collAssignElem)(void *env, void *err,
         int32_t index, const void *elem, const void *elemind, void *coll);
-typedef int (*dpiOciFnType__collGetElem)(void *env, void *err,
+typedef int (*ob_dpiOciFnType__collGetElem)(void *env, void *err,
         const void *coll, int32_t index, int *exists, void **elem,
         void **elemind);
-typedef int (*dpiOciFnType__collSize)(void *env, void *err, const void *coll,
+typedef int (*ob_dpiOciFnType__collSize)(void *env, void *err, const void *coll,
         int32_t *size);
-typedef int (*dpiOciFnType__collTrim)(void *env, void *err, int32_t trim_num,
+typedef int (*ob_dpiOciFnType__collTrim)(void *env, void *err, int32_t trim_num,
         void *coll);
-typedef int (*dpiOciFnType__contextGetValue)(void *hdl, void *err,
+typedef int (*ob_dpiOciFnType__contextGetValue)(void *hdl, void *err,
         const char *key, uint8_t keylen, void **ctx_value);
-typedef int (*dpiOciFnType__contextSetValue)(void *hdl, void *err,
+typedef int (*ob_dpiOciFnType__contextSetValue)(void *hdl, void *err,
         uint16_t duration, const char *key, uint8_t keylen, void *ctx_value);
-typedef int (*dpiOciFnType__dateTimeConstruct)(void *hndl, void *err,
+typedef int (*ob_dpiOciFnType__dateTimeConstruct)(void *hndl, void *err,
         void *datetime, int16_t yr, uint8_t mnth, uint8_t dy, uint8_t hr,
         uint8_t mm, uint8_t ss, uint32_t fsec, const char *tz,
         size_t tzLength);
-typedef int (*dpiOciFnType__dateTimeConvert)(void *hndl, void *err,
+typedef int (*ob_dpiOciFnType__dateTimeConvert)(void *hndl, void *err,
         void *indate, void *outdate);
-typedef int (*dpiOciFnType__dateTimeGetDate)(void *hndl, void *err,
+typedef int (*ob_dpiOciFnType__dateTimeGetDate)(void *hndl, void *err,
         const void *date, int16_t *yr, uint8_t *mnth, uint8_t *dy);
-typedef int (*dpiOciFnType__dateTimeGetTime)(void *hndl, void *err,
+typedef int (*ob_dpiOciFnType__dateTimeGetTime)(void *hndl, void *err,
         void *datetime, uint8_t *hr, uint8_t *mm, uint8_t *ss, uint32_t *fsec);
-typedef int (*dpiOciFnType__dateTimeGetTimeZoneOffset)(void *hndl, void *err,
+typedef int (*ob_dpiOciFnType__dateTimeGetTimeZoneOffset)(void *hndl, void *err,
         const void *datetime, int8_t *hr, int8_t *mm);
-typedef int (*dpiOciFnType__dateTimeIntervalAdd)(void *hndl, void *err,
+typedef int (*ob_dpiOciFnType__dateTimeIntervalAdd)(void *hndl, void *err,
         void *datetime, void *inter, void *outdatetime);
-typedef int (*dpiOciFnType__dateTimeSubtract)(void *hndl, void *err,
+typedef int (*ob_dpiOciFnType__dateTimeSubtract)(void *hndl, void *err,
         void *indate1, void *indate2, void *inter);
-typedef int (*dpiOciFnType__dbShutdown)(void *svchp, void *errhp, void *admhp,
+typedef int (*ob_dpiOciFnType__dbShutdown)(void *svchp, void *errhp, void *admhp,
         uint32_t mode);
-typedef int (*dpiOciFnType__dbStartup)(void *svchp, void *errhp, void *admhp,
+typedef int (*ob_dpiOciFnType__dbStartup)(void *svchp, void *errhp, void *admhp,
         uint32_t mode, uint32_t flags);
-typedef int (*dpiOciFnType__defineByPos)(void *stmtp, void **defnp,
+typedef int (*ob_dpiOciFnType__defineByPos)(void *stmtp, void **defnp,
         void *errhp, uint32_t position, void *valuep, int32_t value_sz,
         uint16_t dty, void *indp, uint16_t *rlenp, uint16_t *rcodep,
         uint32_t mode);
-typedef int (*dpiOciFnType__defineByPos2)(void *stmtp, void **defnp,
+typedef int (*ob_dpiOciFnType__defineByPos2)(void *stmtp, void **defnp,
         void *errhp, uint32_t position, void *valuep, uint64_t value_sz,
         uint16_t dty, void *indp, uint32_t *rlenp, uint16_t *rcodep,
         uint32_t mode);
-typedef int (*dpiOciFnType__defineDynamic)(void *defnp, void *errhp,
+typedef int (*ob_dpiOciFnType__defineDynamic)(void *defnp, void *errhp,
         void *octxp, void *ocbfp);
-typedef int (*dpiOciFnType__defineObject)(void *defnp, void *errhp,
+typedef int (*ob_dpiOciFnType__defineObject)(void *defnp, void *errhp,
         const void *type, void **pgvpp, uint32_t *pvszsp, void **indpp,
         uint32_t *indszp);
-typedef int (*dpiOciFnType__describeAny)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__describeAny)(void *svchp, void *errhp,
         void *objptr, uint32_t objnm_len, uint8_t objptr_typ,
         uint8_t info_level, uint8_t objtyp, void *dschp);
-typedef int (*dpiOciFnType__descriptorAlloc)(const void *parenth,
+typedef int (*ob_dpiOciFnType__descriptorAlloc)(const void *parenth,
         void **descpp, const uint32_t type, const size_t xtramem_sz,
         void **usrmempp);
-typedef int (*dpiOciFnType__descriptorFree)(void *descp, const uint32_t type);
-typedef int (*dpiOciFnType__envNlsCreate)(void **envp, uint32_t mode,
+typedef int (*ob_dpiOciFnType__descriptorFree)(void *descp, const uint32_t type);
+typedef int (*ob_dpiOciFnType__envNlsCreate)(void **envp, uint32_t mode,
         void *ctxp, void *malocfp, void *ralocfp, void *mfreefp,
         size_t xtramem_sz, void **usrmempp, uint16_t charset,
         uint16_t ncharset);
-typedef int (*dpiOciFnType__errorGet)(void *hndlp, uint32_t recordno,
+typedef int (*ob_dpiOciFnType__errorGet)(void *hndlp, uint32_t recordno,
         char *sqlstate, int32_t *errcodep, char *bufp, uint32_t bufsiz,
         uint32_t type);
-typedef int (*dpiOciFnType__handleAlloc)(const void *parenth, void **hndlpp,
+typedef int (*ob_dpiOciFnType__handleAlloc)(const void *parenth, void **hndlpp,
         const uint32_t type, const size_t xtramem_sz, void **usrmempp);
-typedef int (*dpiOciFnType__handleFree)(void *hndlp, const uint32_t type);
-typedef int (*dpiOciFnType__intervalGetDaySecond)(void *hndl, void *err,
+typedef int (*ob_dpiOciFnType__handleFree)(void *hndlp, const uint32_t type);
+typedef int (*ob_dpiOciFnType__intervalGetDaySecond)(void *hndl, void *err,
         int32_t *dy, int32_t *hr, int32_t *mm, int32_t *ss, int32_t *fsec,
         const void *result);
-typedef int (*dpiOciFnType__intervalGetYearMonth)(void *hndl, void *err,
+typedef int (*ob_dpiOciFnType__intervalGetYearMonth)(void *hndl, void *err,
         int32_t *yr, int32_t *mnth, const void *result);
-typedef int (*dpiOciFnType__intervalSetDaySecond)(void *hndl, void *err,
+typedef int (*ob_dpiOciFnType__intervalSetDaySecond)(void *hndl, void *err,
         int32_t dy, int32_t hr, int32_t mm, int32_t ss, int32_t fsec,
         void *result);
-typedef int (*dpiOciFnType__intervalSetYearMonth)(void *hndl, void *err,
+typedef int (*ob_dpiOciFnType__intervalSetYearMonth)(void *hndl, void *err,
         int32_t yr, int32_t mnth, void *result);
-typedef int (*dpiOciFnType__jsonDomDocGet)(void *svchp, void *jsond,
+typedef int (*ob_dpiOciFnType__jsonDomDocGet)(void *svchp, void *jsond,
         dpiJznDomDoc **jDomDoc, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__jsonTextBufferParse)(void *hndlp, void *jsond,
+typedef int (*ob_dpiOciFnType__jsonTextBufferParse)(void *hndlp, void *jsond,
         void *bufp, uint64_t buf_sz, uint32_t validation, uint16_t encoding,
         void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__lobClose)(void *svchp, void *errhp, void *locp);
-typedef int (*dpiOciFnType__lobCreateTemporary)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__lobClose)(void *svchp, void *errhp, void *locp);
+typedef int (*ob_dpiOciFnType__lobCreateTemporary)(void *svchp, void *errhp,
         void *locp, uint16_t csid, uint8_t csfrm, uint8_t lobtype, int cache,
         uint16_t duration);
-typedef int (*dpiOciFnType__lobFileExists)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__lobFileExists)(void *svchp, void *errhp,
         void *filep, int *flag);
-typedef int (*dpiOciFnType__lobFileGetName)(void *envhp, void *errhp,
+typedef int (*ob_dpiOciFnType__lobFileGetName)(void *envhp, void *errhp,
         const void *filep, char *dir_alias, uint16_t *d_length, char *filename,
         uint16_t *f_length);
-typedef int (*dpiOciFnType__lobFileSetName)(void *envhp, void *errhp,
+typedef int (*ob_dpiOciFnType__lobFileSetName)(void *envhp, void *errhp,
         void **filepp, const char *dir_alias, uint16_t d_length,
         const char *filename, uint16_t f_length);
-typedef int (*dpiOciFnType__lobFreeTemporary)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__lobFreeTemporary)(void *svchp, void *errhp,
         void *locp);
-typedef int (*dpiOciFnType__lobGetChunkSize)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__lobGetChunkSize)(void *svchp, void *errhp,
         void *locp, uint32_t *chunksizep);
-typedef int (*dpiOciFnType__lobGetLength2)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__lobGetLength2)(void *svchp, void *errhp,
         void *locp, uint64_t *lenp);
-typedef int (*dpiOciFnType__lobIsOpen)(void *svchp, void *errhp, void *locp,
+typedef int (*ob_dpiOciFnType__lobIsOpen)(void *svchp, void *errhp, void *locp,
         int *flag);
-typedef int (*dpiOciFnType__lobIsTemporary)(void *envp, void *errhp,
+typedef int (*ob_dpiOciFnType__lobIsTemporary)(void *envp, void *errhp,
         void *locp, int *is_temporary);
-typedef int (*dpiOciFnType__lobLocatorAssign)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__lobLocatorAssign)(void *svchp, void *errhp,
         const void *src_locp, void **dst_locpp);
-typedef int (*dpiOciFnType__lobOpen)(void *svchp, void *errhp, void *locp,
+typedef int (*ob_dpiOciFnType__lobOpen)(void *svchp, void *errhp, void *locp,
         uint8_t mode);
-typedef int (*dpiOciFnType__lobRead2)(void *svchp, void *errhp, void *locp,
+typedef int (*ob_dpiOciFnType__lobRead2)(void *svchp, void *errhp, void *locp,
         uint64_t *byte_amtp, uint64_t *char_amtp, uint64_t offset, void *bufp,
         uint64_t bufl, uint8_t piece, void *ctxp, void *cbfp, uint16_t csid,
         uint8_t csfrm);
-typedef int (*dpiOciFnType__lobTrim2)(void *svchp, void *errhp, void *locp,
+typedef int (*ob_dpiOciFnType__lobTrim2)(void *svchp, void *errhp, void *locp,
         uint64_t newlen);
-typedef int (*dpiOciFnType__lobWrite2)(void *svchp, void *errhp, void *locp,
+typedef int (*ob_dpiOciFnType__lobWrite2)(void *svchp, void *errhp, void *locp,
         uint64_t *byte_amtp, uint64_t *char_amtp, uint64_t offset, void *bufp,
         uint64_t buflen, uint8_t piece, void *ctxp, void *cbfp, uint16_t csid,
         uint8_t csfrm);
-typedef int (*dpiOciFnType__memoryAlloc)(void *hdl, void *err, void **mem,
+typedef int (*ob_dpiOciFnType__memoryAlloc)(void *hdl, void *err, void **mem,
         uint16_t dur, uint32_t size, uint32_t flags);
-typedef int (*dpiOciFnType__memoryFree)(void *hdl, void *err, void *mem);
-typedef int (*dpiOciFnType__nlsCharSetConvert)(void *envhp, void *errhp,
+typedef int (*ob_dpiOciFnType__memoryFree)(void *hdl, void *err, void *mem);
+typedef int (*ob_dpiOciFnType__nlsCharSetConvert)(void *envhp, void *errhp,
         uint16_t dstid, void  *dstp, size_t dstlen, uint16_t srcid,
         const void *srcp, size_t srclen, size_t *rsize);
-typedef int (*dpiOciFnType__nlsCharSetIdToName)(void *envhp, char *buf,
+typedef int (*ob_dpiOciFnType__nlsCharSetIdToName)(void *envhp, char *buf,
         size_t buflen, uint16_t id);
-typedef uint16_t (*dpiOciFnType__nlsCharSetNameToId)(void *envhp,
+typedef uint16_t (*ob_dpiOciFnType__nlsCharSetNameToId)(void *envhp,
         const char *name);
-typedef int (*dpiOciFnType__nlsEnvironmentVariableGet)(void *val, size_t size,
+typedef int (*ob_dpiOciFnType__nlsEnvironmentVariableGet)(void *val, size_t size,
         uint16_t item, uint16_t charset, size_t *rsize);
-typedef int (*dpiOciFnType__nlsNameMap)(void *envhp, char *buf, size_t buflen,
+typedef int (*ob_dpiOciFnType__nlsNameMap)(void *envhp, char *buf, size_t buflen,
         const char *srcbuf, uint32_t flag);
-typedef int (*dpiOciFnType__nlsNumericInfoGet)(void *envhp, void *errhp,
+typedef int (*ob_dpiOciFnType__nlsNumericInfoGet)(void *envhp, void *errhp,
         int32_t *val, uint16_t item);
-typedef int (*dpiOciFnType__numberFromInt)(void *err, const void *inum,
+typedef int (*ob_dpiOciFnType__numberFromInt)(void *err, const void *inum,
         unsigned int inum_length, unsigned int inum_s_flag, void *number);
-typedef int (*dpiOciFnType__numberFromReal)(void *err, const void *number,
+typedef int (*ob_dpiOciFnType__numberFromReal)(void *err, const void *number,
         unsigned int rsl_length, void *rsl);
-typedef int (*dpiOciFnType__numberToInt)(void *err, const void *number,
+typedef int (*ob_dpiOciFnType__numberToInt)(void *err, const void *number,
         unsigned int rsl_length, unsigned int rsl_flag, void *rsl);
-typedef int (*dpiOciFnType__numberToReal)(void *err, const void *number,
+typedef int (*ob_dpiOciFnType__numberToReal)(void *err, const void *number,
         unsigned int rsl_length, void *rsl);
-typedef int (*dpiOciFnType__objectCopy)(void *env, void *err, const void *svc,
+typedef int (*ob_dpiOciFnType__objectCopy)(void *env, void *err, const void *svc,
         void *source, void *null_source, void *target, void *null_target,
         void *tdo, uint16_t duration, uint8_t option);
-typedef int (*dpiOciFnType__objectFree)(void *env, void *err, void *instance,
+typedef int (*ob_dpiOciFnType__objectFree)(void *env, void *err, void *instance,
         uint16_t flags);
-typedef int (*dpiOciFnType__objectGetAttr)(void *env, void *err,
+typedef int (*ob_dpiOciFnType__objectGetAttr)(void *env, void *err,
         void *instance, void *null_struct, void *tdo, const char **names,
         const uint32_t *lengths, const uint32_t name_count,
         const uint32_t *indexes, const uint32_t index_count,
         int16_t *attr_null_status, void **attr_null_struct, void **attr_value,
         void **attr_tdo);
-typedef int (*dpiOciFnType__objectGetInd)(void *env, void *err, void *instance,
+typedef int (*ob_dpiOciFnType__objectGetInd)(void *env, void *err, void *instance,
         void **null_struct);
-typedef int (*dpiOciFnType__objectNew)(void *env, void *err, const void *svc,
+typedef int (*ob_dpiOciFnType__objectNew)(void *env, void *err, const void *svc,
         uint16_t typecode, void *tdo, void *table, uint16_t duration,
         int value, void **instance);
-typedef int (*dpiOciFnType__objectPin)(void *env, void *err, void *object_ref,
+typedef int (*ob_dpiOciFnType__objectPin)(void *env, void *err, void *object_ref,
         void *corhdl, int pin_option, uint16_t pin_duration, int lock_option,
         void **object);
-typedef int (*dpiOciFnType__objectSetAttr)(void *env, void *err,
+typedef int (*ob_dpiOciFnType__objectSetAttr)(void *env, void *err,
         void *instance, void *null_struct, void *tdo, const char **names,
         const uint32_t *lengths, const uint32_t name_count,
         const uint32_t *indexes, const uint32_t index_count,
         const int16_t null_status, const void *attr_null_struct,
         const void *attr_value);
-typedef int (*dpiOciFnType__paramGet)(const void *hndlp, uint32_t htype,
+typedef int (*ob_dpiOciFnType__paramGet)(const void *hndlp, uint32_t htype,
         void *errhp, void **parmdpp, uint32_t pos);
-typedef int (*dpiOciFnType__passwordChange)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__passwordChange)(void *svchp, void *errhp,
         const char *user_name, uint32_t usernm_len, const char *opasswd,
         uint32_t opasswd_len, const char *npasswd, uint32_t npasswd_len,
         uint32_t mode);
-typedef int (*dpiOciFnType__ping)(void *svchp, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__rawAssignBytes)(void *env, void *err,
+typedef int (*ob_dpiOciFnType__ping)(void *svchp, void *errhp, uint32_t mode);
+typedef int (*ob_dpiOciFnType__rawAssignBytes)(void *env, void *err,
         const char *rhs, uint32_t rhs_len, void **lhs);
-typedef void *(*dpiOciFnType__rawPtr)(void *env, const void *raw);
-typedef int (*dpiOciFnType__rawResize)(void *env, void *err, uint32_t new_size,
+typedef void *(*ob_dpiOciFnType__rawPtr)(void *env, const void *raw);
+typedef int (*ob_dpiOciFnType__rawResize)(void *env, void *err, uint32_t new_size,
         void **raw);
-typedef uint32_t (*dpiOciFnType__rawSize)(void * env, const void *raw);
-typedef int (*dpiOciFnType__rowidToChar)(void *rowidDesc, char *outbfp,
+typedef uint32_t (*ob_dpiOciFnType__rawSize)(void * env, const void *raw);
+typedef int (*ob_dpiOciFnType__rowidToChar)(void *rowidDesc, char *outbfp,
         uint16_t *outbflp, void *errhp);
-typedef int (*dpiOciFnType__serverAttach)(void *srvhp, void *errhp,
+typedef int (*ob_dpiOciFnType__serverAttach)(void *srvhp, void *errhp,
         const char *dblink, int32_t dblink_len, uint32_t mode);
-typedef int (*dpiOciFnType__serverDetach)(void *srvhp, void *errhp,
+typedef int (*ob_dpiOciFnType__serverDetach)(void *srvhp, void *errhp,
         uint32_t mode);
-typedef int (*dpiOciFnType__serverRelease)(void *hndlp, void *errhp,
+typedef int (*ob_dpiOciFnType__serverRelease)(void *hndlp, void *errhp,
         char *bufp, uint32_t bufsz, uint8_t hndltype, uint32_t *version);
-typedef int (*dpiOciFnType__serverRelease2)(void *hndlp, void *errhp,
+typedef int (*ob_dpiOciFnType__serverRelease2)(void *hndlp, void *errhp,
         char *bufp, uint32_t bufsz, uint8_t hndltype, uint32_t *version,
         uint32_t mode);
-typedef int (*dpiOciFnType__sessionBegin)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__sessionBegin)(void *svchp, void *errhp,
         void *usrhp, uint32_t credt, uint32_t mode);
-typedef int (*dpiOciFnType__sessionEnd)(void *svchp, void *errhp, void *usrhp,
+typedef int (*ob_dpiOciFnType__sessionEnd)(void *svchp, void *errhp, void *usrhp,
         uint32_t mode);
-typedef int (*dpiOciFnType__sessionGet)(void *envhp, void *errhp, void **svchp,
+typedef int (*ob_dpiOciFnType__sessionGet)(void *envhp, void *errhp, void **svchp,
         void *authhp, const char *poolName, uint32_t poolName_len,
         const char *tagInfo, uint32_t tagInfo_len, const char **retTagInfo,
         uint32_t *retTagInfo_len, int *found, uint32_t mode);
-typedef int (*dpiOciFnType__sessionPoolCreate)(void *envhp, void *errhp,
+typedef int (*ob_dpiOciFnType__sessionPoolCreate)(void *envhp, void *errhp,
         void *spoolhp, char **poolName, uint32_t *poolNameLen,
         const char *connStr, uint32_t connStrLen, uint32_t sessMin,
         uint32_t sessMax, uint32_t sessIncr, const char *userid,
         uint32_t useridLen, const char *password, uint32_t passwordLen,
         uint32_t mode);
-typedef int (*dpiOciFnType__sessionPoolDestroy)(void *spoolhp, void *errhp,
+typedef int (*ob_dpiOciFnType__sessionPoolDestroy)(void *spoolhp, void *errhp,
         uint32_t mode);
-typedef int (*dpiOciFnType__sessionRelease)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__sessionRelease)(void *svchp, void *errhp,
         const char *tag, uint32_t tag_len, uint32_t mode);
-typedef int (*dpiOciFnType__shardingKeyColumnAdd)(void *shardingKey,
+typedef int (*ob_dpiOciFnType__shardingKeyColumnAdd)(void *shardingKey,
         void *errhp, void *col, uint32_t colLen, uint16_t colType,
         uint32_t mode);
-typedef int (*dpiOciFnType__sodaBulkInsert)(void *svchp,
+typedef int (*ob_dpiOciFnType__sodaBulkInsert)(void *svchp,
         void *collection, void **documentarray, uint32_t arraylen,
         void *opoptns, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaBulkInsertAndGet)(void *svchp,
+typedef int (*ob_dpiOciFnType__sodaBulkInsertAndGet)(void *svchp,
         void *collection, void **documentarray, uint32_t arraylen,
         void *opoptns, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaBulkInsertAndGetWithOpts)(void *svchp,
+typedef int (*ob_dpiOciFnType__sodaBulkInsertAndGetWithOpts)(void *svchp,
         void *collection, void **documentarray, uint32_t arraylen,
         void *oproptns, void *opoptns, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaCollCreateWithMetadata)(void *svchp,
+typedef int (*ob_dpiOciFnType__sodaCollCreateWithMetadata)(void *svchp,
         const char *collname, uint32_t collnamelen, const char *metadata,
         uint32_t metadatalen, void **collection, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaCollDrop)(void *svchp, void *coll,
+typedef int (*ob_dpiOciFnType__sodaCollDrop)(void *svchp, void *coll,
         int *isDropped, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaCollGetNext)(void *svchp, const void *cur,
+typedef int (*ob_dpiOciFnType__sodaCollGetNext)(void *svchp, const void *cur,
         void **coll, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaCollList)(void *svchp, const char *startname,
+typedef int (*ob_dpiOciFnType__sodaCollList)(void *svchp, const char *startname,
         uint32_t stnamelen, void **cur, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaCollOpen)(void *svchp, const char *collname,
+typedef int (*ob_dpiOciFnType__sodaCollOpen)(void *svchp, const char *collname,
         uint32_t collnamelen, void **coll, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaCollTruncate)(void *svchp, void *collection,
+typedef int (*ob_dpiOciFnType__sodaCollTruncate)(void *svchp, void *collection,
         void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaDataGuideGet)(void *svchp,
+typedef int (*ob_dpiOciFnType__sodaDataGuideGet)(void *svchp,
         const void *collection, uint32_t docFlags, void **doc, void *errhp,
         uint32_t mode);
-typedef int (*dpiOciFnType__sodaDocCount)(void *svchp, const void *coll,
+typedef int (*ob_dpiOciFnType__sodaDocCount)(void *svchp, const void *coll,
         const void *optns, uint64_t *numdocs, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaDocGetNext)(void *svchp, const void *cur,
+typedef int (*ob_dpiOciFnType__sodaDocGetNext)(void *svchp, const void *cur,
         void **doc, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaFind)(void *svchp, const void *coll,
+typedef int (*ob_dpiOciFnType__sodaFind)(void *svchp, const void *coll,
         const void *findOptions, uint32_t docFlags, void **cursor,
         void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaFindOne)(void *svchp, const void *coll,
+typedef int (*ob_dpiOciFnType__sodaFindOne)(void *svchp, const void *coll,
         const void *findOptions, uint32_t docFlags, void **doc, void *errhp,
         uint32_t mode);
-typedef int (*dpiOciFnType__sodaIndexCreate)(void *svchp, const void *coll,
+typedef int (*ob_dpiOciFnType__sodaIndexCreate)(void *svchp, const void *coll,
         const char *indexspec, uint32_t speclen, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaIndexDrop)(void *svchp, const char *indexname,
+typedef int (*ob_dpiOciFnType__sodaIndexDrop)(void *svchp, const char *indexname,
         uint32_t indexnamelen, int *isDropped, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaIndexList)(void *svchp, const void *collection,
+typedef int (*ob_dpiOciFnType__sodaIndexList)(void *svchp, const void *collection,
         uint32_t flags, void **indexList, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaInsert)(void *svchp, void *collection,
+typedef int (*ob_dpiOciFnType__sodaInsert)(void *svchp, void *collection,
         void *document, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaInsertAndGet)(void *svchp, void *collection,
+typedef int (*ob_dpiOciFnType__sodaInsertAndGet)(void *svchp, void *collection,
         void **document, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaInsertAndGetWithOpts)(void *svchp,
+typedef int (*ob_dpiOciFnType__sodaInsertAndGetWithOpts)(void *svchp,
         void *collection, void **document, void *oproptns, void *errhp,
         uint32_t mode);
-typedef int (*dpiOciFnType__sodaOperKeysSet)(const void *operhp,
+typedef int (*ob_dpiOciFnType__sodaOperKeysSet)(const void *operhp,
         const char **keysArray, uint32_t *lengthsArray, uint32_t count,
         void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaRemove)(void *svchp, const void *coll,
+typedef int (*ob_dpiOciFnType__sodaRemove)(void *svchp, const void *coll,
         const void *optns, uint64_t *removeCount, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaReplOne)(void *svchp, const void *coll,
+typedef int (*ob_dpiOciFnType__sodaReplOne)(void *svchp, const void *coll,
         const void *optns, void *document, int *isReplaced, void *errhp,
         uint32_t mode);
-typedef int (*dpiOciFnType__sodaReplOneAndGet)(void *svchp, const void *coll,
+typedef int (*ob_dpiOciFnType__sodaReplOneAndGet)(void *svchp, const void *coll,
         const void *optns, void **document, int *isReplaced, void *errhp,
         uint32_t mode);
-typedef int (*dpiOciFnType__sodaSave)(void *svchp, void *collection,
+typedef int (*ob_dpiOciFnType__sodaSave)(void *svchp, void *collection,
         void *document, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaSaveAndGet)(void *svchp, void *collection,
+typedef int (*ob_dpiOciFnType__sodaSaveAndGet)(void *svchp, void *collection,
         void **document, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__sodaSaveAndGetWithOpts)(void *svchp,
+typedef int (*ob_dpiOciFnType__sodaSaveAndGetWithOpts)(void *svchp,
         void *collection, void **document, void *oproptns, void *errhp,
         uint32_t mode);
-typedef int (*dpiOciFnType__stmtExecute)(void *svchp, void *stmtp, void *errhp,
+typedef int (*ob_dpiOciFnType__stmtExecute)(void *svchp, void *stmtp, void *errhp,
         uint32_t iters, uint32_t rowoff, const void *snap_in, void *snap_out,
         uint32_t mode);
-typedef int (*dpiOciFnType__stmtFetch2)(void *stmtp, void *errhp,
+typedef int (*ob_dpiOciFnType__stmtFetch2)(void *stmtp, void *errhp,
         uint32_t nrows, uint16_t orientation, int32_t scrollOffset,
         uint32_t mode);
-typedef int (*dpiOciFnType__stmtGetBindInfo)(void *stmtp, void *errhp,
+typedef int (*ob_dpiOciFnType__stmtGetBindInfo)(void *stmtp, void *errhp,
         uint32_t size, uint32_t startloc, int32_t *found, char *bvnp[],
         uint8_t bvnl[], char *invp[], uint8_t inpl[], uint8_t dupl[],
         void **hndl);
-typedef int (*dpiOciFnType__stmtGetNextResult)(void *stmthp, void *errhp,
+typedef int (*ob_dpiOciFnType__stmtGetNextResult)(void *stmthp, void *errhp,
         void **result, uint32_t *rtype, uint32_t mode);
-typedef int (*dpiOciFnType__stmtPrepare2)(void *svchp, void **stmtp,
+typedef int (*ob_dpiOciFnType__stmtPrepare2)(void *svchp, void **stmtp,
         void *errhp, const char *stmt, uint32_t stmt_len, const char *key,
         uint32_t key_len, uint32_t language, uint32_t mode);
-typedef int (*dpiOciFnType__stmtRelease)(void *stmtp, void *errhp,
+typedef int (*ob_dpiOciFnType__stmtRelease)(void *stmtp, void *errhp,
         const char *key, uint32_t key_len, uint32_t mode);
-typedef int (*dpiOciFnType__stringAssignText)(void *env, void *err,
+typedef int (*ob_dpiOciFnType__stringAssignText)(void *env, void *err,
         const char *rhs, uint32_t rhs_len, void **lhs);
-typedef char *(*dpiOciFnType__stringPtr)(void *env, const void *vs);
-typedef int (*dpiOciFnType__stringResize)(void *env, void *err,
+typedef char *(*ob_dpiOciFnType__stringPtr)(void *env, const void *vs);
+typedef int (*ob_dpiOciFnType__stringResize)(void *env, void *err,
         uint32_t new_size, void **str);
-typedef uint32_t (*dpiOciFnType__stringSize)(void *env, const void *vs);
-typedef int (*dpiOciFnType__subscriptionRegister)(void *svchp,
+typedef uint32_t (*ob_dpiOciFnType__stringSize)(void *env, const void *vs);
+typedef int (*ob_dpiOciFnType__subscriptionRegister)(void *svchp,
         void **subscrhpp, uint16_t count, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__subscriptionUnRegister)(void *svchp,
+typedef int (*ob_dpiOciFnType__subscriptionUnRegister)(void *svchp,
         void *subscrhp, void *errhp, uint32_t mode);
-typedef int (*dpiOciFnType__tableDelete)(void *env, void *err, int32_t index,
+typedef int (*ob_dpiOciFnType__tableDelete)(void *env, void *err, int32_t index,
         void *tbl);
-typedef int (*dpiOciFnType__tableExists)(void *env, void *err, const void *tbl,
+typedef int (*ob_dpiOciFnType__tableExists)(void *env, void *err, const void *tbl,
         int32_t index, int *exists);
-typedef int (*dpiOciFnType__tableFirst)(void *env, void *err, const void *tbl,
+typedef int (*ob_dpiOciFnType__tableFirst)(void *env, void *err, const void *tbl,
         int32_t *index);
-typedef int (*dpiOciFnType__tableLast)(void *env, void *err, const void *tbl,
+typedef int (*ob_dpiOciFnType__tableLast)(void *env, void *err, const void *tbl,
         int32_t *index);
-typedef int (*dpiOciFnType__tableNext)(void *env, void *err, int32_t index,
+typedef int (*ob_dpiOciFnType__tableNext)(void *env, void *err, int32_t index,
         const void *tbl, int32_t *next_index, int *exists);
-typedef int (*dpiOciFnType__tablePrev)(void *env, void *err, int32_t index,
+typedef int (*ob_dpiOciFnType__tablePrev)(void *env, void *err, int32_t index,
         const void *tbl, int32_t *prev_index, int *exists);
-typedef int (*dpiOciFnType__tableSize)(void *env, void *err, const void *tbl,
+typedef int (*ob_dpiOciFnType__tableSize)(void *env, void *err, const void *tbl,
         int32_t *size);
-typedef int (*dpiOciFnType__threadKeyDestroy)(void *hndl, void *err,
+typedef int (*ob_dpiOciFnType__threadKeyDestroy)(void *hndl, void *err,
         void **key);
-typedef int (*dpiOciFnType__threadKeyGet)(void *hndl, void *err, void *key,
+typedef int (*ob_dpiOciFnType__threadKeyGet)(void *hndl, void *err, void *key,
         void **pValue);
-typedef int (*dpiOciFnType__threadKeyInit)(void *hndl, void *err, void **key,
+typedef int (*ob_dpiOciFnType__threadKeyInit)(void *hndl, void *err, void **key,
         void *destFn);
-typedef int (*dpiOciFnType__threadKeySet)(void *hndl, void *err, void *key,
+typedef int (*ob_dpiOciFnType__threadKeySet)(void *hndl, void *err, void *key,
         void *value);
-typedef void (*dpiOciFnType__threadProcessInit)(void);
-typedef int (*dpiOciFnType__transCommit)(void *svchp, void *errhp,
+typedef void (*ob_dpiOciFnType__threadProcessInit)(void);
+typedef int (*ob_dpiOciFnType__transCommit)(void *svchp, void *errhp,
         uint32_t flags);
-typedef int (*dpiOciFnType__transDetach)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__transDetach)(void *svchp, void *errhp,
         uint32_t flags);
-typedef int (*dpiOciFnType__transForget)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__transForget)(void *svchp, void *errhp,
         uint32_t flags);
-typedef int (*dpiOciFnType__transPrepare)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__transPrepare)(void *svchp, void *errhp,
         uint32_t flags);
-typedef int (*dpiOciFnType__transRollback)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__transRollback)(void *svchp, void *errhp,
         uint32_t flags);
-typedef int (*dpiOciFnType__transStart)(void *svchp, void *errhp,
+typedef int (*ob_dpiOciFnType__transStart)(void *svchp, void *errhp,
         unsigned int timeout, uint32_t flags);
-typedef int (*dpiOciFnType__typeByFullName)(void *env, void *err,
+typedef int (*ob_dpiOciFnType__typeByFullName)(void *env, void *err,
         const void *svc, const char *full_type_name,
         uint32_t full_type_name_length, const char *version_name,
         uint32_t version_name_length, uint16_t pin_duration, int get_option,
         void **tdo);
-typedef int (*dpiOciFnType__typeByName)(void *env, void *err, const void *svc,
+typedef int (*ob_dpiOciFnType__typeByName)(void *env, void *err, const void *svc,
         const char *schema_name, uint32_t s_length, const char *type_name,
         uint32_t t_length, const char *version_name, uint32_t v_length,
         uint16_t pin_duration, int get_option, void **tdo);
-typedef int (*dpiOciFnType__vectorFromArray)(void *vectord, void *errhp,
+typedef int (*ob_dpiOciFnType__vectorFromArray)(void *vectord, void *errhp,
         uint8_t vformat, uint32_t vdim, void *vecarray, uint32_t mode);
-typedef int (*dpiOciFnType__vectorFromSparseArray)(void *vectord, void *errhp,
+typedef int (*ob_dpiOciFnType__vectorFromSparseArray)(void *vectord, void *errhp,
         uint8_t vformat, uint32_t vdim, uint32_t indices, void *indarray,
         void *vecarray, uint32_t mode);
-typedef int (*dpiOciFnType__vectorToArray)(void *vectord, void *errhp,
+typedef int (*ob_dpiOciFnType__vectorToArray)(void *vectord, void *errhp,
         uint8_t vformat, uint32_t *vdim, void *vecarray, uint32_t mode);
-typedef int (*dpiOciFnType__vectorToSparseArray)(void *vectord, void *errhp,
+typedef int (*ob_dpiOciFnType__vectorToSparseArray)(void *vectord, void *errhp,
         uint8_t vformat, uint32_t *vdim, uint32_t *indices, void *indarray,
         void *vecarray, uint32_t mode);
 
@@ -509,7 +509,8 @@ static void *dpiOciLibHandle = NULL;
 // library names to search
 static const char *dpiOciLibNames[] = {
 #if defined _WIN32 || defined __CYGWIN__
-    "oci.dll",
+    "libobci_obclnt.dll",
+    "libobci.dll",
 #elif __APPLE__
     "libclntsh.dylib",
     "libclntsh.dylib.19.1",
@@ -519,13 +520,15 @@ static const char *dpiOciLibNames[] = {
     "libclntsh.dylib.20.1",
     "libclntsh.dylib.21.1",
 #else
-    "libclntsh.so",
-    "libclntsh.so.19.1",
-    "libclntsh.so.18.1",
-    "libclntsh.so.12.1",
-    "libclntsh.so.11.1",
-    "libclntsh.so.20.1",
-    "libclntsh.so.21.1",
+    "libobci_obclnt.so",
+    "libobci.so",
+//    "libclntsh.so",
+//    "libclntsh.so.19.1",
+//    "libclntsh.so.18.1",
+//    "libclntsh.so.12.1",
+//    "libclntsh.so.11.1",
+//    "libclntsh.so.20.1",
+//    "libclntsh.so.21.1",
 #endif
     NULL
 };
@@ -535,194 +538,194 @@ static const char *dpiOciConfigSubDir = "network/admin";
 
 // all OCI symbols used by ODPI-C
 static struct {
-    dpiOciFnType__aqDeq fnAqDeq;
-    dpiOciFnType__aqDeqArray fnAqDeqArray;
-    dpiOciFnType__aqEnq fnAqEnq;
-    dpiOciFnType__aqEnqArray fnAqEnqArray;
-    dpiOciFnType__arrayDescriptorAlloc fnArrayDescriptorAlloc;
-    dpiOciFnType__arrayDescriptorFree fnArrayDescriptorFree;
-    dpiOciFnType__attrGet fnAttrGet;
-    dpiOciFnType__attrSet fnAttrSet;
-    dpiOciFnType__bindByName fnBindByName;
-    dpiOciFnType__bindByName2 fnBindByName2;
-    dpiOciFnType__bindByPos fnBindByPos;
-    dpiOciFnType__bindByPos2 fnBindByPos2;
-    dpiOciFnType__bindDynamic fnBindDynamic;
-    dpiOciFnType__bindObject fnBindObject;
-    dpiOciFnType__break fnBreak;
-    dpiOciFnType__clientVersion fnClientVersion;
-    dpiOciFnType__collAppend fnCollAppend;
-    dpiOciFnType__collAssignElem fnCollAssignElem;
-    dpiOciFnType__collGetElem fnCollGetElem;
-    dpiOciFnType__collSize fnCollSize;
-    dpiOciFnType__collTrim fnCollTrim;
-    dpiOciFnType__contextGetValue fnContextGetValue;
-    dpiOciFnType__contextSetValue fnContextSetValue;
-    dpiOciFnType__dateTimeConstruct fnDateTimeConstruct;
-    dpiOciFnType__dateTimeConvert fnDateTimeConvert;
-    dpiOciFnType__dateTimeGetDate fnDateTimeGetDate;
-    dpiOciFnType__dateTimeGetTime fnDateTimeGetTime;
-    dpiOciFnType__dateTimeGetTimeZoneOffset fnDateTimeGetTimeZoneOffset;
-    dpiOciFnType__dateTimeIntervalAdd fnDateTimeIntervalAdd;
-    dpiOciFnType__dateTimeSubtract fnDateTimeSubtract;
-    dpiOciFnType__dbShutdown fnDbShutdown;
-    dpiOciFnType__dbStartup fnDbStartup;
-    dpiOciFnType__defineByPos fnDefineByPos;
-    dpiOciFnType__defineByPos2 fnDefineByPos2;
-    dpiOciFnType__defineDynamic fnDefineDynamic;
-    dpiOciFnType__defineObject fnDefineObject;
-    dpiOciFnType__describeAny fnDescribeAny;
-    dpiOciFnType__descriptorAlloc fnDescriptorAlloc;
-    dpiOciFnType__descriptorFree fnDescriptorFree;
-    dpiOciFnType__envNlsCreate fnEnvNlsCreate;
-    dpiOciFnType__errorGet fnErrorGet;
-    dpiOciFnType__handleAlloc fnHandleAlloc;
-    dpiOciFnType__handleFree fnHandleFree;
-    dpiOciFnType__intervalGetDaySecond fnIntervalGetDaySecond;
-    dpiOciFnType__intervalGetYearMonth fnIntervalGetYearMonth;
-    dpiOciFnType__intervalSetDaySecond fnIntervalSetDaySecond;
-    dpiOciFnType__intervalSetYearMonth fnIntervalSetYearMonth;
-    dpiOciFnType__jsonDomDocGet fnJsonDomDocGet;
-    dpiOciFnType__jsonTextBufferParse fnJsonTextBufferParse;
-    dpiOciFnType__lobClose fnLobClose;
-    dpiOciFnType__lobCreateTemporary fnLobCreateTemporary;
-    dpiOciFnType__lobFileExists fnLobFileExists;
-    dpiOciFnType__lobFileGetName fnLobFileGetName;
-    dpiOciFnType__lobFileSetName fnLobFileSetName;
-    dpiOciFnType__lobFreeTemporary fnLobFreeTemporary;
-    dpiOciFnType__lobGetChunkSize fnLobGetChunkSize;
-    dpiOciFnType__lobGetLength2 fnLobGetLength2;
-    dpiOciFnType__lobIsOpen fnLobIsOpen;
-    dpiOciFnType__lobIsTemporary fnLobIsTemporary;
-    dpiOciFnType__lobLocatorAssign fnLobLocatorAssign;
-    dpiOciFnType__lobOpen fnLobOpen;
-    dpiOciFnType__lobRead2 fnLobRead2;
-    dpiOciFnType__lobTrim2 fnLobTrim2;
-    dpiOciFnType__lobWrite2 fnLobWrite2;
-    dpiOciFnType__memoryAlloc fnMemoryAlloc;
-    dpiOciFnType__memoryFree fnMemoryFree;
-    dpiOciFnType__nlsCharSetConvert fnNlsCharSetConvert;
-    dpiOciFnType__nlsCharSetIdToName fnNlsCharSetIdToName;
-    dpiOciFnType__nlsCharSetNameToId fnNlsCharSetNameToId;
-    dpiOciFnType__nlsEnvironmentVariableGet fnNlsEnvironmentVariableGet;
-    dpiOciFnType__nlsNameMap fnNlsNameMap;
-    dpiOciFnType__nlsNumericInfoGet fnNlsNumericInfoGet;
-    dpiOciFnType__numberFromInt fnNumberFromInt;
-    dpiOciFnType__numberFromReal fnNumberFromReal;
-    dpiOciFnType__numberToInt fnNumberToInt;
-    dpiOciFnType__numberToReal fnNumberToReal;
-    dpiOciFnType__objectCopy fnObjectCopy;
-    dpiOciFnType__objectFree fnObjectFree;
-    dpiOciFnType__objectGetAttr fnObjectGetAttr;
-    dpiOciFnType__objectGetInd fnObjectGetInd;
-    dpiOciFnType__objectNew fnObjectNew;
-    dpiOciFnType__objectPin fnObjectPin;
-    dpiOciFnType__objectSetAttr fnObjectSetAttr;
-    dpiOciFnType__paramGet fnParamGet;
-    dpiOciFnType__passwordChange fnPasswordChange;
-    dpiOciFnType__ping fnPing;
-    dpiOciFnType__rawAssignBytes fnRawAssignBytes;
-    dpiOciFnType__rawPtr fnRawPtr;
-    dpiOciFnType__rawResize fnRawResize;
-    dpiOciFnType__rawSize fnRawSize;
-    dpiOciFnType__rowidToChar fnRowidToChar;
-    dpiOciFnType__serverAttach fnServerAttach;
-    dpiOciFnType__serverDetach fnServerDetach;
-    dpiOciFnType__serverRelease fnServerRelease;
-    dpiOciFnType__serverRelease2 fnServerRelease2;
-    dpiOciFnType__sessionBegin fnSessionBegin;
-    dpiOciFnType__sessionEnd fnSessionEnd;
-    dpiOciFnType__sessionGet fnSessionGet;
-    dpiOciFnType__sessionPoolCreate fnSessionPoolCreate;
-    dpiOciFnType__sessionPoolDestroy fnSessionPoolDestroy;
-    dpiOciFnType__sessionRelease fnSessionRelease;
-    dpiOciFnType__shardingKeyColumnAdd fnShardingKeyColumnAdd;
-    dpiOciFnType__stmtExecute fnStmtExecute;
-    dpiOciFnType__sodaBulkInsert fnSodaBulkInsert;
-    dpiOciFnType__sodaBulkInsertAndGet fnSodaBulkInsertAndGet;
-    dpiOciFnType__sodaBulkInsertAndGetWithOpts fnSodaBulkInsertAndGetWithOpts;
-    dpiOciFnType__sodaCollCreateWithMetadata fnSodaCollCreateWithMetadata;
-    dpiOciFnType__sodaCollDrop fnSodaCollDrop;
-    dpiOciFnType__sodaCollGetNext fnSodaCollGetNext;
-    dpiOciFnType__sodaCollList fnSodaCollList;
-    dpiOciFnType__sodaCollOpen fnSodaCollOpen;
-    dpiOciFnType__sodaCollTruncate fnSodaCollTruncate;
-    dpiOciFnType__sodaDataGuideGet fnSodaDataGuideGet;
-    dpiOciFnType__sodaDocCount fnSodaDocCount;
-    dpiOciFnType__sodaDocGetNext fnSodaDocGetNext;
-    dpiOciFnType__sodaFind fnSodaFind;
-    dpiOciFnType__sodaFindOne fnSodaFindOne;
-    dpiOciFnType__sodaIndexCreate fnSodaIndexCreate;
-    dpiOciFnType__sodaIndexDrop fnSodaIndexDrop;
-    dpiOciFnType__sodaIndexList fnSodaIndexList;
-    dpiOciFnType__sodaInsert fnSodaInsert;
-    dpiOciFnType__sodaInsertAndGet fnSodaInsertAndGet;
-    dpiOciFnType__sodaInsertAndGetWithOpts fnSodaInsertAndGetWithOpts;
-    dpiOciFnType__sodaOperKeysSet fnSodaOperKeysSet;
-    dpiOciFnType__sodaRemove fnSodaRemove;
-    dpiOciFnType__sodaReplOne fnSodaReplOne;
-    dpiOciFnType__sodaReplOneAndGet fnSodaReplOneAndGet;
-    dpiOciFnType__sodaSave fnSodaSave;
-    dpiOciFnType__sodaSaveAndGet fnSodaSaveAndGet;
-    dpiOciFnType__sodaSaveAndGetWithOpts fnSodaSaveAndGetWithOpts;
-    dpiOciFnType__stmtFetch2 fnStmtFetch2;
-    dpiOciFnType__stmtGetBindInfo fnStmtGetBindInfo;
-    dpiOciFnType__stmtGetNextResult fnStmtGetNextResult;
-    dpiOciFnType__stmtPrepare2 fnStmtPrepare2;
-    dpiOciFnType__stmtRelease fnStmtRelease;
-    dpiOciFnType__stringAssignText fnStringAssignText;
-    dpiOciFnType__stringPtr fnStringPtr;
-    dpiOciFnType__stringResize fnStringResize;
-    dpiOciFnType__stringSize fnStringSize;
-    dpiOciFnType__subscriptionRegister fnSubscriptionRegister;
-    dpiOciFnType__subscriptionUnRegister fnSubscriptionUnRegister;
-    dpiOciFnType__tableDelete fnTableDelete;
-    dpiOciFnType__tableExists fnTableExists;
-    dpiOciFnType__tableFirst fnTableFirst;
-    dpiOciFnType__tableLast fnTableLast;
-    dpiOciFnType__tableNext fnTableNext;
-    dpiOciFnType__tablePrev fnTablePrev;
-    dpiOciFnType__tableSize fnTableSize;
-    dpiOciFnType__threadKeyDestroy fnThreadKeyDestroy;
-    dpiOciFnType__threadKeyGet fnThreadKeyGet;
-    dpiOciFnType__threadKeyInit fnThreadKeyInit;
-    dpiOciFnType__threadKeySet fnThreadKeySet;
-    dpiOciFnType__threadProcessInit fnThreadProcessInit;
-    dpiOciFnType__transCommit fnTransCommit;
-    dpiOciFnType__transDetach fnTransDetach;
-    dpiOciFnType__transForget fnTransForget;
-    dpiOciFnType__transPrepare fnTransPrepare;
-    dpiOciFnType__transRollback fnTransRollback;
-    dpiOciFnType__transStart fnTransStart;
-    dpiOciFnType__typeByFullName fnTypeByFullName;
-    dpiOciFnType__typeByName fnTypeByName;
-    dpiOciFnType__vectorFromArray fnVectorFromArray;
-    dpiOciFnType__vectorFromSparseArray fnVectorFromSparseArray;
-    dpiOciFnType__vectorToArray fnVectorToArray;
-    dpiOciFnType__vectorToSparseArray fnVectorToSparseArray;
+    ob_dpiOciFnType__aqDeq fnAqDeq;
+    ob_dpiOciFnType__aqDeqArray fnAqDeqArray;
+    ob_dpiOciFnType__aqEnq fnAqEnq;
+    ob_dpiOciFnType__aqEnqArray fnAqEnqArray;
+    ob_dpiOciFnType__arrayDescriptorAlloc fnArrayDescriptorAlloc;
+    ob_dpiOciFnType__arrayDescriptorFree fnArrayDescriptorFree;
+    ob_dpiOciFnType__attrGet fnAttrGet;
+    ob_dpiOciFnType__attrSet fnAttrSet;
+    ob_dpiOciFnType__bindByName fnBindByName;
+    ob_dpiOciFnType__bindByName2 fnBindByName2;
+    ob_dpiOciFnType__bindByPos fnBindByPos;
+    ob_dpiOciFnType__bindByPos2 fnBindByPos2;
+    ob_dpiOciFnType__bindDynamic fnBindDynamic;
+    ob_dpiOciFnType__bindObject fnBindObject;
+    ob_dpiOciFnType__break fnBreak;
+    ob_dpiOciFnType__clientVersion fnClientVersion;
+    ob_dpiOciFnType__collAppend fnCollAppend;
+    ob_dpiOciFnType__collAssignElem fnCollAssignElem;
+    ob_dpiOciFnType__collGetElem fnCollGetElem;
+    ob_dpiOciFnType__collSize fnCollSize;
+    ob_dpiOciFnType__collTrim fnCollTrim;
+    ob_dpiOciFnType__contextGetValue fnContextGetValue;
+    ob_dpiOciFnType__contextSetValue fnContextSetValue;
+    ob_dpiOciFnType__dateTimeConstruct fnDateTimeConstruct;
+    ob_dpiOciFnType__dateTimeConvert fnDateTimeConvert;
+    ob_dpiOciFnType__dateTimeGetDate fnDateTimeGetDate;
+    ob_dpiOciFnType__dateTimeGetTime fnDateTimeGetTime;
+    ob_dpiOciFnType__dateTimeGetTimeZoneOffset fnDateTimeGetTimeZoneOffset;
+    ob_dpiOciFnType__dateTimeIntervalAdd fnDateTimeIntervalAdd;
+    ob_dpiOciFnType__dateTimeSubtract fnDateTimeSubtract;
+    ob_dpiOciFnType__dbShutdown fnDbShutdown;
+    ob_dpiOciFnType__dbStartup fnDbStartup;
+    ob_dpiOciFnType__defineByPos fnDefineByPos;
+    ob_dpiOciFnType__defineByPos2 fnDefineByPos2;
+    ob_dpiOciFnType__defineDynamic fnDefineDynamic;
+    ob_dpiOciFnType__defineObject fnDefineObject;
+    ob_dpiOciFnType__describeAny fnDescribeAny;
+    ob_dpiOciFnType__descriptorAlloc fnDescriptorAlloc;
+    ob_dpiOciFnType__descriptorFree fnDescriptorFree;
+    ob_dpiOciFnType__envNlsCreate fnEnvNlsCreate;
+    ob_dpiOciFnType__errorGet fnErrorGet;
+    ob_dpiOciFnType__handleAlloc fnHandleAlloc;
+    ob_dpiOciFnType__handleFree fnHandleFree;
+    ob_dpiOciFnType__intervalGetDaySecond fnIntervalGetDaySecond;
+    ob_dpiOciFnType__intervalGetYearMonth fnIntervalGetYearMonth;
+    ob_dpiOciFnType__intervalSetDaySecond fnIntervalSetDaySecond;
+    ob_dpiOciFnType__intervalSetYearMonth fnIntervalSetYearMonth;
+    ob_dpiOciFnType__jsonDomDocGet fnJsonDomDocGet;
+    ob_dpiOciFnType__jsonTextBufferParse fnJsonTextBufferParse;
+    ob_dpiOciFnType__lobClose fnLobClose;
+    ob_dpiOciFnType__lobCreateTemporary fnLobCreateTemporary;
+    ob_dpiOciFnType__lobFileExists fnLobFileExists;
+    ob_dpiOciFnType__lobFileGetName fnLobFileGetName;
+    ob_dpiOciFnType__lobFileSetName fnLobFileSetName;
+    ob_dpiOciFnType__lobFreeTemporary fnLobFreeTemporary;
+    ob_dpiOciFnType__lobGetChunkSize fnLobGetChunkSize;
+    ob_dpiOciFnType__lobGetLength2 fnLobGetLength2;
+    ob_dpiOciFnType__lobIsOpen fnLobIsOpen;
+    ob_dpiOciFnType__lobIsTemporary fnLobIsTemporary;
+    ob_dpiOciFnType__lobLocatorAssign fnLobLocatorAssign;
+    ob_dpiOciFnType__lobOpen fnLobOpen;
+    ob_dpiOciFnType__lobRead2 fnLobRead2;
+    ob_dpiOciFnType__lobTrim2 fnLobTrim2;
+    ob_dpiOciFnType__lobWrite2 fnLobWrite2;
+    ob_dpiOciFnType__memoryAlloc fnMemoryAlloc;
+    ob_dpiOciFnType__memoryFree fnMemoryFree;
+    ob_dpiOciFnType__nlsCharSetConvert fnNlsCharSetConvert;
+    ob_dpiOciFnType__nlsCharSetIdToName fnNlsCharSetIdToName;
+    ob_dpiOciFnType__nlsCharSetNameToId fnNlsCharSetNameToId;
+    ob_dpiOciFnType__nlsEnvironmentVariableGet fnNlsEnvironmentVariableGet;
+    ob_dpiOciFnType__nlsNameMap fnNlsNameMap;
+    ob_dpiOciFnType__nlsNumericInfoGet fnNlsNumericInfoGet;
+    ob_dpiOciFnType__numberFromInt fnNumberFromInt;
+    ob_dpiOciFnType__numberFromReal fnNumberFromReal;
+    ob_dpiOciFnType__numberToInt fnNumberToInt;
+    ob_dpiOciFnType__numberToReal fnNumberToReal;
+    ob_dpiOciFnType__objectCopy fnObjectCopy;
+    ob_dpiOciFnType__objectFree fnObjectFree;
+    ob_dpiOciFnType__objectGetAttr fnObjectGetAttr;
+    ob_dpiOciFnType__objectGetInd fnObjectGetInd;
+    ob_dpiOciFnType__objectNew fnObjectNew;
+    ob_dpiOciFnType__objectPin fnObjectPin;
+    ob_dpiOciFnType__objectSetAttr fnObjectSetAttr;
+    ob_dpiOciFnType__paramGet fnParamGet;
+    ob_dpiOciFnType__passwordChange fnPasswordChange;
+    ob_dpiOciFnType__ping fnPing;
+    ob_dpiOciFnType__rawAssignBytes fnRawAssignBytes;
+    ob_dpiOciFnType__rawPtr fnRawPtr;
+    ob_dpiOciFnType__rawResize fnRawResize;
+    ob_dpiOciFnType__rawSize fnRawSize;
+    ob_dpiOciFnType__rowidToChar fnRowidToChar;
+    ob_dpiOciFnType__serverAttach fnServerAttach;
+    ob_dpiOciFnType__serverDetach fnServerDetach;
+    ob_dpiOciFnType__serverRelease fnServerRelease;
+    ob_dpiOciFnType__serverRelease2 fnServerRelease2;
+    ob_dpiOciFnType__sessionBegin fnSessionBegin;
+    ob_dpiOciFnType__sessionEnd fnSessionEnd;
+    ob_dpiOciFnType__sessionGet fnSessionGet;
+    ob_dpiOciFnType__sessionPoolCreate fnSessionPoolCreate;
+    ob_dpiOciFnType__sessionPoolDestroy fnSessionPoolDestroy;
+    ob_dpiOciFnType__sessionRelease fnSessionRelease;
+    ob_dpiOciFnType__shardingKeyColumnAdd fnShardingKeyColumnAdd;
+    ob_dpiOciFnType__stmtExecute fnStmtExecute;
+    ob_dpiOciFnType__sodaBulkInsert fnSodaBulkInsert;
+    ob_dpiOciFnType__sodaBulkInsertAndGet fnSodaBulkInsertAndGet;
+    ob_dpiOciFnType__sodaBulkInsertAndGetWithOpts fnSodaBulkInsertAndGetWithOpts;
+    ob_dpiOciFnType__sodaCollCreateWithMetadata fnSodaCollCreateWithMetadata;
+    ob_dpiOciFnType__sodaCollDrop fnSodaCollDrop;
+    ob_dpiOciFnType__sodaCollGetNext fnSodaCollGetNext;
+    ob_dpiOciFnType__sodaCollList fnSodaCollList;
+    ob_dpiOciFnType__sodaCollOpen fnSodaCollOpen;
+    ob_dpiOciFnType__sodaCollTruncate fnSodaCollTruncate;
+    ob_dpiOciFnType__sodaDataGuideGet fnSodaDataGuideGet;
+    ob_dpiOciFnType__sodaDocCount fnSodaDocCount;
+    ob_dpiOciFnType__sodaDocGetNext fnSodaDocGetNext;
+    ob_dpiOciFnType__sodaFind fnSodaFind;
+    ob_dpiOciFnType__sodaFindOne fnSodaFindOne;
+    ob_dpiOciFnType__sodaIndexCreate fnSodaIndexCreate;
+    ob_dpiOciFnType__sodaIndexDrop fnSodaIndexDrop;
+    ob_dpiOciFnType__sodaIndexList fnSodaIndexList;
+    ob_dpiOciFnType__sodaInsert fnSodaInsert;
+    ob_dpiOciFnType__sodaInsertAndGet fnSodaInsertAndGet;
+    ob_dpiOciFnType__sodaInsertAndGetWithOpts fnSodaInsertAndGetWithOpts;
+    ob_dpiOciFnType__sodaOperKeysSet fnSodaOperKeysSet;
+    ob_dpiOciFnType__sodaRemove fnSodaRemove;
+    ob_dpiOciFnType__sodaReplOne fnSodaReplOne;
+    ob_dpiOciFnType__sodaReplOneAndGet fnSodaReplOneAndGet;
+    ob_dpiOciFnType__sodaSave fnSodaSave;
+    ob_dpiOciFnType__sodaSaveAndGet fnSodaSaveAndGet;
+    ob_dpiOciFnType__sodaSaveAndGetWithOpts fnSodaSaveAndGetWithOpts;
+    ob_dpiOciFnType__stmtFetch2 fnStmtFetch2;
+    ob_dpiOciFnType__stmtGetBindInfo fnStmtGetBindInfo;
+    ob_dpiOciFnType__stmtGetNextResult fnStmtGetNextResult;
+    ob_dpiOciFnType__stmtPrepare2 fnStmtPrepare2;
+    ob_dpiOciFnType__stmtRelease fnStmtRelease;
+    ob_dpiOciFnType__stringAssignText fnStringAssignText;
+    ob_dpiOciFnType__stringPtr fnStringPtr;
+    ob_dpiOciFnType__stringResize fnStringResize;
+    ob_dpiOciFnType__stringSize fnStringSize;
+    ob_dpiOciFnType__subscriptionRegister fnSubscriptionRegister;
+    ob_dpiOciFnType__subscriptionUnRegister fnSubscriptionUnRegister;
+    ob_dpiOciFnType__tableDelete fnTableDelete;
+    ob_dpiOciFnType__tableExists fnTableExists;
+    ob_dpiOciFnType__tableFirst fnTableFirst;
+    ob_dpiOciFnType__tableLast fnTableLast;
+    ob_dpiOciFnType__tableNext fnTableNext;
+    ob_dpiOciFnType__tablePrev fnTablePrev;
+    ob_dpiOciFnType__tableSize fnTableSize;
+    ob_dpiOciFnType__threadKeyDestroy fnThreadKeyDestroy;
+    ob_dpiOciFnType__threadKeyGet fnThreadKeyGet;
+    ob_dpiOciFnType__threadKeyInit fnThreadKeyInit;
+    ob_dpiOciFnType__threadKeySet fnThreadKeySet;
+    ob_dpiOciFnType__threadProcessInit fnThreadProcessInit;
+    ob_dpiOciFnType__transCommit fnTransCommit;
+    ob_dpiOciFnType__transDetach fnTransDetach;
+    ob_dpiOciFnType__transForget fnTransForget;
+    ob_dpiOciFnType__transPrepare fnTransPrepare;
+    ob_dpiOciFnType__transRollback fnTransRollback;
+    ob_dpiOciFnType__transStart fnTransStart;
+    ob_dpiOciFnType__typeByFullName fnTypeByFullName;
+    ob_dpiOciFnType__typeByName fnTypeByName;
+    ob_dpiOciFnType__vectorFromArray fnVectorFromArray;
+    ob_dpiOciFnType__vectorFromSparseArray fnVectorFromSparseArray;
+    ob_dpiOciFnType__vectorToArray fnVectorToArray;
+    ob_dpiOciFnType__vectorToSparseArray fnVectorToSparseArray;
 } dpiOciSymbols;
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__allocateMem() [INTERNAL]
+// ob_dpiOci__allocateMem() [INTERNAL]
 //   Wrapper for OCI allocation of memory, only used when debugging memory
 // allocation.
 //-----------------------------------------------------------------------------
-static void *dpiOci__allocateMem(UNUSED void *unused, size_t size)
+static void *ob_dpiOci__allocateMem(UNUSED void *unused, size_t size)
 {
     void *ptr;
 
     ptr = malloc(size);
-    dpiDebug__print("OCI allocated %u bytes at %p\n", size, ptr);
+    ob_dpiDebug__print("OCI allocated %u bytes at %p\n", size, ptr);
     return ptr;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__aqDeq() [INTERNAL]
+// ob_dpiOci__aqDeq() [INTERNAL]
 //   Wrapper for OCIAQDeq().
 //-----------------------------------------------------------------------------
-int dpiOci__aqDeq(dpiConn *conn, const char *queueName, void *options,
+int ob_dpiOci__aqDeq(dpiConn *conn, const char *queueName, void *options,
         void *msgProps, void *payloadType, void **payload, void **payloadInd,
         void **msgId, dpiError *error)
 {
@@ -738,10 +741,10 @@ int dpiOci__aqDeq(dpiConn *conn, const char *queueName, void *options,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__aqDeqArray() [INTERNAL]
+// ob_dpiOci__aqDeqArray() [INTERNAL]
 //   Wrapper for OCIAQDeqArray().
 //-----------------------------------------------------------------------------
-int dpiOci__aqDeqArray(dpiConn *conn, const char *queueName, void *options,
+int ob_dpiOci__aqDeqArray(dpiConn *conn, const char *queueName, void *options,
         uint32_t *numIters, void **msgProps, void *payloadType, void **payload,
         void **payloadInd, void **msgId, dpiError *error)
 {
@@ -757,10 +760,10 @@ int dpiOci__aqDeqArray(dpiConn *conn, const char *queueName, void *options,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__aqEnq() [INTERNAL]
+// ob_dpiOci__aqEnq() [INTERNAL]
 //   Wrapper for OCIAQEnq().
 //-----------------------------------------------------------------------------
-int dpiOci__aqEnq(dpiConn *conn, const char *queueName, void *options,
+int ob_dpiOci__aqEnq(dpiConn *conn, const char *queueName, void *options,
         void *msgProps, void *payloadType, void **payload, void **payloadInd,
         void **msgId, dpiError *error)
 {
@@ -776,10 +779,10 @@ int dpiOci__aqEnq(dpiConn *conn, const char *queueName, void *options,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__aqEnqArray() [INTERNAL]
+// ob_dpiOci__aqEnqArray() [INTERNAL]
 //   Wrapper for OCIAQEnqArray().
 //-----------------------------------------------------------------------------
-int dpiOci__aqEnqArray(dpiConn *conn, const char *queueName, void *options,
+int ob_dpiOci__aqEnqArray(dpiConn *conn, const char *queueName, void *options,
         uint32_t *numIters, void **msgProps, void *payloadType, void **payload,
         void **payloadInd, void **msgId, dpiError *error)
 {
@@ -795,10 +798,10 @@ int dpiOci__aqEnqArray(dpiConn *conn, const char *queueName, void *options,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__arrayDescriptorAlloc() [INTERNAL]
+// ob_dpiOci__arrayDescriptorAlloc() [INTERNAL]
 //   Wrapper for OCIArrayDescriptorAlloc().
 //-----------------------------------------------------------------------------
-int dpiOci__arrayDescriptorAlloc(void *envHandle, void **handle,
+int ob_dpiOci__arrayDescriptorAlloc(void *envHandle, void **handle,
         uint32_t handleType, uint32_t arraySize, dpiError *error)
 {
     int status;
@@ -812,10 +815,10 @@ int dpiOci__arrayDescriptorAlloc(void *envHandle, void **handle,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__arrayDescriptorFree() [INTERNAL]
+// ob_dpiOci__arrayDescriptorFree() [INTERNAL]
 //   Wrapper for OCIArrayDescriptorFree().
 //-----------------------------------------------------------------------------
-int dpiOci__arrayDescriptorFree(void **handle, uint32_t handleType)
+int ob_dpiOci__arrayDescriptorFree(void **handle, uint32_t handleType)
 {
     dpiError *error = NULL;
     int status;
@@ -824,18 +827,18 @@ int dpiOci__arrayDescriptorFree(void **handle, uint32_t handleType)
             dpiOciSymbols.fnArrayDescriptorFree)
     status = (*dpiOciSymbols.fnArrayDescriptorFree)(handle, handleType);
     if (status != DPI_OCI_SUCCESS &&
-            dpiDebugLevel & DPI_DEBUG_LEVEL_UNREPORTED_ERRORS)
-        dpiDebug__print("free array descriptors %p, handleType %d failed\n",
+            ob_dpiDebugLevel & DPI_DEBUG_LEVEL_UNREPORTED_ERRORS)
+        ob_dpiDebug__print("free array descriptors %p, handleType %d failed\n",
                 handle, handleType);
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__attrGet() [INTERNAL]
+// ob_dpiOci__attrGet() [INTERNAL]
 //   Wrapper for OCIAttrGet().
 //-----------------------------------------------------------------------------
-int dpiOci__attrGet(const void *handle, uint32_t handleType, void *ptr,
+int ob_dpiOci__attrGet(const void *handle, uint32_t handleType, void *ptr,
         uint32_t *size, uint32_t attribute, const char *action,
         dpiError *error)
 {
@@ -855,10 +858,10 @@ int dpiOci__attrGet(const void *handle, uint32_t handleType, void *ptr,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__attrSet() [INTERNAL]
+// ob_dpiOci__attrSet() [INTERNAL]
 //   Wrapper for OCIAttrSet().
 //-----------------------------------------------------------------------------
-int dpiOci__attrSet(void *handle, uint32_t handleType, void *ptr,
+int ob_dpiOci__attrSet(void *handle, uint32_t handleType, void *ptr,
         uint32_t size, uint32_t attribute, const char *action, dpiError *error)
 {
     int status;
@@ -873,10 +876,10 @@ int dpiOci__attrSet(void *handle, uint32_t handleType, void *ptr,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__bindByName() [INTERNAL]
+// ob_dpiOci__bindByName() [INTERNAL]
 //   Wrapper for OCIBindByName().
 //-----------------------------------------------------------------------------
-int dpiOci__bindByName(dpiStmt *stmt, void **bindHandle, const char *name,
+int ob_dpiOci__bindByName(dpiStmt *stmt, void **bindHandle, const char *name,
         int32_t nameLength, int dynamicBind, dpiVar *var, dpiError *error)
 {
     uint32_t mode = DPI_OCI_DEFAULT;
@@ -902,10 +905,10 @@ int dpiOci__bindByName(dpiStmt *stmt, void **bindHandle, const char *name,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__bindByName2() [INTERNAL]
+// ob_dpiOci__bindByName2() [INTERNAL]
 //   Wrapper for OCIBindByName2().
 //-----------------------------------------------------------------------------
-int dpiOci__bindByName2(dpiStmt *stmt, void **bindHandle, const char *name,
+int ob_dpiOci__bindByName2(dpiStmt *stmt, void **bindHandle, const char *name,
         int32_t nameLength, int dynamicBind, dpiVar *var, dpiError *error)
 {
     uint32_t mode = DPI_OCI_DEFAULT_BIND_MODE(stmt);
@@ -931,10 +934,10 @@ int dpiOci__bindByName2(dpiStmt *stmt, void **bindHandle, const char *name,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__bindByPos() [INTERNAL]
+// ob_dpiOci__bindByPos() [INTERNAL]
 //   Wrapper for OCIBindByPos().
 //-----------------------------------------------------------------------------
-int dpiOci__bindByPos(dpiStmt *stmt, void **bindHandle, uint32_t pos,
+int ob_dpiOci__bindByPos(dpiStmt *stmt, void **bindHandle, uint32_t pos,
         int dynamicBind, dpiVar *var, dpiError *error)
 {
     uint32_t mode = DPI_OCI_DEFAULT;
@@ -959,10 +962,10 @@ int dpiOci__bindByPos(dpiStmt *stmt, void **bindHandle, uint32_t pos,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__bindByPos2() [INTERNAL]
+// ob_dpiOci__bindByPos2() [INTERNAL]
 //   Wrapper for OCIBindByPos2().
 //-----------------------------------------------------------------------------
-int dpiOci__bindByPos2(dpiStmt *stmt, void **bindHandle, uint32_t pos,
+int ob_dpiOci__bindByPos2(dpiStmt *stmt, void **bindHandle, uint32_t pos,
         int dynamicBind, dpiVar *var, dpiError *error)
 {
     uint32_t mode = DPI_OCI_DEFAULT_BIND_MODE(stmt);
@@ -987,27 +990,27 @@ int dpiOci__bindByPos2(dpiStmt *stmt, void **bindHandle, uint32_t pos,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__bindDynamic() [INTERNAL]
+// ob_dpiOci__bindDynamic() [INTERNAL]
 //   Wrapper for OCIBindDynamic().
 //-----------------------------------------------------------------------------
-int dpiOci__bindDynamic(dpiVar *var, void *bindHandle, dpiError *error)
+int ob_dpiOci__bindDynamic(dpiVar *var, void *bindHandle, dpiError *error)
 {
     int status;
 
     DPI_OCI_LOAD_SYMBOL("OCIBindDynamic", dpiOciSymbols.fnBindDynamic)
     DPI_OCI_ENSURE_ERROR_HANDLE(error)
     status = (*dpiOciSymbols.fnBindDynamic)(bindHandle, error->handle, var,
-            (void*) dpiVar__inBindCallback, var,
-            (void*) dpiVar__outBindCallback);
+            (void*) ob_dpiVar__inBindCallback, var,
+            (void*) ob_dpiVar__outBindCallback);
     DPI_OCI_CHECK_AND_RETURN(error, status, var->conn, "bind dynamic");
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__bindObject() [INTERNAL]
+// ob_dpiOci__bindObject() [INTERNAL]
 //   Wrapper for OCIBindObject().
 //-----------------------------------------------------------------------------
-int dpiOci__bindObject(dpiVar *var, void *bindHandle, dpiError *error)
+int ob_dpiOci__bindObject(dpiVar *var, void *bindHandle, dpiError *error)
 {
     int status;
 
@@ -1021,10 +1024,10 @@ int dpiOci__bindObject(dpiVar *var, void *bindHandle, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__break() [INTERNAL]
+// ob_dpiOci__break() [INTERNAL]
 //   Wrapper for OCIBreak().
 //-----------------------------------------------------------------------------
-int dpiOci__break(dpiConn *conn, dpiError *error)
+int ob_dpiOci__break(dpiConn *conn, dpiError *error)
 {
     int status;
 
@@ -1036,10 +1039,10 @@ int dpiOci__break(dpiConn *conn, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__collAppend() [INTERNAL]
+// ob_dpiOci__collAppend() [INTERNAL]
 //   Wrapper for OCICollAppend().
 //-----------------------------------------------------------------------------
-int dpiOci__collAppend(dpiConn *conn, const void *elem, const void *elemInd,
+int ob_dpiOci__collAppend(dpiConn *conn, const void *elem, const void *elemInd,
         void *coll, dpiError *error)
 {
     int status;
@@ -1053,10 +1056,10 @@ int dpiOci__collAppend(dpiConn *conn, const void *elem, const void *elemInd,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__collAssignElem() [INTERNAL]
+// ob_dpiOci__collAssignElem() [INTERNAL]
 //   Wrapper for OCICollAssignElem().
 //-----------------------------------------------------------------------------
-int dpiOci__collAssignElem(dpiConn *conn, int32_t index, const void *elem,
+int ob_dpiOci__collAssignElem(dpiConn *conn, int32_t index, const void *elem,
         const void *elemInd, void *coll, dpiError *error)
 {
     int status;
@@ -1070,10 +1073,10 @@ int dpiOci__collAssignElem(dpiConn *conn, int32_t index, const void *elem,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__collGetElem() [INTERNAL]
+// ob_dpiOci__collGetElem() [INTERNAL]
 //   Wrapper for OCICollGetElem().
 //-----------------------------------------------------------------------------
-int dpiOci__collGetElem(dpiConn *conn, void *coll, int32_t index, int *exists,
+int ob_dpiOci__collGetElem(dpiConn *conn, void *coll, int32_t index, int *exists,
         void **elem, void **elemInd, dpiError *error)
 {
     int status;
@@ -1087,10 +1090,10 @@ int dpiOci__collGetElem(dpiConn *conn, void *coll, int32_t index, int *exists,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__collSize() [INTERNAL]
+// ob_dpiOci__collSize() [INTERNAL]
 //   Wrapper for OCICollSize().
 //-----------------------------------------------------------------------------
-int dpiOci__collSize(dpiConn *conn, void *coll, int32_t *size, dpiError *error)
+int ob_dpiOci__collSize(dpiConn *conn, void *coll, int32_t *size, dpiError *error)
 {
     int status;
 
@@ -1103,10 +1106,10 @@ int dpiOci__collSize(dpiConn *conn, void *coll, int32_t *size, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__collTrim() [INTERNAL]
+// ob_dpiOci__collTrim() [INTERNAL]
 //   Wrapper for OCICollTrim().
 //-----------------------------------------------------------------------------
-int dpiOci__collTrim(dpiConn *conn, uint32_t numToTrim, void *coll,
+int ob_dpiOci__collTrim(dpiConn *conn, uint32_t numToTrim, void *coll,
         dpiError *error)
 {
     int status;
@@ -1120,10 +1123,10 @@ int dpiOci__collTrim(dpiConn *conn, uint32_t numToTrim, void *coll,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__contextGetValue() [INTERNAL]
+// ob_dpiOci__contextGetValue() [INTERNAL]
 //   Wrapper for OCIContextGetValue().
 //-----------------------------------------------------------------------------
-int dpiOci__contextGetValue(dpiConn *conn, const char *key, uint32_t keyLength,
+int ob_dpiOci__contextGetValue(dpiConn *conn, const char *key, uint32_t keyLength,
         void **value, int checkError, dpiError *error)
 {
     int status;
@@ -1139,10 +1142,10 @@ int dpiOci__contextGetValue(dpiConn *conn, const char *key, uint32_t keyLength,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__contextSetValue() [INTERNAL]
+// ob_dpiOci__contextSetValue() [INTERNAL]
 //   Wrapper for OCIContextSetValue().
 //-----------------------------------------------------------------------------
-int dpiOci__contextSetValue(dpiConn *conn, const char *key, uint32_t keyLength,
+int ob_dpiOci__contextSetValue(dpiConn *conn, const char *key, uint32_t keyLength,
         void *value, int checkError, dpiError *error)
 {
     int status;
@@ -1159,10 +1162,10 @@ int dpiOci__contextSetValue(dpiConn *conn, const char *key, uint32_t keyLength,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__dateTimeConstruct() [INTERNAL]
+// ob_dpiOci__dateTimeConstruct() [INTERNAL]
 //   Wrapper for OCIDateTimeConstruct().
 //-----------------------------------------------------------------------------
-int dpiOci__dateTimeConstruct(void *envHandle, void *handle, int16_t year,
+int ob_dpiOci__dateTimeConstruct(void *envHandle, void *handle, int16_t year,
         uint8_t month, uint8_t day, uint8_t hour, uint8_t minute,
         uint8_t second, uint32_t fsecond, const char *tz, size_t tzLength,
         dpiError *error)
@@ -1180,10 +1183,10 @@ int dpiOci__dateTimeConstruct(void *envHandle, void *handle, int16_t year,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__dateTimeConvert() [INTERNAL]
+// ob_dpiOci__dateTimeConvert() [INTERNAL]
 //   Wrapper for OCIDateTimeConvert().
 //-----------------------------------------------------------------------------
-int dpiOci__dateTimeConvert(void *envHandle, void *inDate, void *outDate,
+int ob_dpiOci__dateTimeConvert(void *envHandle, void *inDate, void *outDate,
         dpiError *error)
 {
     int status;
@@ -1197,10 +1200,10 @@ int dpiOci__dateTimeConvert(void *envHandle, void *inDate, void *outDate,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__dateTimeGetDate() [INTERNAL]
+// ob_dpiOci__dateTimeGetDate() [INTERNAL]
 //   Wrapper for OCIDateTimeGetDate().
 //-----------------------------------------------------------------------------
-int dpiOci__dateTimeGetDate(void *envHandle, void *handle, int16_t *year,
+int ob_dpiOci__dateTimeGetDate(void *envHandle, void *handle, int16_t *year,
         uint8_t *month, uint8_t *day, dpiError *error)
 {
     int status;
@@ -1214,10 +1217,10 @@ int dpiOci__dateTimeGetDate(void *envHandle, void *handle, int16_t *year,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__dateTimeGetTime() [INTERNAL]
+// ob_dpiOci__dateTimeGetTime() [INTERNAL]
 //   Wrapper for OCIDateTimeGetTime().
 //-----------------------------------------------------------------------------
-int dpiOci__dateTimeGetTime(void *envHandle, void *handle, uint8_t *hour,
+int ob_dpiOci__dateTimeGetTime(void *envHandle, void *handle, uint8_t *hour,
         uint8_t *minute, uint8_t *second, uint32_t *fsecond, dpiError *error)
 {
     int status;
@@ -1231,10 +1234,10 @@ int dpiOci__dateTimeGetTime(void *envHandle, void *handle, uint8_t *hour,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__dateTimeGetTimeZoneOffset() [INTERNAL]
+// ob_dpiOci__dateTimeGetTimeZoneOffset() [INTERNAL]
 //   Wrapper for OCIDateTimeGetTimeZoneOffset().
 //-----------------------------------------------------------------------------
-int dpiOci__dateTimeGetTimeZoneOffset(void *envHandle, void *handle,
+int ob_dpiOci__dateTimeGetTimeZoneOffset(void *envHandle, void *handle,
         int8_t *tzHourOffset, int8_t *tzMinuteOffset, dpiError *error)
 {
     int status;
@@ -1249,10 +1252,10 @@ int dpiOci__dateTimeGetTimeZoneOffset(void *envHandle, void *handle,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__dateTimeIntervalAdd() [INTERNAL]
+// ob_dpiOci__dateTimeIntervalAdd() [INTERNAL]
 //   Wrapper for OCIDateTimeIntervalAdd().
 //-----------------------------------------------------------------------------
-int dpiOci__dateTimeIntervalAdd(void *envHandle, void *handle, void *interval,
+int ob_dpiOci__dateTimeIntervalAdd(void *envHandle, void *handle, void *interval,
         void *outHandle, dpiError *error)
 {
     int status;
@@ -1267,10 +1270,10 @@ int dpiOci__dateTimeIntervalAdd(void *envHandle, void *handle, void *interval,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__dateTimeSubtract() [INTERNAL]
+// ob_dpiOci__dateTimeSubtract() [INTERNAL]
 //   Wrapper for OCIDateTimeSubtract().
 //-----------------------------------------------------------------------------
-int dpiOci__dateTimeSubtract(void *envHandle, void *handle1, void *handle2,
+int ob_dpiOci__dateTimeSubtract(void *envHandle, void *handle1, void *handle2,
         void *interval, dpiError *error)
 {
     int status;
@@ -1285,10 +1288,10 @@ int dpiOci__dateTimeSubtract(void *envHandle, void *handle1, void *handle2,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__dbShutdown() [INTERNAL]
+// ob_dpiOci__dbShutdown() [INTERNAL]
 //   Wrapper for OCIDBShutdown().
 //-----------------------------------------------------------------------------
-int dpiOci__dbShutdown(dpiConn *conn, uint32_t mode, dpiError *error)
+int ob_dpiOci__dbShutdown(dpiConn *conn, uint32_t mode, dpiError *error)
 {
     int status;
 
@@ -1301,10 +1304,10 @@ int dpiOci__dbShutdown(dpiConn *conn, uint32_t mode, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__dbStartup() [INTERNAL]
+// ob_dpiOci__dbStartup() [INTERNAL]
 //   Wrapper for OCIDBStartup().
 //-----------------------------------------------------------------------------
-int dpiOci__dbStartup(dpiConn *conn, void *adminHandle, uint32_t mode,
+int ob_dpiOci__dbStartup(dpiConn *conn, void *adminHandle, uint32_t mode,
         dpiError *error)
 {
     int status;
@@ -1318,10 +1321,10 @@ int dpiOci__dbStartup(dpiConn *conn, void *adminHandle, uint32_t mode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__defineByPos() [INTERNAL]
+// ob_dpiOci__defineByPos() [INTERNAL]
 //   Wrapper for OCIDefineByPos().
 //-----------------------------------------------------------------------------
-int dpiOci__defineByPos(dpiStmt *stmt, void **defineHandle, uint32_t pos,
+int ob_dpiOci__defineByPos(dpiStmt *stmt, void **defineHandle, uint32_t pos,
         dpiVar *var, dpiError *error)
 {
     int status;
@@ -1342,10 +1345,10 @@ int dpiOci__defineByPos(dpiStmt *stmt, void **defineHandle, uint32_t pos,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__defineByPos2() [INTERNAL]
+// ob_dpiOci__defineByPos2() [INTERNAL]
 //   Wrapper for OCIDefineByPos2().
 //-----------------------------------------------------------------------------
-int dpiOci__defineByPos2(dpiStmt *stmt, void **defineHandle, uint32_t pos,
+int ob_dpiOci__defineByPos2(dpiStmt *stmt, void **defineHandle, uint32_t pos,
         dpiVar *var, dpiError *error)
 {
     int status;
@@ -1366,26 +1369,26 @@ int dpiOci__defineByPos2(dpiStmt *stmt, void **defineHandle, uint32_t pos,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__defineDynamic() [INTERNAL]
+// ob_dpiOci__defineDynamic() [INTERNAL]
 //   Wrapper for OCIDefineDynamic().
 //-----------------------------------------------------------------------------
-int dpiOci__defineDynamic(dpiVar *var, void *defineHandle, dpiError *error)
+int ob_dpiOci__defineDynamic(dpiVar *var, void *defineHandle, dpiError *error)
 {
     int status;
 
     DPI_OCI_LOAD_SYMBOL("OCIDefineDynamic", dpiOciSymbols.fnDefineDynamic)
     DPI_OCI_ENSURE_ERROR_HANDLE(error)
     status = (*dpiOciSymbols.fnDefineDynamic)(defineHandle, error->handle, var,
-            (void*) dpiVar__defineCallback);
+            (void*) ob_dpiVar__defineCallback);
     DPI_OCI_CHECK_AND_RETURN(error, status, var->conn, "define dynamic");
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__defineObject() [INTERNAL]
+// ob_dpiOci__defineObject() [INTERNAL]
 //   Wrapper for OCIDefineObject().
 //-----------------------------------------------------------------------------
-int dpiOci__defineObject(dpiVar *var, void *defineHandle, dpiError *error)
+int ob_dpiOci__defineObject(dpiVar *var, void *defineHandle, dpiError *error)
 {
     int status;
 
@@ -1399,10 +1402,10 @@ int dpiOci__defineObject(dpiVar *var, void *defineHandle, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__describeAny() [INTERNAL]
+// ob_dpiOci__describeAny() [INTERNAL]
 //   Wrapper for OCIDescribeAny().
 //-----------------------------------------------------------------------------
-int dpiOci__describeAny(dpiConn *conn, void *obj, uint32_t objLength,
+int ob_dpiOci__describeAny(dpiConn *conn, void *obj, uint32_t objLength,
         uint8_t objType, void *describeHandle, dpiError *error)
 {
     int status;
@@ -1416,10 +1419,10 @@ int dpiOci__describeAny(dpiConn *conn, void *obj, uint32_t objLength,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__descriptorAlloc() [INTERNAL]
+// ob_dpiOci__descriptorAlloc() [INTERNAL]
 //   Wrapper for OCIDescriptorAlloc().
 //-----------------------------------------------------------------------------
-int dpiOci__descriptorAlloc(void *envHandle, void **handle,
+int ob_dpiOci__descriptorAlloc(void *envHandle, void **handle,
         const uint32_t handleType, const char *action, dpiError *error)
 {
     int status;
@@ -1432,10 +1435,10 @@ int dpiOci__descriptorAlloc(void *envHandle, void **handle,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__descriptorFree() [INTERNAL]
+// ob_dpiOci__descriptorFree() [INTERNAL]
 //   Wrapper for OCIDescriptorFree().
 //-----------------------------------------------------------------------------
-int dpiOci__descriptorFree(void *handle, uint32_t handleType)
+int ob_dpiOci__descriptorFree(void *handle, uint32_t handleType)
 {
     dpiError *error = NULL;
     int status;
@@ -1443,18 +1446,18 @@ int dpiOci__descriptorFree(void *handle, uint32_t handleType)
     DPI_OCI_LOAD_SYMBOL("OCIDescriptorFree", dpiOciSymbols.fnDescriptorFree)
     status = (*dpiOciSymbols.fnDescriptorFree)(handle, handleType);
     if (status != DPI_OCI_SUCCESS &&
-            dpiDebugLevel & DPI_DEBUG_LEVEL_UNREPORTED_ERRORS)
-        dpiDebug__print("free descriptor %p, type %d failed\n", handle,
+            ob_dpiDebugLevel & DPI_DEBUG_LEVEL_UNREPORTED_ERRORS)
+        ob_dpiDebug__print("free descriptor %p, type %d failed\n", handle,
                 handleType);
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__envNlsCreate() [INTERNAL]
+// ob_dpiOci__envNlsCreate() [INTERNAL]
 //   Wrapper for OCIEnvNlsCreate().
 //-----------------------------------------------------------------------------
-int dpiOci__envNlsCreate(void **envHandle, uint32_t mode, uint16_t charsetId,
+int ob_dpiOci__envNlsCreate(void **envHandle, uint32_t mode, uint16_t charsetId,
         uint16_t ncharsetId, dpiError *error)
 {
     void *mallocFn = NULL, *reallocFn = NULL, *freeFn = NULL;
@@ -1462,29 +1465,29 @@ int dpiOci__envNlsCreate(void **envHandle, uint32_t mode, uint16_t charsetId,
 
     *envHandle = NULL;
     DPI_OCI_LOAD_SYMBOL("OCIEnvNlsCreate", dpiOciSymbols.fnEnvNlsCreate)
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_MEM) {
-        mallocFn = (void*) dpiOci__allocateMem;
-        reallocFn = (void*) dpiOci__reallocMem;
-        freeFn = (void*) dpiOci__freeMem;
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_MEM) {
+        mallocFn = (void*) ob_dpiOci__allocateMem;
+        reallocFn = (void*) ob_dpiOci__reallocMem;
+        freeFn = (void*) ob_dpiOci__freeMem;
     }
     status = (*dpiOciSymbols.fnEnvNlsCreate)(envHandle, mode, NULL, mallocFn,
             reallocFn, freeFn, 0, NULL, charsetId, ncharsetId);
     if (*envHandle) {
         if (status == DPI_OCI_SUCCESS || status == DPI_OCI_SUCCESS_WITH_INFO)
             return DPI_SUCCESS;
-        if (dpiOci__errorGet(*envHandle, DPI_OCI_HTYPE_ENV, charsetId,
+        if (ob_dpiOci__errorGet(*envHandle, DPI_OCI_HTYPE_ENV, charsetId,
                 "create env", error) == 0)
             return DPI_FAILURE;
     }
-    return dpiError__set(error, "create env", DPI_ERR_CREATE_ENV);
+    return ob_dpiError__set(error, "create env", DPI_ERR_CREATE_ENV);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__errorGet() [INTERNAL]
+// ob_dpiOci__errorGet() [INTERNAL]
 //   Wrapper for OCIErrorGet().
 //-----------------------------------------------------------------------------
-int dpiOci__errorGet(void *handle, uint32_t handleType, uint16_t charsetId,
+int ob_dpiOci__errorGet(void *handle, uint32_t handleType, uint16_t charsetId,
         const char *action, dpiError *error)
 {
     uint32_t i, numChars, bufferChars;
@@ -1497,7 +1500,7 @@ int dpiOci__errorGet(void *handle, uint32_t handleType, uint16_t charsetId,
             error->buffer->message, sizeof(error->buffer->message),
             handleType);
     if (status != DPI_OCI_SUCCESS)
-        return dpiError__set(error, action, DPI_ERR_GET_FAILED);
+        return ob_dpiError__set(error, action, DPI_ERR_GET_FAILED);
     error->buffer->action = action;
 
     // determine length of message since OCI does not provide this information;
@@ -1528,25 +1531,25 @@ int dpiOci__errorGet(void *handle, uint32_t handleType, uint16_t charsetId,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__freeMem() [INTERNAL]
+// ob_dpiOci__freeMem() [INTERNAL]
 //   Wrapper for OCI allocation of memory, only used when debugging memory
 // allocation.
 //-----------------------------------------------------------------------------
-static void dpiOci__freeMem(UNUSED void *unused, void *ptr)
+static void ob_dpiOci__freeMem(UNUSED void *unused, void *ptr)
 {
     char message[40];
 
     (void) sprintf(message, "OCI freed ptr at %p", ptr);
     free(ptr);
-    dpiDebug__print("%s\n", message);
+    ob_dpiDebug__print("%s\n", message);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__handleAlloc() [INTERNAL]
+// ob_dpiOci__handleAlloc() [INTERNAL]
 //   Wrapper for OCIHandleAlloc().
 //-----------------------------------------------------------------------------
-int dpiOci__handleAlloc(void *envHandle, void **handle, uint32_t handleType,
+int ob_dpiOci__handleAlloc(void *envHandle, void **handle, uint32_t handleType,
         const char *action, dpiError *error)
 {
     int status;
@@ -1555,16 +1558,16 @@ int dpiOci__handleAlloc(void *envHandle, void **handle, uint32_t handleType,
     status = (*dpiOciSymbols.fnHandleAlloc)(envHandle, handle, handleType, 0,
             NULL);
     if (handleType == DPI_OCI_HTYPE_ERROR && status != DPI_OCI_SUCCESS)
-        return dpiError__set(error, action, DPI_ERR_NO_MEMORY);
+        return ob_dpiError__set(error, action, DPI_ERR_NO_MEMORY);
     DPI_OCI_CHECK_AND_RETURN(error, status, NULL, action);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__handleFree() [INTERNAL]
+// ob_dpiOci__handleFree() [INTERNAL]
 //   Wrapper for OCIHandleFree().
 //-----------------------------------------------------------------------------
-int dpiOci__handleFree(void *handle, uint32_t handleType)
+int ob_dpiOci__handleFree(void *handle, uint32_t handleType)
 {
     dpiError *error = NULL;
     int status;
@@ -1572,18 +1575,18 @@ int dpiOci__handleFree(void *handle, uint32_t handleType)
     DPI_OCI_LOAD_SYMBOL("OCIHandleFree", dpiOciSymbols.fnHandleFree)
     status = (*dpiOciSymbols.fnHandleFree)(handle, handleType);
     if (status != DPI_OCI_SUCCESS &&
-            dpiDebugLevel & DPI_DEBUG_LEVEL_UNREPORTED_ERRORS)
-        dpiDebug__print("free handle %p, handleType %d failed\n", handle,
+            ob_dpiDebugLevel & DPI_DEBUG_LEVEL_UNREPORTED_ERRORS)
+        ob_dpiDebug__print("free handle %p, handleType %d failed\n", handle,
                 handleType);
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__intervalGetDaySecond() [INTERNAL]
+// ob_dpiOci__intervalGetDaySecond() [INTERNAL]
 //   Wrapper for OCIIntervalGetDaySecond().
 //-----------------------------------------------------------------------------
-int dpiOci__intervalGetDaySecond(void *envHandle, int32_t *day, int32_t *hour,
+int ob_dpiOci__intervalGetDaySecond(void *envHandle, int32_t *day, int32_t *hour,
         int32_t *minute, int32_t *second, int32_t *fsecond,
         const void *interval, dpiError *error)
 {
@@ -1599,10 +1602,10 @@ int dpiOci__intervalGetDaySecond(void *envHandle, int32_t *day, int32_t *hour,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__intervalGetYearMonth() [INTERNAL]
+// ob_dpiOci__intervalGetYearMonth() [INTERNAL]
 //   Wrapper for OCIIntervalGetYearMonth().
 //-----------------------------------------------------------------------------
-int dpiOci__intervalGetYearMonth(void *envHandle, int32_t *year,
+int ob_dpiOci__intervalGetYearMonth(void *envHandle, int32_t *year,
         int32_t *month, const void *interval, dpiError *error)
 {
     int status;
@@ -1617,10 +1620,10 @@ int dpiOci__intervalGetYearMonth(void *envHandle, int32_t *year,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__intervalSetDaySecond() [INTERNAL]
+// ob_dpiOci__intervalSetDaySecond() [INTERNAL]
 //   Wrapper for OCIIntervalSetDaySecond().
 //-----------------------------------------------------------------------------
-int dpiOci__intervalSetDaySecond(void *envHandle, int32_t day, int32_t hour,
+int ob_dpiOci__intervalSetDaySecond(void *envHandle, int32_t day, int32_t hour,
         int32_t minute, int32_t second, int32_t fsecond, void *interval,
         dpiError *error)
 {
@@ -1636,10 +1639,10 @@ int dpiOci__intervalSetDaySecond(void *envHandle, int32_t day, int32_t hour,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__intervalSetYearMonth() [INTERNAL]
+// ob_dpiOci__intervalSetYearMonth() [INTERNAL]
 //   Wrapper for OCIIntervalSetYearMonth().
 //-----------------------------------------------------------------------------
-int dpiOci__intervalSetYearMonth(void *envHandle, int32_t year, int32_t month,
+int ob_dpiOci__intervalSetYearMonth(void *envHandle, int32_t year, int32_t month,
         void *interval, dpiError *error)
 {
     int status;
@@ -1654,10 +1657,10 @@ int dpiOci__intervalSetYearMonth(void *envHandle, int32_t year, int32_t month,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__jsonDomDocGet() [INTERNAL]
+// ob_dpiOci__jsonDomDocGet() [INTERNAL]
 //   Wrapper for OCIJsonDomDocGet().
 //-----------------------------------------------------------------------------
-int dpiOci__jsonDomDocGet(dpiJson *json, dpiJznDomDoc **domDoc,
+int ob_dpiOci__jsonDomDocGet(dpiJson *json, dpiJznDomDoc **domDoc,
         dpiError *error)
 {
     int status;
@@ -1671,10 +1674,10 @@ int dpiOci__jsonDomDocGet(dpiJson *json, dpiJznDomDoc **domDoc,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__jsonTextBufferParse() [INTERNAL]
+// ob_dpiOci__jsonTextBufferParse() [INTERNAL]
 //   Wrapper for OCIJsonTextBufferParse().
 //-----------------------------------------------------------------------------
-int dpiOci__jsonTextBufferParse(dpiJson *json, const char *value,
+int ob_dpiOci__jsonTextBufferParse(dpiJson *json, const char *value,
         uint64_t valueLength, uint32_t flags, dpiError *error)
 {
     int status;
@@ -1693,12 +1696,12 @@ int dpiOci__jsonTextBufferParse(dpiJson *json, const char *value,
 #ifdef _WIN32
 
 //-----------------------------------------------------------------------------
-// dpiOci__checkDllArchitecture() [INTERNAL]
+// ob_dpiOci__checkDllArchitecture() [INTERNAL]
 //   Check the architecture of the specified DLL name and check if it
 // matches the expected architecture. If it does not, the load error is
 // modified and DPI_SUCCESS is returned; otherwise, DPI_FAILURE is returned.
 //-----------------------------------------------------------------------------
-static int dpiOci__checkDllArchitecture(dpiOciLoadLibParams *loadParams,
+static int ob_dpiOci__checkDllArchitecture(dpiOciLoadLibParams *loadParams,
         const char *name, dpiError *error)
 {
     const char *errorFormat = "%s is not the correct architecture";
@@ -1732,7 +1735,7 @@ static int dpiOci__checkDllArchitecture(dpiOciLoadLibParams *loadParams,
 #endif
 
     // store a modified error in the error buffer
-    if (dpiUtils__ensureBuffer(strlen(errorFormat) + strlen(name) + 1,
+    if (ob_dpiUtils__ensureBuffer(strlen(errorFormat) + strlen(name) + 1,
             "allocate wrong architecture load error buffer",
             (void**) &loadParams->errorBuffer,
             &loadParams->errorBufferLength, error) < 0)
@@ -1743,12 +1746,12 @@ static int dpiOci__checkDllArchitecture(dpiOciLoadLibParams *loadParams,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__getEnv() [INTERNAL]
+// ob_dpiOci__getEnv() [INTERNAL]
 //   Gets the value of the environment variable with the given name. If the
 // environment variable is not found, NULL is returned. On Windows, a buffer is
 // required.
 //-----------------------------------------------------------------------------
-static char *dpiOci__getEnv(dpiOciLoadLibParams *loadParams, const char *name)
+static char *ob_dpiOci__getEnv(dpiOciLoadLibParams *loadParams, const char *name)
 {
     DWORD numBytes, actualNumBytes;
 
@@ -1759,7 +1762,7 @@ static char *dpiOci__getEnv(dpiOciLoadLibParams *loadParams, const char *name)
         return NULL;
 
     // ensure the buffer is large enough to receive the contents
-    if (dpiUtils__ensureBuffer(numBytes + 1, "allocate environment variable",
+    if (ob_dpiUtils__ensureBuffer(numBytes + 1, "allocate environment variable",
             (void**) &loadParams->envBuffer, &loadParams->envBufferLength,
             NULL) < 0)
         return NULL;
@@ -1775,11 +1778,11 @@ static char *dpiOci__getEnv(dpiOciLoadLibParams *loadParams, const char *name)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__getModuleDir() [INTERNAL]
+// ob_dpiOci__getModuleDir() [INTERNAL]
 //   Attempts to get the directory of the module from the given function
 // pointer. This is platform specific.
 //-----------------------------------------------------------------------------
-static int dpiOci__getModuleDir(void *fn, const char *moduleType,
+static int ob_dpiOci__getModuleDir(void *fn, const char *moduleType,
         char **nameBuffer, size_t *nameBufferLength, dpiError *error)
 {
     HMODULE module = NULL;
@@ -1794,7 +1797,7 @@ static int dpiOci__getModuleDir(void *fn, const char *moduleType,
     // attempt to get the module name from the module; the size of the buffer
     // is increased as needed as there is no other known way to acquire the
     // full name (MAX_PATH is no longer the maximum path length)
-    if (dpiUtils__ensureBuffer(MAX_PATH, "allocate module name",
+    if (ob_dpiUtils__ensureBuffer(MAX_PATH, "allocate module name",
             (void**) nameBuffer, nameBufferLength, error) < 0) {
         FreeLibrary(module);
         return DPI_FAILURE;
@@ -1804,7 +1807,7 @@ static int dpiOci__getModuleDir(void *fn, const char *moduleType,
                 (DWORD) *nameBufferLength);
         if (result < (DWORD) *nameBufferLength)
             break;
-        if (dpiUtils__ensureBuffer(*nameBufferLength * 2,
+        if (ob_dpiUtils__ensureBuffer(*nameBufferLength * 2,
                 "allocate module name", (void**) nameBuffer, nameBufferLength,
                 error) < 0) {
             FreeLibrary(module);
@@ -1814,8 +1817,8 @@ static int dpiOci__getModuleDir(void *fn, const char *moduleType,
     FreeLibrary(module);
     if (result == 0)
         return DPI_FAILURE;
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
-        dpiDebug__print("%s module name is %s\n", moduleType, *nameBuffer);
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
+        ob_dpiDebug__print("%s module name is %s\n", moduleType, *nameBuffer);
 
     // strip off the module name and only return the directory name
     temp = strrchr(*nameBuffer, '\\');
@@ -1829,7 +1832,7 @@ static int dpiOci__getModuleDir(void *fn, const char *moduleType,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__findAndCheckDllArchitecture() [INTERNAL]
+// ob_dpiOci__findAndCheckDllArchitecture() [INTERNAL]
 //   Attempt to find the specified DLL name using the standard search path and
 // if the DLL can be found but is of the wrong architecture, include the full
 // name of the DLL in the load error. Return DPI_SUCCESS if such a DLL was
@@ -1837,7 +1840,7 @@ static int dpiOci__getModuleDir(void *fn, const char *moduleType,
 // been set); otherwise, return DPI_FAILURE so that the normal load error can
 // be determined.
 //-----------------------------------------------------------------------------
-static int dpiOci__findAndCheckDllArchitecture(dpiOciLoadLibParams *loadParams,
+static int ob_dpiOci__findAndCheckDllArchitecture(dpiOciLoadLibParams *loadParams,
         const char *name, dpiError *error)
 {
     DWORD bufferLength;
@@ -1848,13 +1851,13 @@ static int dpiOci__findAndCheckDllArchitecture(dpiOciLoadLibParams *loadParams,
     // if the name of the DLL is an absolute path, check it directly
     temp = strchr(name, '\\');
     if (temp)
-        return dpiOci__checkDllArchitecture(loadParams, name, error);
+        return ob_dpiOci__checkDllArchitecture(loadParams, name, error);
 
     // check current directory
     bufferLength = GetCurrentDirectory(0, NULL);
     if (bufferLength == 0)
         return DPI_FAILURE;
-    if (dpiUtils__ensureBuffer(strlen(name) + 1 + bufferLength,
+    if (ob_dpiUtils__ensureBuffer(strlen(name) + 1 + bufferLength,
             "allocate load params name buffer (current dir)",
             (void**) &loadParams->nameBuffer,
             &loadParams->nameBufferLength, error) < 0)
@@ -1864,11 +1867,11 @@ static int dpiOci__findAndCheckDllArchitecture(dpiOciLoadLibParams *loadParams,
     temp = loadParams->nameBuffer + strlen(loadParams->nameBuffer);
     *temp++ = '\\';
     strcpy(temp, name);
-    status = dpiOci__checkDllArchitecture(loadParams, loadParams->nameBuffer,
+    status = ob_dpiOci__checkDllArchitecture(loadParams, loadParams->nameBuffer,
             error);
 
     // search PATH
-    path = dpiOci__getEnv(loadParams, "PATH");
+    path = ob_dpiOci__getEnv(loadParams, "PATH");
     if (path) {
         while (status < 0) {
             temp = strchr(path, ';');
@@ -1877,14 +1880,14 @@ static int dpiOci__findAndCheckDllArchitecture(dpiOciLoadLibParams *loadParams,
             } else {
                 length = strlen(path);
             }
-            if (dpiUtils__ensureBuffer(strlen(name) + length + 2,
+            if (ob_dpiUtils__ensureBuffer(strlen(name) + length + 2,
                     "allocate load params name buffer (PATH)",
                     (void**) &loadParams->nameBuffer,
                     &loadParams->nameBufferLength, error) < 0)
                 return DPI_FAILURE;
             (void) sprintf(loadParams->nameBuffer, "%.*s\\%s", (int) length,
                     path, name);
-            status = dpiOci__checkDllArchitecture(loadParams,
+            status = ob_dpiOci__checkDllArchitecture(loadParams,
                     loadParams->nameBuffer, error);
             if (!temp)
                 break;
@@ -1897,13 +1900,13 @@ static int dpiOci__findAndCheckDllArchitecture(dpiOciLoadLibParams *loadParams,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__loadLibWithName() [INTERNAL]
+// ob_dpiOci__loadLibWithName() [INTERNAL]
 //   Platform specific method of loading the library with a specific name.
 // Load errors are stored in the temporary load error buffer and do not cause
 // the function to fail; other errors (such as memory allocation errors) will
 // result in failure.
 //-----------------------------------------------------------------------------
-static int dpiOci__loadLibWithName(dpiOciLoadLibParams *loadParams,
+static int ob_dpiOci__loadLibWithName(dpiOciLoadLibParams *loadParams,
         const char *name, dpiError *error)
 {
     DWORD errorNum;
@@ -1917,11 +1920,11 @@ static int dpiOci__loadLibWithName(dpiOciLoadLibParams *loadParams,
     // loaded and use that information if it can be found
     errorNum = GetLastError();
     if (errorNum == ERROR_BAD_EXE_FORMAT &&
-            dpiOci__findAndCheckDllArchitecture(loadParams, name, error) == 0)
+            ob_dpiOci__findAndCheckDllArchitecture(loadParams, name, error) == 0)
         return DPI_SUCCESS;
 
     // otherwise, attempt to get the error message
-    return dpiUtils__getWindowsError(errorNum, &loadParams->errorBuffer,
+    return ob_dpiUtils__getWindowsError(errorNum, &loadParams->errorBuffer,
             &loadParams->errorBufferLength, error);
 }
 
@@ -1930,11 +1933,11 @@ static int dpiOci__loadLibWithName(dpiOciLoadLibParams *loadParams,
 #else
 
 //-----------------------------------------------------------------------------
-// dpiOci__getEnv() [INTERNAL]
+// ob_dpiOci__getEnv() [INTERNAL]
 //   Gets the value of the environment variable with the given name. If the
 // environment variable is not found, NULL is returned.
 //-----------------------------------------------------------------------------
-static char *dpiOci__getEnv(UNUSED dpiOciLoadLibParams *loadParams,
+static char *ob_dpiOci__getEnv(UNUSED dpiOciLoadLibParams *loadParams,
         const char *name)
 {
     return getenv(name);
@@ -1942,11 +1945,11 @@ static char *dpiOci__getEnv(UNUSED dpiOciLoadLibParams *loadParams,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__getModuleDir() [INTERNAL]
+// ob_dpiOci__getModuleDir() [INTERNAL]
 //   Attempts to get the directory of the module from the given function
 // pointer. This is platform specific.
 //-----------------------------------------------------------------------------
-static int dpiOci__getModuleDir(void *fn, const char *moduleType,
+static int ob_dpiOci__getModuleDir(void *fn, const char *moduleType,
         char **nameBuffer, size_t *nameBufferLength, dpiError *error)
 {
 #ifndef _AIX
@@ -1954,10 +1957,10 @@ static int dpiOci__getModuleDir(void *fn, const char *moduleType,
     char *temp;
 
     if (dladdr(fn, &info) != 0) {
-        if (dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
-            dpiDebug__print("%s module name is %s\n", moduleType,
+        if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
+            ob_dpiDebug__print("%s module name is %s\n", moduleType,
                     info.dli_fname);
-        if (dpiUtils__ensureBuffer(strlen(info.dli_fname) + 1,
+        if (ob_dpiUtils__ensureBuffer(strlen(info.dli_fname) + 1,
                 "allocate module name", (void**) nameBuffer,
                 nameBufferLength, error) < 0)
             return DPI_FAILURE;
@@ -1975,13 +1978,13 @@ static int dpiOci__getModuleDir(void *fn, const char *moduleType,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__loadLibWithName() [INTERNAL]
+// ob_dpiOci__loadLibWithName() [INTERNAL]
 //   Platform specific method of loading the library with a specific name.
 // Load errors are stored in the temporary load error buffer and do not cause
 // the function to fail; other errors (such as memory allocation errors) will
 // result in failure.
 //-----------------------------------------------------------------------------
-static int dpiOci__loadLibWithName(dpiOciLoadLibParams *loadParams,
+static int ob_dpiOci__loadLibWithName(dpiOciLoadLibParams *loadParams,
         const char *libName, dpiError *error)
 {
     char *osError;
@@ -1989,7 +1992,7 @@ static int dpiOci__loadLibWithName(dpiOciLoadLibParams *loadParams,
     loadParams->handle = dlopen(libName, RTLD_LAZY);
     if (!loadParams->handle) {
         osError = dlerror();
-        if (dpiUtils__ensureBuffer(strlen(osError) + 1,
+        if (ob_dpiUtils__ensureBuffer(strlen(osError) + 1,
                 "allocate load error buffer",
                 (void**) &loadParams->errorBuffer,
                 &loadParams->errorBufferLength, error) < 0)
@@ -2002,11 +2005,11 @@ static int dpiOci__loadLibWithName(dpiOciLoadLibParams *loadParams,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__loadLibWithOracleHome() [INTERNAL]
+// ob_dpiOci__loadLibWithOracleHome() [INTERNAL]
 //   Attempts to load the library from the lib subdirectory of an Oracle home
 // pointed to by the environemnt variable ORACLE_HOME.
 //-----------------------------------------------------------------------------
-static int dpiOci__loadLibWithOracleHome(dpiOciLoadLibParams *loadParams,
+static int ob_dpiOci__loadLibWithOracleHome(dpiOciLoadLibParams *loadParams,
         dpiError *error)
 {
     char *oracleHome, *oracleHomeLibDir;
@@ -2014,7 +2017,7 @@ static int dpiOci__loadLibWithOracleHome(dpiOciLoadLibParams *loadParams,
     int status;
 
     // check environment variable; if not set, attempt cannot proceed
-    oracleHome = dpiOci__getEnv(loadParams, "ORACLE_HOME");
+    oracleHome = ob_dpiOci__getEnv(loadParams, "OCEANBASE_HOME");
     if (!oracleHome)
         return DPI_FAILURE;
 
@@ -2024,28 +2027,28 @@ static int dpiOci__loadLibWithOracleHome(dpiOciLoadLibParams *loadParams,
         return DPI_FAILURE;
 
     // craft directory to search
-    if (dpiUtils__allocateMemory(1, oracleHomeLength + 5, 0,
+    if (ob_dpiUtils__allocateMemory(1, oracleHomeLength + 5, 0,
             "allocate ORACLE_HOME dir name", (void**) &oracleHomeLibDir,
             error) < 0)
         return DPI_FAILURE;
     (void) sprintf(oracleHomeLibDir, "%s/lib", oracleHome);
 
     // perform search
-    status = dpiOci__loadLibWithDir(loadParams, oracleHomeLibDir,
+    status = ob_dpiOci__loadLibWithDir(loadParams, oracleHomeLibDir,
            strlen(oracleHomeLibDir), 0, error);
-    dpiUtils__freeMemory(oracleHomeLibDir);
+    ob_dpiUtils__freeMemory(oracleHomeLibDir);
     return status;
 }
 
 #endif
 
 //-----------------------------------------------------------------------------
-// dpiOci__calculateConfigDir() [INTERNAL]
+// ob_dpiOci__calculateConfigDir() [INTERNAL]
 //   Attempt to calculate the default configuration directory to use when
 // locating configuration files. If the value cannot be calculated, no errors
 // are raised.
 //-----------------------------------------------------------------------------
-static void dpiOci__calculateConfigDir(dpiOciLoadLibParams *loadParams)
+static void ob_dpiOci__calculateConfigDir(dpiOciLoadLibParams *loadParams)
 {
     size_t nameBufferLength = 0;
     char *nameBuffer = NULL;
@@ -2053,9 +2056,9 @@ static void dpiOci__calculateConfigDir(dpiOciLoadLibParams *loadParams)
     int status;
 
     // first check to see if the environment variable TNS_ADMIN is set
-    baseDir = dpiOci__getEnv(loadParams, "TNS_ADMIN");
+    baseDir = ob_dpiOci__getEnv(loadParams, "TNS_ADMIN");
     if (baseDir) {
-        status = dpiUtils__allocateMemory(1, strlen(baseDir) + 1, 0,
+        status = ob_dpiUtils__allocateMemory(1, strlen(baseDir) + 1, 0,
                 "allocate config dir", (void**) loadParams->configDir, NULL);
         if (status == DPI_SUCCESS)
             strcpy(*loadParams->configDir, baseDir);
@@ -2065,15 +2068,15 @@ static void dpiOci__calculateConfigDir(dpiOciLoadLibParams *loadParams)
     // otherwise, check the environment variable ORACLE_HOME is set and if not,
     // look for the directory in which the Oracle Client library which has been
     // loaded
-    baseDir = dpiOci__getEnv(loadParams, "ORACLE_HOME");
+    baseDir = ob_dpiOci__getEnv(loadParams, "ORACLE_HOME");
     if (!baseDir) {
-        status = dpiOci__getModuleDir(dpiOciSymbols.fnThreadProcessInit,
+        status = ob_dpiOci__getModuleDir(dpiOciSymbols.fnThreadProcessInit,
                 "OCI", &nameBuffer, &nameBufferLength, NULL);
         if (status == DPI_SUCCESS)
             baseDir = nameBuffer;
     }
     if (baseDir) {
-        status = dpiUtils__allocateMemory(1,
+        status = ob_dpiUtils__allocateMemory(1,
                 strlen(baseDir) + strlen(dpiOciConfigSubDir) + 2, 0,
                 "allocate config dir", (void**) loadParams->configDir, NULL);
         if (status == DPI_SUCCESS)
@@ -2081,17 +2084,17 @@ static void dpiOci__calculateConfigDir(dpiOciLoadLibParams *loadParams)
                     dpiOciConfigSubDir);
     }
     if (nameBuffer)
-        dpiUtils__freeMemory(nameBuffer);
+        ob_dpiUtils__freeMemory(nameBuffer);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__loadLibWithDir() [INTERNAL]
+// ob_dpiOci__loadLibWithDir() [INTERNAL]
 //   Helper function for loading the OCI library. If a directory is specified,
 // that directory is searched; otherwise, an unqualfied search is performed
 // using the normal OS library loading rules.
 //-----------------------------------------------------------------------------
-static int dpiOci__loadLibWithDir(dpiOciLoadLibParams *loadParams,
+static int ob_dpiOci__loadLibWithDir(dpiOciLoadLibParams *loadParams,
         const char *dirName, size_t dirNameLength, int scanAllNames,
         dpiError *error)
 {
@@ -2100,8 +2103,8 @@ static int dpiOci__loadLibWithDir(dpiOciLoadLibParams *loadParams,
     int i;
 
     // report attempt with directory, if applicable
-    if (dirName && dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
-        dpiDebug__print("load in dir %.*s\n", (int) dirNameLength, dirName);
+    if (dirName && ob_dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
+        ob_dpiDebug__print("load in dir %.*s\n", (int) dirNameLength, dirName);
 
     // iterate over all possible options
     for (i = 0; dpiOciLibNames[i]; i++) {
@@ -2111,7 +2114,7 @@ static int dpiOci__loadLibWithDir(dpiOciLoadLibParams *loadParams,
             searchName = dpiOciLibNames[i];
         } else {
             nameLength = strlen(dpiOciLibNames[i]) + dirNameLength + 2;
-            if (dpiUtils__ensureBuffer(nameLength, "allocate name buffer",
+            if (ob_dpiUtils__ensureBuffer(nameLength, "allocate name buffer",
                     (void**) &loadParams->nameBuffer,
                     &loadParams->nameBufferLength, error) < 0)
                 return DPI_FAILURE;
@@ -2123,26 +2126,26 @@ static int dpiOci__loadLibWithDir(dpiOciLoadLibParams *loadParams,
         // attempt to load the library using the calculated name; failure here
         // implies something other than a load failure and this error is
         // reported immediately
-        if (dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
-            dpiDebug__print("load with name %s\n", searchName);
-        if (dpiOci__loadLibWithName(loadParams, searchName, error) < 0)
+        if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
+            ob_dpiDebug__print("load with name %s\n", searchName);
+        if (ob_dpiOci__loadLibWithName(loadParams, searchName, error) < 0)
             return DPI_FAILURE;
 
         // success is also reported immediately
         if (loadParams->handle) {
-            if (dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
-                dpiDebug__print("load by OS successful\n");
+            if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
+                ob_dpiDebug__print("load by OS successful\n");
             return DPI_SUCCESS;
         }
 
         // load failed; store the first failure that occurs which will be
         // reported if no successful loads were made and no other errors took
         // place
-        if (dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
-            dpiDebug__print("load by OS failure: %s\n",
+        if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
+            ob_dpiDebug__print("load by OS failure: %s\n",
                     loadParams->errorBuffer);
         if (i == 0) {
-            if (dpiUtils__ensureBuffer(loadParams->errorBufferLength,
+            if (ob_dpiUtils__ensureBuffer(loadParams->errorBufferLength,
                     "allocate load error buffer",
                     (void**) &loadParams->loadError,
                     &loadParams->loadErrorLength, error) < 0)
@@ -2160,10 +2163,10 @@ static int dpiOci__loadLibWithDir(dpiOciLoadLibParams *loadParams,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__loadLib() [INTERNAL]
+// ob_dpiOci__loadLib() [INTERNAL]
 //   Load the OCI library.
 //-----------------------------------------------------------------------------
-int dpiOci__loadLib(dpiContextCreateParams *params,
+int ob_dpiOci__loadLib(dpiContextCreateParams *params,
         dpiVersionInfo *clientVersionInfo, char **configDir, dpiError *error)
 {
     static const char *envNamesToCheck[] = {
@@ -2193,23 +2196,23 @@ int dpiOci__loadLib(dpiContextCreateParams *params,
 
     // log the directory parameter values and any environment variables that
     // have an impact on loading the library
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB) {
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB) {
 
         // first log directory parameter values
-        dpiDebug__print("Context Parameters:\n");
+        ob_dpiDebug__print("Context Parameters:\n");
         if (params->oracleClientLibDir)
-            dpiDebug__print("    Oracle Client Lib Dir: %s\n",
+            ob_dpiDebug__print("    Oracle Client Lib Dir: %s\n",
                     params->oracleClientLibDir);
         if (params->oracleClientConfigDir)
-            dpiDebug__print("    Oracle Client Config Dir: %s\n",
+            ob_dpiDebug__print("    Oracle Client Config Dir: %s\n",
                     params->oracleClientConfigDir);
 
         // now log environment variable values
-        dpiDebug__print("Environment Variables:\n");
+        ob_dpiDebug__print("Environment Variables:\n");
         for (i = 0; envNamesToCheck[i]; i++) {
-            temp = dpiOci__getEnv(&loadLibParams, envNamesToCheck[i]);
+            temp = ob_dpiOci__getEnv(&loadLibParams, envNamesToCheck[i]);
             if (temp)
-                dpiDebug__print("    %s => \"%s\"\n", envNamesToCheck[i],
+                ob_dpiDebug__print("    %s => \"%s\"\n", envNamesToCheck[i],
                         temp);
         }
 
@@ -2224,7 +2227,7 @@ int dpiOci__loadLib(dpiContextCreateParams *params,
 #else
         if (setenv("TNS_ADMIN", params->oracleClientConfigDir, 1) != 0) {
 #endif
-            return dpiError__setFromOS(error,
+            return ob_dpiError__setFromOS(error,
                     "set TNS_ADMIN environment variable");
         }
     }
@@ -2232,9 +2235,9 @@ int dpiOci__loadLib(dpiContextCreateParams *params,
     // if a lib directory was specified in the create params, look for the OCI
     // library in that location only
     if (params->oracleClientLibDir) {
-        if (dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
-            dpiDebug__print("load in parameter directory\n");
-        status = dpiOci__loadLibWithDir(&loadLibParams,
+        if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
+            ob_dpiDebug__print("load in parameter directory\n");
+        status = ob_dpiOci__loadLibWithDir(&loadLibParams,
                 params->oracleClientLibDir, strlen(params->oracleClientLibDir),
                 1, error);
 
@@ -2242,30 +2245,30 @@ int dpiOci__loadLib(dpiContextCreateParams *params,
     } else {
 
         // first try the directory in which the ODPI-C library itself is found
-        if (dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
-            dpiDebug__print("check ODPI-C module directory\n");
-        status = dpiOci__getModuleDir(dpiContext_createWithParams,
+        if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
+            ob_dpiDebug__print("check ODPI-C module directory\n");
+        status = ob_dpiOci__getModuleDir(ob_dpiContext_createWithParams,
                 "ODPI-C", &loadLibParams.moduleNameBuffer,
                 &loadLibParams.moduleNameBufferLength, error);
         if (status == DPI_SUCCESS)
-            status = dpiOci__loadLibWithDir(&loadLibParams,
+            status = ob_dpiOci__loadLibWithDir(&loadLibParams,
                     loadLibParams.moduleNameBuffer,
                     strlen(loadLibParams.moduleNameBuffer), 0, error);
 
         // if that fails, try the default OS library loading mechanism
         if (status < 0) {
-            if (dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
-                dpiDebug__print("load with OS search heuristics\n");
-            status = dpiOci__loadLibWithDir(&loadLibParams, NULL, 0, 1, error);
+            if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
+                ob_dpiDebug__print("load with OS search heuristics\n");
+            status = ob_dpiOci__loadLibWithDir(&loadLibParams, NULL, 0, 1, error);
         }
 
 #ifndef _WIN32
         // if that fails, on platforms other than Windows, attempt to load
         // from $ORACLE_HOME/lib
         if (status < 0) {
-            if (dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
-                dpiDebug__print("check ORACLE_HOME\n");
-            status = dpiOci__loadLibWithOracleHome(&loadLibParams, error);
+            if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
+                ob_dpiDebug__print("check ORACLE_HOME\n");
+            status = ob_dpiOci__loadLibWithOracleHome(&loadLibParams, error);
         }
 #endif
 
@@ -2275,28 +2278,28 @@ int dpiOci__loadLib(dpiContextCreateParams *params,
     // error message that will be returned
     if (status < 0 && (int) error->buffer->errorNum == 0) {
         const char *bits = (sizeof(void*) == 8) ? "64" : "32";
-        dpiError__set(error, "load library", DPI_ERR_LOAD_LIBRARY,
+        ob_dpiError__set(error, "load library", DPI_ERR_LOAD_LIBRARY,
                 bits, loadLibParams.loadError, params->loadErrorUrl);
     }
 
     // validate library, if a library was loaded
     if (status == DPI_SUCCESS) {
         dpiOciLibHandle = loadLibParams.handle;
-        status = dpiOci__loadLibValidate(params, &loadLibParams,
+        status = ob_dpiOci__loadLibValidate(params, &loadLibParams,
                 clientVersionInfo, error);
     }
 
     // free any memory that was allocated
     if (loadLibParams.nameBuffer)
-        dpiUtils__freeMemory(loadLibParams.nameBuffer);
+        ob_dpiUtils__freeMemory(loadLibParams.nameBuffer);
     if (loadLibParams.moduleNameBuffer)
-        dpiUtils__freeMemory(loadLibParams.moduleNameBuffer);
+        ob_dpiUtils__freeMemory(loadLibParams.moduleNameBuffer);
     if (loadLibParams.loadError)
-        dpiUtils__freeMemory(loadLibParams.loadError);
+        ob_dpiUtils__freeMemory(loadLibParams.loadError);
     if (loadLibParams.errorBuffer)
-        dpiUtils__freeMemory(loadLibParams.errorBuffer);
+        ob_dpiUtils__freeMemory(loadLibParams.errorBuffer);
     if (loadLibParams.envBuffer)
-        dpiUtils__freeMemory(loadLibParams.envBuffer);
+        ob_dpiUtils__freeMemory(loadLibParams.envBuffer);
 
     // free the library, if a library was loaded and any error occurred
     if (status < 0) {
@@ -2322,20 +2325,20 @@ int dpiOci__loadLib(dpiContextCreateParams *params,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__loadLibValidate() [INTERNAL]
+// ob_dpiOci__loadLibValidate() [INTERNAL]
 //   Validate the OCI library after loading.
 //-----------------------------------------------------------------------------
-static int dpiOci__loadLibValidate(dpiContextCreateParams *params,
+static int ob_dpiOci__loadLibValidate(dpiContextCreateParams *params,
         dpiOciLoadLibParams *loadParams, dpiVersionInfo *clientVersionInfo,
         dpiError *error)
 {
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
-        dpiDebug__print("validating loaded library\n");
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_LOAD_LIB)
+        ob_dpiDebug__print("validating loaded library\n");
 
     // determine the OCI client version information
-    if (dpiOci__loadSymbol("OCIClientVersion",
+    if (ob_dpiOci__loadSymbol("OCIClientVersion",
             (void**) &dpiOciSymbols.fnClientVersion, NULL) < 0)
-        return dpiError__set(error, "load symbol OCIClientVersion",
+        return ob_dpiError__set(error, "load symbol OCIClientVersion",
                 DPI_ERR_ORACLE_CLIENT_UNSUPPORTED);
     memset(clientVersionInfo, 0, sizeof(*clientVersionInfo));
     (*dpiOciSymbols.fnClientVersion)(&clientVersionInfo->versionNum,
@@ -2344,7 +2347,7 @@ static int dpiOci__loadLibValidate(dpiContextCreateParams *params,
             &clientVersionInfo->portReleaseNum,
             &clientVersionInfo->portUpdateNum);
     if (clientVersionInfo->versionNum == 0)
-        return dpiError__set(error, "get OCI client version",
+        return ob_dpiError__set(error, "get OCI client version",
                 DPI_ERR_ORACLE_CLIENT_UNSUPPORTED);
     clientVersionInfo->fullVersionNum = (uint32_t)
             DPI_ORACLE_VERSION_TO_NUMBER(clientVersionInfo->versionNum,
@@ -2354,7 +2357,7 @@ static int dpiOci__loadLibValidate(dpiContextCreateParams *params,
                     clientVersionInfo->portUpdateNum);
 
     // OCI version must be a minimum of 11.2
-    if (dpiUtils__checkClientVersion(clientVersionInfo, 11, 2, error) < 0)
+    if (ob_dpiUtils__checkClientVersion(clientVersionInfo, 10, 2, error) < 0)
         return DPI_FAILURE;
 
     // initialize threading capability in the OCI library
@@ -2372,20 +2375,20 @@ static int dpiOci__loadLibValidate(dpiContextCreateParams *params,
 
     // if a configuration directory is not supplied, calculate one, if possible
     if (!params->oracleClientConfigDir)
-        dpiOci__calculateConfigDir(loadParams);
+        ob_dpiOci__calculateConfigDir(loadParams);
 
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__loadSymbol() [INTERNAL]
+// ob_dpiOci__loadSymbol() [INTERNAL]
 //   Return the symbol for the function that is to be called. The symbol table
 // is first consulted. If the symbol is not found there, it is looked up and
 // then stored there so the next invocation does not have to perform the
 // lookup.
 //-----------------------------------------------------------------------------
-static int dpiOci__loadSymbol(const char *symbolName, void **symbol,
+static int ob_dpiOci__loadSymbol(const char *symbolName, void **symbol,
         dpiError *error)
 {
 #ifdef _WIN32
@@ -2394,7 +2397,7 @@ static int dpiOci__loadSymbol(const char *symbolName, void **symbol,
     *symbol = dlsym(dpiOciLibHandle, symbolName);
 #endif
     if (!*symbol)
-        return dpiError__set(error, "get symbol", DPI_ERR_LOAD_SYMBOL,
+        return ob_dpiError__set(error, "get symbol", DPI_ERR_LOAD_SYMBOL,
                 symbolName);
 
     return DPI_SUCCESS;
@@ -2402,10 +2405,10 @@ static int dpiOci__loadSymbol(const char *symbolName, void **symbol,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobClose() [INTERNAL]
+// ob_dpiOci__lobClose() [INTERNAL]
 //   Wrapper for OCILobClose().
 //-----------------------------------------------------------------------------
-int dpiOci__lobClose(dpiLob *lob, dpiError *error)
+int ob_dpiOci__lobClose(dpiLob *lob, dpiError *error)
 {
     int status;
 
@@ -2418,10 +2421,10 @@ int dpiOci__lobClose(dpiLob *lob, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobCreateTemporary() [INTERNAL]
+// ob_dpiOci__lobCreateTemporary() [INTERNAL]
 //   Wrapper for OCILobCreateTemporary().
 //-----------------------------------------------------------------------------
-int dpiOci__lobCreateTemporary(dpiLob *lob, dpiError *error)
+int ob_dpiOci__lobCreateTemporary(dpiLob *lob, dpiError *error)
 {
     uint8_t lobType;
     int status;
@@ -2440,10 +2443,10 @@ int dpiOci__lobCreateTemporary(dpiLob *lob, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobFileExists() [INTERNAL]
+// ob_dpiOci__lobFileExists() [INTERNAL]
 //   Wrapper for OCILobFileExists().
 //-----------------------------------------------------------------------------
-int dpiOci__lobFileExists(dpiLob *lob, int *exists, dpiError *error)
+int ob_dpiOci__lobFileExists(dpiLob *lob, int *exists, dpiError *error)
 {
     int status;
 
@@ -2456,10 +2459,10 @@ int dpiOci__lobFileExists(dpiLob *lob, int *exists, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobFileGetName() [INTERNAL]
+// ob_dpiOci__lobFileGetName() [INTERNAL]
 //   Wrapper for OCILobFileGetName().
 //-----------------------------------------------------------------------------
-int dpiOci__lobFileGetName(dpiLob *lob, char *dirAlias,
+int ob_dpiOci__lobFileGetName(dpiLob *lob, char *dirAlias,
         uint16_t *dirAliasLength, char *name, uint16_t *nameLength,
         dpiError *error)
 {
@@ -2474,10 +2477,10 @@ int dpiOci__lobFileGetName(dpiLob *lob, char *dirAlias,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobFileSetName() [INTERNAL]
+// ob_dpiOci__lobFileSetName() [INTERNAL]
 //   Wrapper for OCILobFileSetName().
 //-----------------------------------------------------------------------------
-int dpiOci__lobFileSetName(dpiLob *lob, const char *dirAlias,
+int ob_dpiOci__lobFileSetName(dpiLob *lob, const char *dirAlias,
         uint16_t dirAliasLength, const char *name, uint16_t nameLength,
         dpiError *error)
 {
@@ -2492,10 +2495,10 @@ int dpiOci__lobFileSetName(dpiLob *lob, const char *dirAlias,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobFreeTemporary() [INTERNAL]
+// ob_dpiOci__lobFreeTemporary() [INTERNAL]
 //   Wrapper for OCILobFreeTemporary().
 //-----------------------------------------------------------------------------
-int dpiOci__lobFreeTemporary(dpiConn *conn, void *lobLocator, int checkError,
+int ob_dpiOci__lobFreeTemporary(dpiConn *conn, void *lobLocator, int checkError,
         dpiError *error)
 {
     int status;
@@ -2512,10 +2515,10 @@ int dpiOci__lobFreeTemporary(dpiConn *conn, void *lobLocator, int checkError,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobGetChunkSize() [INTERNAL]
+// ob_dpiOci__lobGetChunkSize() [INTERNAL]
 //   Wrapper for OCILobGetChunkSize().
 //-----------------------------------------------------------------------------
-int dpiOci__lobGetChunkSize(dpiLob *lob, uint32_t *size, dpiError *error)
+int ob_dpiOci__lobGetChunkSize(dpiLob *lob, uint32_t *size, dpiError *error)
 {
     int status;
 
@@ -2528,10 +2531,10 @@ int dpiOci__lobGetChunkSize(dpiLob *lob, uint32_t *size, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobGetLength2() [INTERNAL]
+// ob_dpiOci__lobGetLength2() [INTERNAL]
 //   Wrapper for OCILobGetLength2().
 //-----------------------------------------------------------------------------
-int dpiOci__lobGetLength2(dpiLob *lob, uint64_t *size, dpiError *error)
+int ob_dpiOci__lobGetLength2(dpiLob *lob, uint64_t *size, dpiError *error)
 {
     int status;
 
@@ -2544,10 +2547,10 @@ int dpiOci__lobGetLength2(dpiLob *lob, uint64_t *size, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobIsOpen() [INTERNAL]
+// ob_dpiOci__lobIsOpen() [INTERNAL]
 //   Wrapper for OCILobIsOpen().
 //-----------------------------------------------------------------------------
-int dpiOci__lobIsOpen(dpiLob *lob, int *isOpen, dpiError *error)
+int ob_dpiOci__lobIsOpen(dpiLob *lob, int *isOpen, dpiError *error)
 {
     int status;
 
@@ -2560,10 +2563,10 @@ int dpiOci__lobIsOpen(dpiLob *lob, int *isOpen, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobIsTemporary() [INTERNAL]
+// ob_dpiOci__lobIsTemporary() [INTERNAL]
 //   Wrapper for OCILobIsTemporary().
 //-----------------------------------------------------------------------------
-int dpiOci__lobIsTemporary(dpiLob *lob, int *isTemporary, int checkError,
+int ob_dpiOci__lobIsTemporary(dpiLob *lob, int *isTemporary, int checkError,
         dpiError *error)
 {
     int status;
@@ -2580,10 +2583,10 @@ int dpiOci__lobIsTemporary(dpiLob *lob, int *isTemporary, int checkError,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobLocatorAssign() [INTERNAL]
+// ob_dpiOci__lobLocatorAssign() [INTERNAL]
 //   Wrapper for OCILobLocatorAssign().
 //-----------------------------------------------------------------------------
-int dpiOci__lobLocatorAssign(dpiLob *lob, void **copiedHandle, dpiError *error)
+int ob_dpiOci__lobLocatorAssign(dpiLob *lob, void **copiedHandle, dpiError *error)
 {
     int status;
 
@@ -2597,10 +2600,10 @@ int dpiOci__lobLocatorAssign(dpiLob *lob, void **copiedHandle, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobOpen() [INTERNAL]
+// ob_dpiOci__lobOpen() [INTERNAL]
 //   Wrapper for OCILobOpen().
 //-----------------------------------------------------------------------------
-int dpiOci__lobOpen(dpiLob *lob, dpiError *error)
+int ob_dpiOci__lobOpen(dpiLob *lob, dpiError *error)
 {
     uint8_t mode;
     int status;
@@ -2616,10 +2619,10 @@ int dpiOci__lobOpen(dpiLob *lob, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobRead2() [INTERNAL]
+// ob_dpiOci__lobRead2() [INTERNAL]
 //   Wrapper for OCILobRead2().
 //-----------------------------------------------------------------------------
-int dpiOci__lobRead2(dpiLob *lob, uint64_t offset, uint64_t *amountInBytes,
+int ob_dpiOci__lobRead2(dpiLob *lob, uint64_t offset, uint64_t *amountInBytes,
         uint64_t *amountInChars, char *buffer, uint64_t bufferLength,
         dpiError *error)
 {
@@ -2644,10 +2647,10 @@ int dpiOci__lobRead2(dpiLob *lob, uint64_t offset, uint64_t *amountInBytes,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobTrim2() [INTERNAL]
+// ob_dpiOci__lobTrim2() [INTERNAL]
 //   Wrapper for OCILobTrim2().
 //-----------------------------------------------------------------------------
-int dpiOci__lobTrim2(dpiLob *lob, uint64_t newLength, dpiError *error)
+int ob_dpiOci__lobTrim2(dpiLob *lob, uint64_t newLength, dpiError *error)
 {
     int status;
 
@@ -2656,16 +2659,16 @@ int dpiOci__lobTrim2(dpiLob *lob, uint64_t newLength, dpiError *error)
     status = (*dpiOciSymbols.fnLobTrim2)(lob->conn->handle, error->handle,
             lob->locator, newLength);
     if (status == DPI_OCI_INVALID_HANDLE)
-        return dpiOci__lobCreateTemporary(lob, error);
+        return ob_dpiOci__lobCreateTemporary(lob, error);
     DPI_OCI_CHECK_AND_RETURN(error, status, lob->conn, "trim LOB");
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__lobWrite2() [INTERNAL]
+// ob_dpiOci__lobWrite2() [INTERNAL]
 //   Wrapper for OCILobWrite2().
 //-----------------------------------------------------------------------------
-int dpiOci__lobWrite2(dpiLob *lob, uint64_t offset, const char *value,
+int ob_dpiOci__lobWrite2(dpiLob *lob, uint64_t offset, const char *value,
         uint64_t valueLength, dpiError *error)
 {
     uint64_t lengthInBytes = valueLength, lengthInChars = 0;
@@ -2685,10 +2688,10 @@ int dpiOci__lobWrite2(dpiLob *lob, uint64_t offset, const char *value,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__memoryAlloc() [INTERNAL]
+// ob_dpiOci__memoryAlloc() [INTERNAL]
 //   Wrapper for OCIMemoryAlloc().
 //-----------------------------------------------------------------------------
-int dpiOci__memoryAlloc(dpiConn *conn, void **ptr, uint32_t size,
+int ob_dpiOci__memoryAlloc(dpiConn *conn, void **ptr, uint32_t size,
         int checkError, dpiError *error)
 {
     int status;
@@ -2705,10 +2708,10 @@ int dpiOci__memoryAlloc(dpiConn *conn, void **ptr, uint32_t size,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__memoryFree() [INTERNAL]
+// ob_dpiOci__memoryFree() [INTERNAL]
 //   Wrapper for OCIMemoryFree().
 //-----------------------------------------------------------------------------
-int dpiOci__memoryFree(dpiConn *conn, void *ptr, dpiError *error)
+int ob_dpiOci__memoryFree(dpiConn *conn, void *ptr, dpiError *error)
 {
     DPI_OCI_LOAD_SYMBOL("OCIMemoryFree", dpiOciSymbols.fnMemoryFree)
     DPI_OCI_ENSURE_ERROR_HANDLE(error)
@@ -2718,10 +2721,10 @@ int dpiOci__memoryFree(dpiConn *conn, void *ptr, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__nlsCharSetConvert() [INTERNAL]
+// ob_dpiOci__nlsCharSetConvert() [INTERNAL]
 //   Wrapper for OCINlsCharSetConvert().
 //-----------------------------------------------------------------------------
-int dpiOci__nlsCharSetConvert(void *envHandle, uint16_t destCharsetId,
+int ob_dpiOci__nlsCharSetConvert(void *envHandle, uint16_t destCharsetId,
         char *dest, size_t destLength, uint16_t sourceCharsetId,
         const char *source, size_t sourceLength, size_t *resultSize,
         dpiError *error)
@@ -2739,10 +2742,10 @@ int dpiOci__nlsCharSetConvert(void *envHandle, uint16_t destCharsetId,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__nlsCharSetIdToName() [INTERNAL]
+// ob_dpiOci__nlsCharSetIdToName() [INTERNAL]
 //   Wrapper for OCINlsCharSetIdToName().
 //-----------------------------------------------------------------------------
-int dpiOci__nlsCharSetIdToName(void *envHandle, char *buf, size_t bufLength,
+int ob_dpiOci__nlsCharSetIdToName(void *envHandle, char *buf, size_t bufLength,
         uint16_t charsetId, dpiError *error)
 {
     int status;
@@ -2756,10 +2759,10 @@ int dpiOci__nlsCharSetIdToName(void *envHandle, char *buf, size_t bufLength,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__nlsCharSetNameToId() [INTERNAL]
+// ob_dpiOci__nlsCharSetNameToId() [INTERNAL]
 //   Wrapper for OCINlsCharSetNameToId().
 //-----------------------------------------------------------------------------
-int dpiOci__nlsCharSetNameToId(void *envHandle, const char *name,
+int ob_dpiOci__nlsCharSetNameToId(void *envHandle, const char *name,
         uint16_t *charsetId, dpiError *error)
 {
     DPI_OCI_LOAD_SYMBOL("OCINlsCharSetNameToId",
@@ -2770,10 +2773,10 @@ int dpiOci__nlsCharSetNameToId(void *envHandle, const char *name,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__nlsEnvironmentVariableGet() [INTERNAL]
+// ob_dpiOci__nlsEnvironmentVariableGet() [INTERNAL]
 //   Wrapper for OCIEnvironmentVariableGet().
 //-----------------------------------------------------------------------------
-int dpiOci__nlsEnvironmentVariableGet(uint16_t item, void *value,
+int ob_dpiOci__nlsEnvironmentVariableGet(uint16_t item, void *value,
         dpiError *error)
 {
     size_t ignored;
@@ -2784,17 +2787,17 @@ int dpiOci__nlsEnvironmentVariableGet(uint16_t item, void *value,
     status = (*dpiOciSymbols.fnNlsEnvironmentVariableGet)(value, 0, item, 0,
             &ignored);
     if (status != DPI_OCI_SUCCESS)
-        return dpiError__set(error, "get NLS environment variable",
+        return ob_dpiError__set(error, "get NLS environment variable",
                 DPI_ERR_NLS_ENV_VAR_GET);
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__nlsNameMap() [INTERNAL]
+// ob_dpiOci__nlsNameMap() [INTERNAL]
 //   Wrapper for OCINlsNameMap().
 //-----------------------------------------------------------------------------
-int dpiOci__nlsNameMap(void *envHandle, char *buf, size_t bufLength,
+int ob_dpiOci__nlsNameMap(void *envHandle, char *buf, size_t bufLength,
         const char *source, uint32_t flag, dpiError *error)
 {
     int status;
@@ -2807,10 +2810,10 @@ int dpiOci__nlsNameMap(void *envHandle, char *buf, size_t bufLength,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__nlsNumericInfoGet() [INTERNAL]
+// ob_dpiOci__nlsNumericInfoGet() [INTERNAL]
 //   Wrapper for OCINlsNumericInfoGet().
 //-----------------------------------------------------------------------------
-int dpiOci__nlsNumericInfoGet(void *envHandle, int32_t *value, uint16_t item,
+int ob_dpiOci__nlsNumericInfoGet(void *envHandle, int32_t *value, uint16_t item,
         dpiError *error)
 {
     int status;
@@ -2825,10 +2828,10 @@ int dpiOci__nlsNumericInfoGet(void *envHandle, int32_t *value, uint16_t item,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__numberFromInt() [INTERNAL]
+// ob_dpiOci__numberFromInt() [INTERNAL]
 //   Wrapper for OCINumberFromInt().
 //-----------------------------------------------------------------------------
-int dpiOci__numberFromInt(const void *value, unsigned int valueLength,
+int ob_dpiOci__numberFromInt(const void *value, unsigned int valueLength,
         unsigned int flags, void *number, dpiError *error)
 {
     int status;
@@ -2842,10 +2845,10 @@ int dpiOci__numberFromInt(const void *value, unsigned int valueLength,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__numberFromReal() [INTERNAL]
+// ob_dpiOci__numberFromReal() [INTERNAL]
 //   Wrapper for OCINumberFromReal().
 //-----------------------------------------------------------------------------
-int dpiOci__numberFromReal(const double value, void *number, dpiError *error)
+int ob_dpiOci__numberFromReal(const double value, void *number, dpiError *error)
 {
     int status;
 
@@ -2858,10 +2861,10 @@ int dpiOci__numberFromReal(const double value, void *number, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__numberToInt() [INTERNAL]
+// ob_dpiOci__numberToInt() [INTERNAL]
 //   Wrapper for OCINumberToInt().
 //-----------------------------------------------------------------------------
-int dpiOci__numberToInt(void *number, void *value, unsigned int valueLength,
+int ob_dpiOci__numberToInt(void *number, void *value, unsigned int valueLength,
         unsigned int flags, dpiError *error)
 {
     int status;
@@ -2875,10 +2878,10 @@ int dpiOci__numberToInt(void *number, void *value, unsigned int valueLength,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__numberToReal() [INTERNAL]
+// ob_dpiOci__numberToReal() [INTERNAL]
 //   Wrapper for OCINumberToReal().
 //-----------------------------------------------------------------------------
-int dpiOci__numberToReal(double *value, void *number, dpiError *error)
+int ob_dpiOci__numberToReal(double *value, void *number, dpiError *error)
 {
     int status;
 
@@ -2891,10 +2894,10 @@ int dpiOci__numberToReal(double *value, void *number, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__objectCopy() [INTERNAL]
+// ob_dpiOci__objectCopy() [INTERNAL]
 //   Wrapper for OCIObjectCopy().
 //-----------------------------------------------------------------------------
-int dpiOci__objectCopy(dpiObject *obj, void *sourceInstance,
+int ob_dpiOci__objectCopy(dpiObject *obj, void *sourceInstance,
         void *sourceIndicator, dpiError *error)
 {
     int status;
@@ -2910,10 +2913,10 @@ int dpiOci__objectCopy(dpiObject *obj, void *sourceInstance,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__objectFree() [INTERNAL]
+// ob_dpiOci__objectFree() [INTERNAL]
 //   Wrapper for OCIObjectFree().
 //-----------------------------------------------------------------------------
-int dpiOci__objectFree(void *envHandle, void *data, int checkError,
+int ob_dpiOci__objectFree(void *envHandle, void *data, int checkError,
         dpiError *error)
 {
     int status;
@@ -2923,7 +2926,7 @@ int dpiOci__objectFree(void *envHandle, void *data, int checkError,
     status = (*dpiOciSymbols.fnObjectFree)(envHandle, error->handle, data,
             DPI_OCI_DEFAULT);
     if (checkError && DPI_OCI_ERROR_OCCURRED(status)) {
-        dpiError__setFromOCI(error, status, NULL, "free instance");
+        ob_dpiError__setFromOCI(error, status, NULL, "free instance");
 
         // during the attempt to free, PL/SQL records fail with error
         // "ORA-21602: operation does not support the specified typecode", but
@@ -2939,10 +2942,10 @@ int dpiOci__objectFree(void *envHandle, void *data, int checkError,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__objectGetAttr() [INTERNAL]
+// ob_dpiOci__objectGetAttr() [INTERNAL]
 //   Wrapper for OCIObjectGetAttr().
 //-----------------------------------------------------------------------------
-int dpiOci__objectGetAttr(dpiObject *obj, dpiObjectAttr *attr,
+int ob_dpiOci__objectGetAttr(dpiObject *obj, dpiObjectAttr *attr,
         int16_t *scalarValueIndicator, void **valueIndicator, void **value,
         void **tdo, dpiError *error)
 {
@@ -2959,10 +2962,10 @@ int dpiOci__objectGetAttr(dpiObject *obj, dpiObjectAttr *attr,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__objectGetInd() [INTERNAL]
+// ob_dpiOci__objectGetInd() [INTERNAL]
 //   Wrapper for OCIObjectGetInd().
 //-----------------------------------------------------------------------------
-int dpiOci__objectGetInd(dpiObject *obj, dpiError *error)
+int ob_dpiOci__objectGetInd(dpiObject *obj, dpiError *error)
 {
     int status;
 
@@ -2975,10 +2978,10 @@ int dpiOci__objectGetInd(dpiObject *obj, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__objectNew() [INTERNAL]
+// ob_dpiOci__objectNew() [INTERNAL]
 //   Wrapper for OCIObjectNew().
 //-----------------------------------------------------------------------------
-int dpiOci__objectNew(dpiObject *obj, dpiError *error)
+int ob_dpiOci__objectNew(dpiObject *obj, dpiError *error)
 {
     int status;
 
@@ -2992,10 +2995,10 @@ int dpiOci__objectNew(dpiObject *obj, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__objectPin() [INTERNAL]
+// ob_dpiOci__objectPin() [INTERNAL]
 //   Wrapper for OCIObjectPin().
 //-----------------------------------------------------------------------------
-int dpiOci__objectPin(void *envHandle, void *objRef, void **obj,
+int ob_dpiOci__objectPin(void *envHandle, void *objRef, void **obj,
         dpiError *error)
 {
     int status;
@@ -3010,10 +3013,10 @@ int dpiOci__objectPin(void *envHandle, void *objRef, void **obj,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__objectSetAttr() [INTERNAL]
+// ob_dpiOci__objectSetAttr() [INTERNAL]
 //   Wrapper for OCIObjectSetAttr().
 //-----------------------------------------------------------------------------
-int dpiOci__objectSetAttr(dpiObject *obj, dpiObjectAttr *attr,
+int ob_dpiOci__objectSetAttr(dpiObject *obj, dpiObjectAttr *attr,
         int16_t scalarValueIndicator, void *valueIndicator, const void *value,
         dpiError *error)
 {
@@ -3030,10 +3033,10 @@ int dpiOci__objectSetAttr(dpiObject *obj, dpiObjectAttr *attr,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__passwordChange() [INTERNAL]
+// ob_dpiOci__passwordChange() [INTERNAL]
 //   Wrapper for OCIPasswordChange().
 //-----------------------------------------------------------------------------
-int dpiOci__passwordChange(dpiConn *conn, const char *userName,
+int ob_dpiOci__passwordChange(dpiConn *conn, const char *userName,
         uint32_t userNameLength, const char *oldPassword,
         uint32_t oldPasswordLength, const char *newPassword,
         uint32_t newPasswordLength, uint32_t mode, dpiError *error)
@@ -3050,10 +3053,10 @@ int dpiOci__passwordChange(dpiConn *conn, const char *userName,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__paramGet() [INTERNAL]
+// ob_dpiOci__paramGet() [INTERNAL]
 //   Wrapper for OCIParamGet().
 //-----------------------------------------------------------------------------
-int dpiOci__paramGet(const void *handle, uint32_t handleType, void **parameter,
+int ob_dpiOci__paramGet(const void *handle, uint32_t handleType, void **parameter,
         uint32_t pos, const char *action, dpiError *error)
 {
     int status;
@@ -3067,10 +3070,10 @@ int dpiOci__paramGet(const void *handle, uint32_t handleType, void **parameter,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__ping() [INTERNAL]
+// ob_dpiOci__ping() [INTERNAL]
 //   Wrapper for OCIPing().
 //-----------------------------------------------------------------------------
-int dpiOci__ping(dpiConn *conn, dpiError *error)
+int ob_dpiOci__ping(dpiConn *conn, dpiError *error)
 {
     int status;
 
@@ -3079,7 +3082,7 @@ int dpiOci__ping(dpiConn *conn, dpiError *error)
     status = (*dpiOciSymbols.fnPing)(conn->handle, error->handle,
             DPI_OCI_DEFAULT);
     if (DPI_OCI_ERROR_OCCURRED(status)) {
-        dpiError__setFromOCI(error, status, conn, "ping");
+        ob_dpiError__setFromOCI(error, status, conn, "ping");
 
         // attempting to ping a database earlier than 10g will result in error
         // ORA-1010: invalid OCI operation, but that implies a successful ping
@@ -3094,10 +3097,10 @@ int dpiOci__ping(dpiConn *conn, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__rawAssignBytes() [INTERNAL]
+// ob_dpiOci__rawAssignBytes() [INTERNAL]
 //   Wrapper for OCIRawAssignBytes().
 //-----------------------------------------------------------------------------
-int dpiOci__rawAssignBytes(void *envHandle, const char *value,
+int ob_dpiOci__rawAssignBytes(void *envHandle, const char *value,
         uint32_t valueLength, void **handle, dpiError *error)
 {
     int status;
@@ -3111,10 +3114,10 @@ int dpiOci__rawAssignBytes(void *envHandle, const char *value,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__rawPtr() [INTERNAL]
+// ob_dpiOci__rawPtr() [INTERNAL]
 //   Wrapper for OCIRawPtr().
 //-----------------------------------------------------------------------------
-int dpiOci__rawPtr(void *envHandle, void *handle, void **ptr)
+int ob_dpiOci__rawPtr(void *envHandle, void *handle, void **ptr)
 {
     dpiError *error = NULL;
 
@@ -3125,10 +3128,10 @@ int dpiOci__rawPtr(void *envHandle, void *handle, void **ptr)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__rawResize() [INTERNAL]
+// ob_dpiOci__rawResize() [INTERNAL]
 //   Wrapper for OCIRawResize().
 //-----------------------------------------------------------------------------
-int dpiOci__rawResize(void *envHandle, void **handle, uint32_t newSize,
+int ob_dpiOci__rawResize(void *envHandle, void **handle, uint32_t newSize,
         dpiError *error)
 {
     int status;
@@ -3142,10 +3145,10 @@ int dpiOci__rawResize(void *envHandle, void **handle, uint32_t newSize,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__rawSize() [INTERNAL]
+// ob_dpiOci__rawSize() [INTERNAL]
 //   Wrapper for OCIRawSize().
 //-----------------------------------------------------------------------------
-int dpiOci__rawSize(void *envHandle, void *handle, uint32_t *size)
+int ob_dpiOci__rawSize(void *envHandle, void *handle, uint32_t *size)
 {
     dpiError *error = NULL;
 
@@ -3156,27 +3159,27 @@ int dpiOci__rawSize(void *envHandle, void *handle, uint32_t *size)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__reallocMem() [INTERNAL]
+// ob_dpiOci__reallocMem() [INTERNAL]
 //   Wrapper for OCI allocation of memory, only used when debugging memory
 // allocation.
 //-----------------------------------------------------------------------------
-static void *dpiOci__reallocMem(UNUSED void *unused, void *ptr, size_t newSize)
+static void *ob_dpiOci__reallocMem(UNUSED void *unused, void *ptr, size_t newSize)
 {
     char message[80];
     void *newPtr;
 
     (void) sprintf(message, "OCI reallocated ptr at %p", ptr);
     newPtr = realloc(ptr, newSize);
-    dpiDebug__print("%s to %u bytes at %p\n", message, newSize, newPtr);
+    ob_dpiDebug__print("%s to %u bytes at %p\n", message, newSize, newPtr);
     return newPtr;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__rowidToChar() [INTERNAL]
+// ob_dpiOci__rowidToChar() [INTERNAL]
 //   Wrapper for OCIRowidToChar().
 //-----------------------------------------------------------------------------
-int dpiOci__rowidToChar(dpiRowid *rowid, char *buffer, uint16_t *bufferSize,
+int ob_dpiOci__rowidToChar(dpiRowid *rowid, char *buffer, uint16_t *bufferSize,
         dpiError *error)
 {
     uint16_t origSize;
@@ -3194,10 +3197,10 @@ int dpiOci__rowidToChar(dpiRowid *rowid, char *buffer, uint16_t *bufferSize,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__serverAttach() [INTERNAL]
+// ob_dpiOci__serverAttach() [INTERNAL]
 //   Wrapper for OCIServerAttach().
 //-----------------------------------------------------------------------------
-int dpiOci__serverAttach(dpiConn *conn, const char *connectString,
+int ob_dpiOci__serverAttach(dpiConn *conn, const char *connectString,
         uint32_t connectStringLength, dpiError *error)
 {
     int status;
@@ -3211,10 +3214,10 @@ int dpiOci__serverAttach(dpiConn *conn, const char *connectString,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__serverDetach() [INTERNAL]
+// ob_dpiOci__serverDetach() [INTERNAL]
 //   Wrapper for OCIServerDetach().
 //-----------------------------------------------------------------------------
-int dpiOci__serverDetach(dpiConn *conn, int checkError, dpiError *error)
+int ob_dpiOci__serverDetach(dpiConn *conn, int checkError, dpiError *error)
 {
     int status;
 
@@ -3229,10 +3232,10 @@ int dpiOci__serverDetach(dpiConn *conn, int checkError, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__serverRelease() [INTERNAL]
+// ob_dpiOci__serverRelease() [INTERNAL]
 //   Wrapper for OCIServerRelease().
 //-----------------------------------------------------------------------------
-int dpiOci__serverRelease(dpiConn *conn, char *buffer, uint32_t bufferSize,
+int ob_dpiOci__serverRelease(dpiConn *conn, char *buffer, uint32_t bufferSize,
         uint32_t *version, uint32_t mode, dpiError *error)
 {
     int status;
@@ -3253,10 +3256,10 @@ int dpiOci__serverRelease(dpiConn *conn, char *buffer, uint32_t bufferSize,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sessionBegin() [INTERNAL]
+// ob_dpiOci__sessionBegin() [INTERNAL]
 //   Wrapper for OCISessionBegin().
 //-----------------------------------------------------------------------------
-int dpiOci__sessionBegin(dpiConn *conn, uint32_t credentialType,
+int ob_dpiOci__sessionBegin(dpiConn *conn, uint32_t credentialType,
         uint32_t mode, dpiError *error)
 {
     int status;
@@ -3270,10 +3273,10 @@ int dpiOci__sessionBegin(dpiConn *conn, uint32_t credentialType,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sessionEnd() [INTERNAL]
+// ob_dpiOci__sessionEnd() [INTERNAL]
 //   Wrapper for OCISessionEnd().
 //-----------------------------------------------------------------------------
-int dpiOci__sessionEnd(dpiConn *conn, int checkError, dpiError *error)
+int ob_dpiOci__sessionEnd(dpiConn *conn, int checkError, dpiError *error)
 {
     int status;
 
@@ -3288,10 +3291,10 @@ int dpiOci__sessionEnd(dpiConn *conn, int checkError, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sessionGet() [INTERNAL]
+// ob_dpiOci__sessionGet() [INTERNAL]
 //   Wrapper for OCISessionGet().
 //-----------------------------------------------------------------------------
-int dpiOci__sessionGet(void *envHandle, void **handle, void *authInfo,
+int ob_dpiOci__sessionGet(void *envHandle, void **handle, void *authInfo,
         const char *connectString, uint32_t connectStringLength,
         const char *tag, uint32_t tagLength, const char **outTag,
         uint32_t *outTagLength, int *found, uint32_t mode, dpiError *error)
@@ -3314,10 +3317,10 @@ int dpiOci__sessionGet(void *envHandle, void **handle, void *authInfo,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sessionPoolCreate() [INTERNAL]
+// ob_dpiOci__sessionPoolCreate() [INTERNAL]
 //   Wrapper for OCISessionPoolCreate().
 //-----------------------------------------------------------------------------
-int dpiOci__sessionPoolCreate(dpiPool *pool, const char *connectString,
+int ob_dpiOci__sessionPoolCreate(dpiPool *pool, const char *connectString,
         uint32_t connectStringLength, uint32_t minSessions,
         uint32_t maxSessions, uint32_t sessionIncrement, const char *userName,
         uint32_t userNameLength, const char *password, uint32_t passwordLength,
@@ -3338,10 +3341,10 @@ int dpiOci__sessionPoolCreate(dpiPool *pool, const char *connectString,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sessionPoolDestroy() [INTERNAL]
+// ob_dpiOci__sessionPoolDestroy() [INTERNAL]
 //   Wrapper for OCISessionPoolDestroy().
 //-----------------------------------------------------------------------------
-int dpiOci__sessionPoolDestroy(dpiPool *pool, uint32_t mode, int checkError,
+int ob_dpiOci__sessionPoolDestroy(dpiPool *pool, uint32_t mode, int checkError,
         dpiError *error)
 {
     void *handle;
@@ -3360,18 +3363,18 @@ int dpiOci__sessionPoolDestroy(dpiPool *pool, uint32_t mode, int checkError,
             mode);
     if (checkError && DPI_OCI_ERROR_OCCURRED(status)) {
         pool->handle = handle;
-        return dpiError__setFromOCI(error, status, NULL, "destroy pool");
+        return ob_dpiError__setFromOCI(error, status, NULL, "destroy pool");
     }
-    dpiOci__handleFree(handle, DPI_OCI_HTYPE_SPOOL);
+    ob_dpiOci__handleFree(handle, DPI_OCI_HTYPE_SPOOL);
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sessionRelease() [INTERNAL]
+// ob_dpiOci__sessionRelease() [INTERNAL]
 //   Wrapper for OCISessionRelease().
 //-----------------------------------------------------------------------------
-int dpiOci__sessionRelease(dpiConn *conn, const char *tag, uint32_t tagLength,
+int ob_dpiOci__sessionRelease(dpiConn *conn, const char *tag, uint32_t tagLength,
         uint32_t mode, int checkError, dpiError *error)
 {
     int status;
@@ -3387,10 +3390,10 @@ int dpiOci__sessionRelease(dpiConn *conn, const char *tag, uint32_t tagLength,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__shardingKeyColumnAdd() [INTERNAL]
+// ob_dpiOci__shardingKeyColumnAdd() [INTERNAL]
 //   Wrapper for OCIshardingKeyColumnAdd().
 //-----------------------------------------------------------------------------
-int dpiOci__shardingKeyColumnAdd(void *shardingKey, void *col, uint32_t colLen,
+int ob_dpiOci__shardingKeyColumnAdd(void *shardingKey, void *col, uint32_t colLen,
         uint16_t colType, dpiError *error)
 {
     int status;
@@ -3405,10 +3408,10 @@ int dpiOci__shardingKeyColumnAdd(void *shardingKey, void *col, uint32_t colLen,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaBulkInsert() [INTERNAL]
+// ob_dpiOci__sodaBulkInsert() [INTERNAL]
 //   Wrapper for OCISodaBulkInsert().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaBulkInsert(dpiSodaColl *coll, void **documents,
+int ob_dpiOci__sodaBulkInsert(dpiSodaColl *coll, void **documents,
         uint32_t numDocuments, void *outputOptions, uint32_t mode,
         dpiError *error)
 {
@@ -3425,10 +3428,10 @@ int dpiOci__sodaBulkInsert(dpiSodaColl *coll, void **documents,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaBulkInsertAndGet() [INTERNAL]
+// ob_dpiOci__sodaBulkInsertAndGet() [INTERNAL]
 //   Wrapper for OCISodaBulkInsertAndGet().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaBulkInsertAndGet(dpiSodaColl *coll, void **documents,
+int ob_dpiOci__sodaBulkInsertAndGet(dpiSodaColl *coll, void **documents,
         uint32_t numDocuments, void *outputOptions, uint32_t mode,
         dpiError *error)
 {
@@ -3446,10 +3449,10 @@ int dpiOci__sodaBulkInsertAndGet(dpiSodaColl *coll, void **documents,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaBulkInsertAndGetWithOpts() [INTERNAL]
+// ob_dpiOci__sodaBulkInsertAndGetWithOpts() [INTERNAL]
 //   Wrapper for OCISodaBulkInsertAndGetWithOpts().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaBulkInsertAndGetWithOpts(dpiSodaColl *coll, void **documents,
+int ob_dpiOci__sodaBulkInsertAndGetWithOpts(dpiSodaColl *coll, void **documents,
         uint32_t numDocuments, void *operOptions, void *outputOptions,
         uint32_t mode, dpiError *error)
 {
@@ -3467,10 +3470,10 @@ int dpiOci__sodaBulkInsertAndGetWithOpts(dpiSodaColl *coll, void **documents,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaCollCreateWithMetadata() [INTERNAL]
+// ob_dpiOci__sodaCollCreateWithMetadata() [INTERNAL]
 //   Wrapper for OCISodaCollCreateWithMetadata().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaCollCreateWithMetadata(dpiSodaDb *db, const char *name,
+int ob_dpiOci__sodaCollCreateWithMetadata(dpiSodaDb *db, const char *name,
         uint32_t nameLength, const char *metadata, uint32_t metadataLength,
         uint32_t mode, void **handle, dpiError *error)
 {
@@ -3488,10 +3491,10 @@ int dpiOci__sodaCollCreateWithMetadata(dpiSodaDb *db, const char *name,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaCollDrop() [INTERNAL]
+// ob_dpiOci__sodaCollDrop() [INTERNAL]
 //   Wrapper for OCISodaCollDrop().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaCollDrop(dpiSodaColl *coll, int *isDropped, uint32_t mode,
+int ob_dpiOci__sodaCollDrop(dpiSodaColl *coll, int *isDropped, uint32_t mode,
         dpiError *error)
 {
     int status;
@@ -3506,10 +3509,10 @@ int dpiOci__sodaCollDrop(dpiSodaColl *coll, int *isDropped, uint32_t mode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaCollGetNext() [INTERNAL]
+// ob_dpiOci__sodaCollGetNext() [INTERNAL]
 //   Wrapper for OCISodaCollGetNext().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaCollGetNext(dpiConn *conn, void *cursorHandle,
+int ob_dpiOci__sodaCollGetNext(dpiConn *conn, void *cursorHandle,
         void **collectionHandle, dpiError *error)
 {
     int status;
@@ -3527,10 +3530,10 @@ int dpiOci__sodaCollGetNext(dpiConn *conn, void *cursorHandle,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaCollList() [INTERNAL]
+// ob_dpiOci__sodaCollList() [INTERNAL]
 //   Wrapper for OCISodaCollList().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaCollList(dpiSodaDb *db, const char *startingName,
+int ob_dpiOci__sodaCollList(dpiSodaDb *db, const char *startingName,
         uint32_t startingNameLength, void **handle, uint32_t mode,
         dpiError *error)
 {
@@ -3546,10 +3549,10 @@ int dpiOci__sodaCollList(dpiSodaDb *db, const char *startingName,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaCollOpen() [INTERNAL]
+// ob_dpiOci__sodaCollOpen() [INTERNAL]
 //   Wrapper for OCISodaCollOpen().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaCollOpen(dpiSodaDb *db, const char *name, uint32_t nameLength,
+int ob_dpiOci__sodaCollOpen(dpiSodaDb *db, const char *name, uint32_t nameLength,
         uint32_t mode, void **handle, dpiError *error)
 {
     int status;
@@ -3563,10 +3566,10 @@ int dpiOci__sodaCollOpen(dpiSodaDb *db, const char *name, uint32_t nameLength,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaCollTruncate() [INTERNAL]
+// ob_dpiOci__sodaCollTruncate() [INTERNAL]
 //   Wrapper for OCISodaCollTruncate().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaCollTruncate(dpiSodaColl *coll, dpiError *error)
+int ob_dpiOci__sodaCollTruncate(dpiSodaColl *coll, dpiError *error)
 {
     int status;
 
@@ -3581,10 +3584,10 @@ int dpiOci__sodaCollTruncate(dpiSodaColl *coll, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaDataGuideGet() [INTERNAL]
+// ob_dpiOci__sodaDataGuideGet() [INTERNAL]
 //   Wrapper for OCISodaDataGuideGet().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaDataGuideGet(dpiSodaColl *coll, void **handle, uint32_t mode,
+int ob_dpiOci__sodaDataGuideGet(dpiSodaColl *coll, void **handle, uint32_t mode,
         dpiError *error)
 {
     int status;
@@ -3596,7 +3599,7 @@ int dpiOci__sodaDataGuideGet(dpiSodaColl *coll, void **handle, uint32_t mode,
             coll->handle, DPI_OCI_SODA_AS_AL32UTF8, handle, error->handle,
             mode);
     if (DPI_OCI_ERROR_OCCURRED(status)) {
-        dpiError__setFromOCI(error, status, coll->db->conn, "get data guide");
+        ob_dpiError__setFromOCI(error, status, coll->db->conn, "get data guide");
         if (error->buffer->code != 24801)
             return DPI_FAILURE;
         *handle = NULL;
@@ -3606,10 +3609,10 @@ int dpiOci__sodaDataGuideGet(dpiSodaColl *coll, void **handle, uint32_t mode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaDocCount() [INTERNAL]
+// ob_dpiOci__sodaDocCount() [INTERNAL]
 //   Wrapper for OCISodaDocCount().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaDocCount(dpiSodaColl *coll, void *options, uint32_t mode,
+int ob_dpiOci__sodaDocCount(dpiSodaColl *coll, void *options, uint32_t mode,
         uint64_t *count, dpiError *error)
 {
     int status;
@@ -3624,10 +3627,10 @@ int dpiOci__sodaDocCount(dpiSodaColl *coll, void *options, uint32_t mode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaDocGetNext() [INTERNAL]
+// ob_dpiOci__sodaDocGetNext() [INTERNAL]
 //   Wrapper for OCISodaDocGetNext().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaDocGetNext(dpiSodaDocCursor *cursor, void **handle,
+int ob_dpiOci__sodaDocGetNext(dpiSodaDocCursor *cursor, void **handle,
         dpiError *error)
 {
     int status;
@@ -3646,10 +3649,10 @@ int dpiOci__sodaDocGetNext(dpiSodaDocCursor *cursor, void **handle,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaFind() [INTERNAL]
+// ob_dpiOci__sodaFind() [INTERNAL]
 //   Wrapper for OCISodaFind().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaFind(dpiSodaColl *coll, const void *options, uint32_t flags,
+int ob_dpiOci__sodaFind(dpiSodaColl *coll, const void *options, uint32_t flags,
         uint32_t mode, void **handle, dpiError *error)
 {
     int status;
@@ -3668,10 +3671,10 @@ int dpiOci__sodaFind(dpiSodaColl *coll, const void *options, uint32_t flags,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaFindOne() [INTERNAL]
+// ob_dpiOci__sodaFindOne() [INTERNAL]
 //   Wrapper for OCISodaFindOne().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaFindOne(dpiSodaColl *coll, const void *options, uint32_t flags,
+int ob_dpiOci__sodaFindOne(dpiSodaColl *coll, const void *options, uint32_t flags,
         uint32_t mode, void **handle, dpiError *error)
 {
     int status;
@@ -3690,10 +3693,10 @@ int dpiOci__sodaFindOne(dpiSodaColl *coll, const void *options, uint32_t flags,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaIndexCreate() [INTERNAL]
+// ob_dpiOci__sodaIndexCreate() [INTERNAL]
 //   Wrapper for OCISodaIndexCreate().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaIndexCreate(dpiSodaColl *coll, const char *indexSpec,
+int ob_dpiOci__sodaIndexCreate(dpiSodaColl *coll, const char *indexSpec,
         uint32_t indexSpecLength, uint32_t mode, dpiError *error)
 {
     int status;
@@ -3707,10 +3710,10 @@ int dpiOci__sodaIndexCreate(dpiSodaColl *coll, const char *indexSpec,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaIndexDrop() [INTERNAL]
+// ob_dpiOci__sodaIndexDrop() [INTERNAL]
 //   Wrapper for OCISodaIndexDrop().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaIndexDrop(dpiSodaColl *coll, const char *name,
+int ob_dpiOci__sodaIndexDrop(dpiSodaColl *coll, const char *name,
         uint32_t nameLength, uint32_t mode, int *isDropped, dpiError *error)
 {
     int status;
@@ -3724,10 +3727,10 @@ int dpiOci__sodaIndexDrop(dpiSodaColl *coll, const char *name,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaIndexList() [INTERNAL]
+// ob_dpiOci__sodaIndexList() [INTERNAL]
 //   Wrapper for OCISodaIndexList().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaIndexList(dpiSodaColl *coll, uint32_t flags, void **handle,
+int ob_dpiOci__sodaIndexList(dpiSodaColl *coll, uint32_t flags, void **handle,
         dpiError *error)
 {
     int status;
@@ -3741,10 +3744,10 @@ int dpiOci__sodaIndexList(dpiSodaColl *coll, uint32_t flags, void **handle,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaInsert() [INTERNAL]
+// ob_dpiOci__sodaInsert() [INTERNAL]
 //   Wrapper for OCISodaInsert().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaInsert(dpiSodaColl *coll, void *handle, uint32_t mode,
+int ob_dpiOci__sodaInsert(dpiSodaColl *coll, void *handle, uint32_t mode,
         dpiError *error)
 {
     int status;
@@ -3759,10 +3762,10 @@ int dpiOci__sodaInsert(dpiSodaColl *coll, void *handle, uint32_t mode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaInsertAndGet() [INTERNAL]
+// ob_dpiOci__sodaInsertAndGet() [INTERNAL]
 //   Wrapper for OCISodaInsertAndGet().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaInsertAndGet(dpiSodaColl *coll, void **handle, uint32_t mode,
+int ob_dpiOci__sodaInsertAndGet(dpiSodaColl *coll, void **handle, uint32_t mode,
         dpiError *error)
 {
     int status;
@@ -3778,10 +3781,10 @@ int dpiOci__sodaInsertAndGet(dpiSodaColl *coll, void **handle, uint32_t mode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaInsertAndGetWithOpts() [INTERNAL]
+// ob_dpiOci__sodaInsertAndGetWithOpts() [INTERNAL]
 //   Wrapper for OCISodaInsertAndGetWithOpts().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaInsertAndGetWithOpts(dpiSodaColl *coll, void **handle,
+int ob_dpiOci__sodaInsertAndGetWithOpts(dpiSodaColl *coll, void **handle,
         void *operOptions, uint32_t mode, dpiError *error)
 {
     int status;
@@ -3798,10 +3801,10 @@ int dpiOci__sodaInsertAndGetWithOpts(dpiSodaColl *coll, void **handle,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaOperKeysSet() [INTERNAL]
+// ob_dpiOci__sodaOperKeysSet() [INTERNAL]
 //   Wrapper for OCISodaOperKeysSet().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaOperKeysSet(const dpiSodaOperOptions *options, void *handle,
+int ob_dpiOci__sodaOperKeysSet(const dpiSodaOperOptions *options, void *handle,
         dpiError *error)
 {
     int status;
@@ -3817,10 +3820,10 @@ int dpiOci__sodaOperKeysSet(const dpiSodaOperOptions *options, void *handle,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaRemove() [INTERNAL]
+// ob_dpiOci__sodaRemove() [INTERNAL]
 //   Wrapper for OCISodaRemove().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaRemove(dpiSodaColl *coll, void *options, uint32_t mode,
+int ob_dpiOci__sodaRemove(dpiSodaColl *coll, void *options, uint32_t mode,
         uint64_t *count, dpiError *error)
 {
     int status;
@@ -3835,10 +3838,10 @@ int dpiOci__sodaRemove(dpiSodaColl *coll, void *options, uint32_t mode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaReplOne() [INTERNAL]
+// ob_dpiOci__sodaReplOne() [INTERNAL]
 //   Wrapper for OCISodaReplOne().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaReplOne(dpiSodaColl *coll, const void *options, void *handle,
+int ob_dpiOci__sodaReplOne(dpiSodaColl *coll, const void *options, void *handle,
         uint32_t mode, int *isReplaced, dpiError *error)
 {
     int status;
@@ -3853,10 +3856,10 @@ int dpiOci__sodaReplOne(dpiSodaColl *coll, const void *options, void *handle,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaReplOneAndGet() [INTERNAL]
+// ob_dpiOci__sodaReplOneAndGet() [INTERNAL]
 //   Wrapper for OCISodaReplOneAndGet().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaReplOneAndGet(dpiSodaColl *coll, const void *options,
+int ob_dpiOci__sodaReplOneAndGet(dpiSodaColl *coll, const void *options,
         void **handle, uint32_t mode, int *isReplaced, dpiError *error)
 {
     int status;
@@ -3872,10 +3875,10 @@ int dpiOci__sodaReplOneAndGet(dpiSodaColl *coll, const void *options,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaSave() [INTERNAL]
+// ob_dpiOci__sodaSave() [INTERNAL]
 //   Wrapper for OCISodaSave().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaSave(dpiSodaColl *coll, void *handle, uint32_t mode,
+int ob_dpiOci__sodaSave(dpiSodaColl *coll, void *handle, uint32_t mode,
         dpiError *error)
 {
     int status;
@@ -3890,10 +3893,10 @@ int dpiOci__sodaSave(dpiSodaColl *coll, void *handle, uint32_t mode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaSaveAndGet() [INTERNAL]
+// ob_dpiOci__sodaSaveAndGet() [INTERNAL]
 //   Wrapper for OCISodaSaveAndGet().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaSaveAndGet(dpiSodaColl *coll, void **handle, uint32_t mode,
+int ob_dpiOci__sodaSaveAndGet(dpiSodaColl *coll, void **handle, uint32_t mode,
         dpiError *error)
 {
     int status;
@@ -3908,10 +3911,10 @@ int dpiOci__sodaSaveAndGet(dpiSodaColl *coll, void **handle, uint32_t mode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__sodaSaveAndGetWithOpts() [INTERNAL]
+// ob_dpiOci__sodaSaveAndGetWithOpts() [INTERNAL]
 //   Wrapper for OCISodaSaveAndGetWithOpts().
 //-----------------------------------------------------------------------------
-int dpiOci__sodaSaveAndGetWithOpts(dpiSodaColl *coll, void **handle,
+int ob_dpiOci__sodaSaveAndGetWithOpts(dpiSodaColl *coll, void **handle,
         void *operOptions, uint32_t mode, dpiError *error)
 {
     int status;
@@ -3927,10 +3930,10 @@ int dpiOci__sodaSaveAndGetWithOpts(dpiSodaColl *coll, void **handle,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__stmtExecute() [INTERNAL]
+// ob_dpiOci__stmtExecute() [INTERNAL]
 //   Wrapper for OCIStmtExecute().
 //-----------------------------------------------------------------------------
-int dpiOci__stmtExecute(dpiStmt *stmt, uint32_t numIters, uint32_t mode,
+int ob_dpiOci__stmtExecute(dpiStmt *stmt, uint32_t numIters, uint32_t mode,
         dpiError *error)
 {
     int status;
@@ -3944,10 +3947,10 @@ int dpiOci__stmtExecute(dpiStmt *stmt, uint32_t numIters, uint32_t mode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__stmtFetch2() [INTERNAL]
+// ob_dpiOci__stmtFetch2() [INTERNAL]
 //   Wrapper for OCIStmtFetch2().
 //-----------------------------------------------------------------------------
-int dpiOci__stmtFetch2(dpiStmt *stmt, uint32_t numRows, uint16_t fetchMode,
+int ob_dpiOci__stmtFetch2(dpiStmt *stmt, uint32_t numRows, uint16_t fetchMode,
         int32_t offset, dpiError *error)
 {
     int status;
@@ -3959,7 +3962,7 @@ int dpiOci__stmtFetch2(dpiStmt *stmt, uint32_t numRows, uint16_t fetchMode,
     if (status == DPI_OCI_NO_DATA || fetchMode == DPI_MODE_FETCH_LAST) {
         stmt->hasRowsToFetch = 0;
     } else if (DPI_OCI_ERROR_OCCURRED(status)) {
-        return dpiError__setFromOCI(error, status, stmt->conn, "fetch");
+        return ob_dpiError__setFromOCI(error, status, stmt->conn, "fetch");
     } else {
         stmt->hasRowsToFetch = 1;
     }
@@ -3968,10 +3971,10 @@ int dpiOci__stmtFetch2(dpiStmt *stmt, uint32_t numRows, uint16_t fetchMode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__stmtGetBindInfo() [INTERNAL]
+// ob_dpiOci__stmtGetBindInfo() [INTERNAL]
 //   Wrapper for OCIStmtGetBindInfo().
 //-----------------------------------------------------------------------------
-int dpiOci__stmtGetBindInfo(dpiStmt *stmt, uint32_t size, uint32_t startLoc,
+int ob_dpiOci__stmtGetBindInfo(dpiStmt *stmt, uint32_t size, uint32_t startLoc,
         int32_t *numFound, char *names[], uint8_t nameLengths[],
         char *indNames[], uint8_t indNameLengths[], uint8_t isDuplicate[],
         void *bindHandles[], dpiError *error)
@@ -3992,10 +3995,10 @@ int dpiOci__stmtGetBindInfo(dpiStmt *stmt, uint32_t size, uint32_t startLoc,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__stmtGetNextResult() [INTERNAL]
+// ob_dpiOci__stmtGetNextResult() [INTERNAL]
 //   Wrapper for OCIStmtGetNextResult().
 //-----------------------------------------------------------------------------
-int dpiOci__stmtGetNextResult(dpiStmt *stmt, void **handle, dpiError *error)
+int ob_dpiOci__stmtGetNextResult(dpiStmt *stmt, void **handle, dpiError *error)
 {
     uint32_t returnType;
     int status;
@@ -4014,10 +4017,10 @@ int dpiOci__stmtGetNextResult(dpiStmt *stmt, void **handle, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__stmtPrepare2() [INTERNAL]
+// ob_dpiOci__stmtPrepare2() [INTERNAL]
 //   Wrapper for OCIStmtPrepare2().
 //-----------------------------------------------------------------------------
-int dpiOci__stmtPrepare2(dpiStmt *stmt, const char *sql, uint32_t sqlLength,
+int ob_dpiOci__stmtPrepare2(dpiStmt *stmt, const char *sql, uint32_t sqlLength,
         const char *tag, uint32_t tagLength, dpiError *error)
 {
     uint32_t mode = DPI_OCI_DEFAULT;
@@ -4025,7 +4028,7 @@ int dpiOci__stmtPrepare2(dpiStmt *stmt, const char *sql, uint32_t sqlLength,
 
     DPI_OCI_LOAD_SYMBOL("OCIStmtPrepare2", dpiOciSymbols.fnStmtPrepare2)
     DPI_OCI_ENSURE_ERROR_HANDLE(error)
-    if (dpiUtils__checkClientVersion(stmt->env->versionInfo, 12, 2,
+    if (ob_dpiUtils__checkClientVersion(stmt->env->versionInfo, 12, 2,
             NULL) == DPI_SUCCESS)
         mode |= DPI_OCI_PREP2_GET_SQL_ID;
     status = (*dpiOciSymbols.fnStmtPrepare2)(stmt->conn->handle, &stmt->handle,
@@ -4033,7 +4036,7 @@ int dpiOci__stmtPrepare2(dpiStmt *stmt, const char *sql, uint32_t sqlLength,
             mode);
     if (DPI_OCI_ERROR_OCCURRED(status)) {
         stmt->handle = NULL;
-        return dpiError__setFromOCI(error, status, stmt->conn, "prepare SQL");
+        return ob_dpiError__setFromOCI(error, status, stmt->conn, "prepare SQL");
     }
 
     return DPI_SUCCESS;
@@ -4041,10 +4044,10 @@ int dpiOci__stmtPrepare2(dpiStmt *stmt, const char *sql, uint32_t sqlLength,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__stmtRelease() [INTERNAL]
+// ob_dpiOci__stmtRelease() [INTERNAL]
 //   Wrapper for OCIStmtRelease().
 //-----------------------------------------------------------------------------
-int dpiOci__stmtRelease(dpiStmt *stmt, const char *tag, uint32_t tagLength,
+int ob_dpiOci__stmtRelease(dpiStmt *stmt, const char *tag, uint32_t tagLength,
         int checkError, dpiError *error)
 {
     uint32_t mode = DPI_OCI_DEFAULT;
@@ -4055,7 +4058,7 @@ int dpiOci__stmtRelease(dpiStmt *stmt, const char *tag, uint32_t tagLength,
     // that there actually is a cache currently being used; otherwise, the
     // error "ORA-24300: bad value for mode" will be raised
     if (stmt->deleteFromCache) {
-        dpiOci__attrGet(stmt->conn->handle, DPI_OCI_HTYPE_SVCCTX,
+        ob_dpiOci__attrGet(stmt->conn->handle, DPI_OCI_HTYPE_SVCCTX,
                 &cacheSize, NULL, DPI_OCI_ATTR_STMTCACHESIZE, NULL, error);
         if (cacheSize > 0)
             mode |= DPI_OCI_STRLS_CACHE_DELETE;
@@ -4072,10 +4075,10 @@ int dpiOci__stmtRelease(dpiStmt *stmt, const char *tag, uint32_t tagLength,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__stringAssignText() [INTERNAL]
+// ob_dpiOci__stringAssignText() [INTERNAL]
 //   Wrapper for OCIStringAssignText().
 //-----------------------------------------------------------------------------
-int dpiOci__stringAssignText(void *envHandle, const char *value,
+int ob_dpiOci__stringAssignText(void *envHandle, const char *value,
         uint32_t valueLength, void **handle, dpiError *error)
 {
     int status;
@@ -4090,10 +4093,10 @@ int dpiOci__stringAssignText(void *envHandle, const char *value,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__stringPtr() [INTERNAL]
+// ob_dpiOci__stringPtr() [INTERNAL]
 //   Wrapper for OCIStringPtr().
 //-----------------------------------------------------------------------------
-int dpiOci__stringPtr(void *envHandle, void *handle, char **ptr)
+int ob_dpiOci__stringPtr(void *envHandle, void *handle, char **ptr)
 {
     dpiError *error = NULL;
 
@@ -4104,10 +4107,10 @@ int dpiOci__stringPtr(void *envHandle, void *handle, char **ptr)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__stringResize() [INTERNAL]
+// ob_dpiOci__stringResize() [INTERNAL]
 //   Wrapper for OCIStringResize().
 //-----------------------------------------------------------------------------
-int dpiOci__stringResize(void *envHandle, void **handle, uint32_t newSize,
+int ob_dpiOci__stringResize(void *envHandle, void **handle, uint32_t newSize,
         dpiError *error)
 {
     int status;
@@ -4121,10 +4124,10 @@ int dpiOci__stringResize(void *envHandle, void **handle, uint32_t newSize,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__stringSize() [INTERNAL]
+// ob_dpiOci__stringSize() [INTERNAL]
 //   Wrapper for OCIStringSize().
 //-----------------------------------------------------------------------------
-int dpiOci__stringSize(void *envHandle, void *handle, uint32_t *size)
+int ob_dpiOci__stringSize(void *envHandle, void *handle, uint32_t *size)
 {
     dpiError *error = NULL;
 
@@ -4135,10 +4138,10 @@ int dpiOci__stringSize(void *envHandle, void *handle, uint32_t *size)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__subscriptionRegister() [INTERNAL]
+// ob_dpiOci__subscriptionRegister() [INTERNAL]
 //   Wrapper for OCISubscriptionRegister().
 //-----------------------------------------------------------------------------
-int dpiOci__subscriptionRegister(dpiConn *conn, void **handle, uint32_t mode,
+int ob_dpiOci__subscriptionRegister(dpiConn *conn, void **handle, uint32_t mode,
         dpiError *error)
 {
     int status;
@@ -4153,10 +4156,10 @@ int dpiOci__subscriptionRegister(dpiConn *conn, void **handle, uint32_t mode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__subscriptionUnRegister() [INTERNAL]
+// ob_dpiOci__subscriptionUnRegister() [INTERNAL]
 //   Wrapper for OCISubscriptionUnRegister().
 //-----------------------------------------------------------------------------
-int dpiOci__subscriptionUnRegister(dpiConn *conn, dpiSubscr *subscr,
+int ob_dpiOci__subscriptionUnRegister(dpiConn *conn, dpiSubscr *subscr,
         dpiError *error)
 {
     uint32_t mode;
@@ -4174,10 +4177,10 @@ int dpiOci__subscriptionUnRegister(dpiConn *conn, dpiSubscr *subscr,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__tableDelete() [INTERNAL]
+// ob_dpiOci__tableDelete() [INTERNAL]
 //   Wrapper for OCITableDelete().
 //-----------------------------------------------------------------------------
-int dpiOci__tableDelete(dpiObject *obj, int32_t index, dpiError *error)
+int ob_dpiOci__tableDelete(dpiObject *obj, int32_t index, dpiError *error)
 {
     int status;
 
@@ -4190,10 +4193,10 @@ int dpiOci__tableDelete(dpiObject *obj, int32_t index, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__tableExists() [INTERNAL]
+// ob_dpiOci__tableExists() [INTERNAL]
 //   Wrapper for OCITableExists().
 //-----------------------------------------------------------------------------
-int dpiOci__tableExists(dpiObject *obj, int32_t index, int *exists,
+int ob_dpiOci__tableExists(dpiObject *obj, int32_t index, int *exists,
         dpiError *error)
 {
     int status;
@@ -4208,10 +4211,10 @@ int dpiOci__tableExists(dpiObject *obj, int32_t index, int *exists,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__tableFirst() [INTERNAL]
+// ob_dpiOci__tableFirst() [INTERNAL]
 //   Wrapper for OCITableFirst().
 //-----------------------------------------------------------------------------
-int dpiOci__tableFirst(dpiObject *obj, int32_t *index, dpiError *error)
+int ob_dpiOci__tableFirst(dpiObject *obj, int32_t *index, dpiError *error)
 {
     int status;
 
@@ -4225,10 +4228,10 @@ int dpiOci__tableFirst(dpiObject *obj, int32_t *index, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__tableLast() [INTERNAL]
+// ob_dpiOci__tableLast() [INTERNAL]
 //   Wrapper for OCITableLast().
 //-----------------------------------------------------------------------------
-int dpiOci__tableLast(dpiObject *obj, int32_t *index, dpiError *error)
+int ob_dpiOci__tableLast(dpiObject *obj, int32_t *index, dpiError *error)
 {
     int status;
 
@@ -4241,10 +4244,10 @@ int dpiOci__tableLast(dpiObject *obj, int32_t *index, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__tableNext() [INTERNAL]
+// ob_dpiOci__tableNext() [INTERNAL]
 //   Wrapper for OCITableNext().
 //-----------------------------------------------------------------------------
-int dpiOci__tableNext(dpiObject *obj, int32_t index, int32_t *nextIndex,
+int ob_dpiOci__tableNext(dpiObject *obj, int32_t index, int32_t *nextIndex,
         int *exists, dpiError *error)
 {
     int status;
@@ -4258,10 +4261,10 @@ int dpiOci__tableNext(dpiObject *obj, int32_t index, int32_t *nextIndex,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__tablePrev() [INTERNAL]
+// ob_dpiOci__tablePrev() [INTERNAL]
 //   Wrapper for OCITablePrev().
 //-----------------------------------------------------------------------------
-int dpiOci__tablePrev(dpiObject *obj, int32_t index, int32_t *prevIndex,
+int ob_dpiOci__tablePrev(dpiObject *obj, int32_t index, int32_t *prevIndex,
         int *exists, dpiError *error)
 {
     int status;
@@ -4275,10 +4278,10 @@ int dpiOci__tablePrev(dpiObject *obj, int32_t index, int32_t *prevIndex,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__tableSize() [INTERNAL]
+// ob_dpiOci__tableSize() [INTERNAL]
 //   Wrapper for OCITableSize().
 //-----------------------------------------------------------------------------
-int dpiOci__tableSize(dpiObject *obj, int32_t *size, dpiError *error)
+int ob_dpiOci__tableSize(dpiObject *obj, int32_t *size, dpiError *error)
 {
     int status;
 
@@ -4291,10 +4294,10 @@ int dpiOci__tableSize(dpiObject *obj, int32_t *size, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__threadKeyDestroy() [INTERNAL]
+// ob_dpiOci__threadKeyDestroy() [INTERNAL]
 //   Wrapper for OCIThreadKeyDestroy().
 //-----------------------------------------------------------------------------
-int dpiOci__threadKeyDestroy(void *envHandle, void *errorHandle, void **key,
+int ob_dpiOci__threadKeyDestroy(void *envHandle, void *errorHandle, void **key,
         dpiError *error)
 {
     DPI_OCI_LOAD_SYMBOL("OCIThreadKeyDestroy",
@@ -4305,10 +4308,10 @@ int dpiOci__threadKeyDestroy(void *envHandle, void *errorHandle, void **key,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__threadKeyGet() [INTERNAL]
+// ob_dpiOci__threadKeyGet() [INTERNAL]
 //   Wrapper for OCIThreadKeyGet().
 //-----------------------------------------------------------------------------
-int dpiOci__threadKeyGet(void *envHandle, void *errorHandle, void *key,
+int ob_dpiOci__threadKeyGet(void *envHandle, void *errorHandle, void *key,
         void **value, dpiError *error)
 {
     int status;
@@ -4316,16 +4319,16 @@ int dpiOci__threadKeyGet(void *envHandle, void *errorHandle, void *key,
     status = (*dpiOciSymbols.fnThreadKeyGet)(envHandle, errorHandle, key,
             value);
     if (status != DPI_OCI_SUCCESS)
-        return dpiError__set(error, "get TLS error", DPI_ERR_TLS_ERROR);
+        return ob_dpiError__set(error, "get TLS error", DPI_ERR_TLS_ERROR);
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__threadKeyInit() [INTERNAL]
+// ob_dpiOci__threadKeyInit() [INTERNAL]
 //   Wrapper for OCIThreadKeyInit().
 //-----------------------------------------------------------------------------
-int dpiOci__threadKeyInit(void *envHandle, void *errorHandle, void **key,
+int ob_dpiOci__threadKeyInit(void *envHandle, void *errorHandle, void **key,
         void *destroyFunc, dpiError *error)
 {
     int status;
@@ -4338,10 +4341,10 @@ int dpiOci__threadKeyInit(void *envHandle, void *errorHandle, void **key,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__threadKeySet() [INTERNAL]
+// ob_dpiOci__threadKeySet() [INTERNAL]
 //   Wrapper for OCIThreadKeySet().
 //-----------------------------------------------------------------------------
-int dpiOci__threadKeySet(void *envHandle, void *errorHandle, void *key,
+int ob_dpiOci__threadKeySet(void *envHandle, void *errorHandle, void *key,
         void *value, dpiError *error)
 {
     int status;
@@ -4350,16 +4353,16 @@ int dpiOci__threadKeySet(void *envHandle, void *errorHandle, void *key,
     status = (*dpiOciSymbols.fnThreadKeySet)(envHandle, errorHandle, key,
             value);
     if (status != DPI_OCI_SUCCESS)
-        return dpiError__set(error, "set TLS error", DPI_ERR_TLS_ERROR);
+        return ob_dpiError__set(error, "set TLS error", DPI_ERR_TLS_ERROR);
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__transCommit() [INTERNAL]
+// ob_dpiOci__transCommit() [INTERNAL]
 //   Wrapper for OCITransCommit().
 //-----------------------------------------------------------------------------
-int dpiOci__transCommit(dpiConn *conn, uint32_t flags, dpiError *error)
+int ob_dpiOci__transCommit(dpiConn *conn, uint32_t flags, dpiError *error)
 {
     int status;
 
@@ -4372,10 +4375,10 @@ int dpiOci__transCommit(dpiConn *conn, uint32_t flags, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__transDetach() [INTERNAL]
+// ob_dpiOci__transDetach() [INTERNAL]
 //   Wrapper for OCITransDetach().
 //-----------------------------------------------------------------------------
-int dpiOci__transDetach(dpiConn *conn, uint32_t flags, dpiError *error)
+int ob_dpiOci__transDetach(dpiConn *conn, uint32_t flags, dpiError *error)
 {
     int status;
 
@@ -4388,10 +4391,10 @@ int dpiOci__transDetach(dpiConn *conn, uint32_t flags, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__transForget() [INTERNAL]
+// ob_dpiOci__transForget() [INTERNAL]
 //   Wrapper for OCITransForget().
 //-----------------------------------------------------------------------------
-int dpiOci__transForget(dpiConn *conn, dpiError *error)
+int ob_dpiOci__transForget(dpiConn *conn, dpiError *error)
 {
     int status;
 
@@ -4404,10 +4407,10 @@ int dpiOci__transForget(dpiConn *conn, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__transPrepare() [INTERNAL]
+// ob_dpiOci__transPrepare() [INTERNAL]
 //   Wrapper for OCITransPrepare().
 //-----------------------------------------------------------------------------
-int dpiOci__transPrepare(dpiConn *conn, int *commitNeeded, dpiError *error)
+int ob_dpiOci__transPrepare(dpiConn *conn, int *commitNeeded, dpiError *error)
 {
     int status;
 
@@ -4421,10 +4424,10 @@ int dpiOci__transPrepare(dpiConn *conn, int *commitNeeded, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__transRollback() [INTERNAL]
+// ob_dpiOci__transRollback() [INTERNAL]
 //   Wrapper for OCITransRollback().
 //-----------------------------------------------------------------------------
-int dpiOci__transRollback(dpiConn *conn, int checkError, dpiError *error)
+int ob_dpiOci__transRollback(dpiConn *conn, int checkError, dpiError *error)
 {
     int status;
 
@@ -4439,10 +4442,10 @@ int dpiOci__transRollback(dpiConn *conn, int checkError, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__transStart() [INTERNAL]
+// ob_dpiOci__transStart() [INTERNAL]
 //   Wrapper for OCITransStart().
 //-----------------------------------------------------------------------------
-int dpiOci__transStart(dpiConn *conn, uint32_t transactionTimeout,
+int ob_dpiOci__transStart(dpiConn *conn, uint32_t transactionTimeout,
         uint32_t flags, dpiError *error)
 {
     int status;
@@ -4456,10 +4459,10 @@ int dpiOci__transStart(dpiConn *conn, uint32_t transactionTimeout,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__typeByName() [INTERNAL]
+// ob_dpiOci__typeByName() [INTERNAL]
 //   Wrapper for OCITypeByName().
 //-----------------------------------------------------------------------------
-int dpiOci__typeByName(dpiConn *conn, const char *schema,
+int ob_dpiOci__typeByName(dpiConn *conn, const char *schema,
         uint32_t schemaLength, const char *name, uint32_t nameLength,
         void **tdo, dpiError *error)
 {
@@ -4475,10 +4478,10 @@ int dpiOci__typeByName(dpiConn *conn, const char *schema,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__typeByFullName() [INTERNAL]
+// ob_dpiOci__typeByFullName() [INTERNAL]
 //   Wrapper for OCITypeByFullName().
 //-----------------------------------------------------------------------------
-int dpiOci__typeByFullName(dpiConn *conn, const char *name,
+int ob_dpiOci__typeByFullName(dpiConn *conn, const char *name,
         uint32_t nameLength, void **tdo, dpiError *error)
 {
     int status;
@@ -4493,10 +4496,10 @@ int dpiOci__typeByFullName(dpiConn *conn, const char *name,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__vectorFromArray() [INTERNAL]
+// ob_dpiOci__vectorFromArray() [INTERNAL]
 //   Wrapper for OCIVectorFromArray().
 //-----------------------------------------------------------------------------
-int dpiOci__vectorFromArray(dpiVector *vector, dpiVectorInfo *info,
+int ob_dpiOci__vectorFromArray(dpiVector *vector, dpiVectorInfo *info,
         dpiError *error)
 {
     int status;
@@ -4511,15 +4514,15 @@ int dpiOci__vectorFromArray(dpiVector *vector, dpiVectorInfo *info,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__vectorFromSparseArray() [INTERNAL]
+// ob_dpiOci__vectorFromSparseArray() [INTERNAL]
 //   Wrapper for OCIVectorFromSparseArray().
 //-----------------------------------------------------------------------------
-int dpiOci__vectorFromSparseArray(dpiVector *vector, dpiVectorInfo *info,
+int ob_dpiOci__vectorFromSparseArray(dpiVector *vector, dpiVectorInfo *info,
         dpiError *error)
 {
     int status;
 
-    if (dpiUtils__checkClientVersion(vector->env->versionInfo, 23, 7,
+    if (ob_dpiUtils__checkClientVersion(vector->env->versionInfo, 23, 7,
             error) < 0)
         return DPI_FAILURE;
     DPI_OCI_LOAD_SYMBOL("OCIVectorFromSparseArray",
@@ -4534,10 +4537,10 @@ int dpiOci__vectorFromSparseArray(dpiVector *vector, dpiVectorInfo *info,
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__vectorToArray() [INTERNAL]
+// ob_dpiOci__vectorToArray() [INTERNAL]
 //   Wrapper for OCIVectorToArray().
 //-----------------------------------------------------------------------------
-int dpiOci__vectorToArray(dpiVector *vector, dpiError *error)
+int ob_dpiOci__vectorToArray(dpiVector *vector, dpiError *error)
 {
     int status;
 
@@ -4551,15 +4554,15 @@ int dpiOci__vectorToArray(dpiVector *vector, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiOci__vectorToSparseArray() [INTERNAL]
+// ob_dpiOci__vectorToSparseArray() [INTERNAL]
 //   Wrapper for OCIVectorToSparseArray().
 //-----------------------------------------------------------------------------
-int dpiOci__vectorToSparseArray(dpiVector *vector, dpiError *error)
+int ob_dpiOci__vectorToSparseArray(dpiVector *vector, dpiError *error)
 {
     uint32_t numDimensions = vector->numDimensions;
     int status;
 
-    if (dpiUtils__checkClientVersion(vector->env->versionInfo, 23, 7,
+    if (ob_dpiUtils__checkClientVersion(vector->env->versionInfo, 23, 7,
             error) < 0)
         return DPI_FAILURE;
     DPI_OCI_LOAD_SYMBOL("OCIVectorToSparseArray",

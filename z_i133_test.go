@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	godror "github.com/godror/godror"
+	godror "github.com/travelliu/godror_ob"
 )
 
 var flagAlloc133 = flag.String("alloc133", "alloc133.txt", "file to write alloc info")
@@ -346,6 +346,6 @@ func readSmaps(pid int) (uint64, error) {
 			}
 		}
 	}
-	//fmt.Println(m)
+	// fmt.Println(m)
 	return rss, nil
 }

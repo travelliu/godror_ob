@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/go-logfmt/logfmt"
-	"github.com/godror/godror/slog"
+	"github.com/travelliu/godror_ob/slog"
 )
 
 const (
@@ -413,7 +413,7 @@ func (P ConnectionParams) string(class, withPassword bool) string {
 	if P.LibDir != "" {
 		q.Add("libDir", P.LibDir)
 	}
-	//return quoteRunes(P.Username, "/@") + "/" + quoteRunes(password, "@") + "@" + P.CommonParams.ConnectString + "\n" + q.String()
+	// return quoteRunes(P.Username, "/@") + "/" + quoteRunes(password, "@") + "@" + P.CommonParams.ConnectString + "\n" + q.String()
 
 	return q.String()
 }
@@ -424,7 +424,7 @@ func (P ConnectionParams) string(class, withPassword bool) string {
 func Parse(dataSourceName string) (ConnectionParams, error) {
 	P := ConnectionParams{
 		// StandaloneConnection: DefaultStandaloneConnection,
-		//CommonParams: CommonParams{ Timezone: time.Local, },
+		// CommonParams: CommonParams{ Timezone: time.Local, },
 		ConnParams: ConnParams{
 			ConnClass: DefaultConnectionClass,
 		},
@@ -442,7 +442,7 @@ func Parse(dataSourceName string) (ConnectionParams, error) {
 	dataSourceName = strings.TrimSpace(dataSourceName)
 	var q url.Values
 
-	//fmt.Printf("dsn=%q\n", dataSourceName)
+	// fmt.Printf("dsn=%q\n", dataSourceName)
 	if strings.HasPrefix(dataSourceName, "oracle://") {
 		// URL
 		u, err := url.Parse(dataSourceName)
@@ -466,7 +466,7 @@ func Parse(dataSourceName string) (ConnectionParams, error) {
 		if u.Path != "" && u.Path != "/" {
 			P.ConnectString += u.Path
 		}
-		//fmt.Printf("URL=%s cs=%q host=%q port=%q path=%q\n", u, P.ConnectString, u.Host, u.Port(), u.Path)
+		// fmt.Printf("URL=%s cs=%q host=%q port=%q path=%q\n", u, P.ConnectString, u.Host, u.Port(), u.Path)
 		q = u.Query()
 	} else if strings.IndexByte(dataSourceName, '\n') >= 0 || // multi-line, or
 		strings.Contains(dataSourceName, "connectString=") { // contains connectString
@@ -478,9 +478,9 @@ func Parse(dataSourceName string) (ConnectionParams, error) {
 		var passw string
 		P.Username, passw, dataSourceName = parseUserPassw(dataSourceName)
 		P.Password.Set(passw)
-		//fmt.Printf("dsn=%q\n", dataSourceName)
+		// fmt.Printf("dsn=%q\n", dataSourceName)
 		uSid := strings.ToUpper(dataSourceName)
-		//fmt.Printf("dataSourceName=%q SID=%q\n", dataSourceName, uSid)
+		// fmt.Printf("dataSourceName=%q SID=%q\n", dataSourceName, uSid)
 		if strings.Contains(uSid, " AS ") {
 			for _, role := range adminRoles {
 				if s := role.String(); strings.HasSuffix(uSid, " AS "+s) {
@@ -493,7 +493,7 @@ func Parse(dataSourceName string) (ConnectionParams, error) {
 		P.ConnectString = dataSourceName
 	}
 
-	//fmt.Printf("csa=%q\n", P.ConnectString)
+	// fmt.Printf("csa=%q\n", P.ConnectString)
 
 	if paramsString != "" {
 		if q == nil {
@@ -530,7 +530,7 @@ func Parse(dataSourceName string) (ConnectionParams, error) {
 			return P, fmt.Errorf("parsing parameters %q: %w", paramsString, err)
 		}
 	}
-	//fmt.Printf("cs0=%q\n", P.ConnectString)
+	// fmt.Printf("cs0=%q\n", P.ConnectString)
 
 	// Override everything from the parameters,
 	// which can come from the URL values or the logfmt-formatted parameters string.
@@ -623,8 +623,8 @@ func Parse(dataSourceName string) (ConnectionParams, error) {
 		if P.Timezone == nil {
 			P.Timezone = time.UTC
 		}
-		//} else if P.Timezone == nil {
-		//P.Timezone = time.Local
+		// } else if P.Timezone == nil {
+		// P.Timezone = time.Local
 	}
 	for _, task := range []struct {
 		Dest *int
@@ -927,9 +927,9 @@ func parseUserPassw(dataSourceName string) (user, passw, connectString string) {
 			ups[0], extra = ups[0][:i], ups[0][i:]
 		}
 	}
-	//fmt.Printf("ups=%v extra=%q\n", ups, extra)
+	// fmt.Printf("ups=%v extra=%q\n", ups, extra)
 	userpass := splitQuoted(ups[0], '/')
-	//fmt.Printf("ups=%q\nuserpass=%q\n", ups, userpass)
+	// fmt.Printf("ups=%q\nuserpass=%q\n", ups, userpass)
 	if len(ups) == 1 && len(userpass) == 1 {
 		return "", "", dataSourceName + unquote(extra)
 	}

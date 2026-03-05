@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	godror "github.com/godror/godror"
+	godror "github.com/travelliu/godror_ob"
 )
 
 func Test119GetTables(t *testing.T) {
@@ -56,7 +56,7 @@ func Test119GetTables(t *testing.T) {
 		colCnt++
 	}
 
-	//in the end we have last table to add to result, if there was one
+	// in the end we have last table to add to result, if there was one
 	if table.Name != "" {
 		tables = append(tables, table)
 	}

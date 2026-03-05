@@ -22,7 +22,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/godror/godror/slog"
+	"github.com/travelliu/godror_ob/slog"
 )
 
 // Data holds the data to/from Oracle.
@@ -67,7 +67,7 @@ func NewData(v any) (*Data, error) {
 
 // IsNull returns whether the data is null.
 func (d *Data) IsNull() bool {
-	// Use of C.dpiData_getIsNull(&d.dpiData) would be safer,
+	// Use of C.ob_dpiData_getIsNull(&d.dpiData) would be safer,
 	// but ODPI-C 3.1.4 just returns dpiData->isNull, so do the same
 	// without calling CGO.
 	return d == nil || d.dpiData.isNull == 1
@@ -80,7 +80,7 @@ func (d *Data) SetNull() {
 
 // GetBool returns the bool data.
 func (d *Data) GetBool() bool {
-	//return !d.IsNull() && C.dpiData_getBool(&d.dpiData) == 1
+	// return !d.IsNull() && C.ob_dpiData_getBool(&d.dpiData) == 1
 	return !d.IsNull() && *((*C.int)(unsafe.Pointer(&d.dpiData.value))) == 1
 }
 
@@ -92,7 +92,7 @@ func (d *Data) SetBool(b bool) {
 		i = 1
 	}
 	d.NativeTypeNum = C.DPI_NATIVE_TYPE_BOOLEAN
-	C.dpiData_setBool(&d.dpiData, i)
+	C.ob_dpiData_setBool(&d.dpiData, i)
 }
 
 // GetBytes returns the []byte from the data.
@@ -100,12 +100,12 @@ func (d *Data) GetBytes() []byte {
 	if d.IsNull() {
 		return nil
 	}
-	//b := C.dpiData_getBytes(&d.dpiData)
+	// b := C.ob_dpiData_getBytes(&d.dpiData)
 	b := ((*C.dpiBytes)(unsafe.Pointer(&d.dpiData.value)))
 	if b.ptr == nil || b.length == 0 {
 		return nil
 	}
-	//return ((*[32767]byte)(unsafe.Pointer(b.ptr)))[:b.length:b.length]
+	// return ((*[32767]byte)(unsafe.Pointer(b.ptr)))[:b.length:b.length]
 	return ([]byte)(unsafe.Slice((*byte)(unsafe.Pointer(b.ptr)), b.length))
 }
 
@@ -116,7 +116,7 @@ func (d *Data) SetBytes(b []byte) {
 		return
 	}
 	d.NativeTypeNum = C.DPI_NATIVE_TYPE_BYTES
-	C.dpiData_setBytes(&d.dpiData, (*C.char)(unsafe.Pointer(&b[0])), C.uint32_t(len(b)))
+	C.ob_dpiData_setBytes(&d.dpiData, (*C.char)(unsafe.Pointer(&b[0])), C.uint32_t(len(b)))
 }
 
 // GetFloat32 gets float32 from the data.
@@ -124,7 +124,7 @@ func (d *Data) GetFloat32() float32 {
 	if d.IsNull() {
 		return 0
 	}
-	//return float32(C.dpiData_getFloat(&d.dpiData))
+	// return float32(C.ob_dpiData_getFloat(&d.dpiData))
 	return *((*float32)(unsafe.Pointer(&d.dpiData.value)))
 }
 
@@ -132,16 +132,16 @@ func (d *Data) GetFloat32() float32 {
 func (d *Data) SetFloat32(f float32) {
 	d.reset(false)
 	d.NativeTypeNum = C.DPI_NATIVE_TYPE_FLOAT
-	C.dpiData_setFloat(&d.dpiData, C.float(f))
+	C.ob_dpiData_setFloat(&d.dpiData, C.float(f))
 }
 
 // GetFloat64 gets float64 from the data.
 func (d *Data) GetFloat64() float64 {
-	//fmt.Println("GetFloat64", d.IsNull(), d)
+	// fmt.Println("GetFloat64", d.IsNull(), d)
 	if d.IsNull() {
 		return 0
 	}
-	//return float64(C.dpiData_getDouble(&d.dpiData))
+	// return float64(C.ob_dpiData_getDouble(&d.dpiData))
 	return *((*float64)(unsafe.Pointer(&d.dpiData.value)))
 }
 
@@ -149,7 +149,7 @@ func (d *Data) GetFloat64() float64 {
 func (d *Data) SetFloat64(f float64) {
 	d.reset(false)
 	d.NativeTypeNum = C.DPI_NATIVE_TYPE_DOUBLE
-	C.dpiData_setDouble(&d.dpiData, C.double(f))
+	C.ob_dpiData_setDouble(&d.dpiData, C.double(f))
 }
 
 // GetInt64 gets int64 from the data.
@@ -157,7 +157,7 @@ func (d *Data) GetInt64() int64 {
 	if d.IsNull() {
 		return 0
 	}
-	//i := C.dpiData_getInt64(&d.dpiData)
+	// i := C.ob_dpiData_getInt64(&d.dpiData)
 	i := *((*int64)(unsafe.Pointer(&d.dpiData.value)))
 	if logger := getLogger(context.TODO()); logger != nil && logger.Enabled(context.TODO(), slog.LevelDebug) {
 		logger.Debug("GetInt64", "data", d, "p", fmt.Sprintf("%p", d), "i", i)
@@ -170,7 +170,7 @@ func (d *Data) GetInt64() int64 {
 func (d *Data) SetInt64(i int64) {
 	d.reset(false)
 	d.NativeTypeNum = C.DPI_NATIVE_TYPE_INT64
-	C.dpiData_setInt64(&d.dpiData, C.int64_t(i))
+	C.ob_dpiData_setInt64(&d.dpiData, C.int64_t(i))
 }
 
 // GetIntervalDS gets duration as interval date-seconds from data.
@@ -178,7 +178,7 @@ func (d *Data) GetIntervalDS() time.Duration {
 	if d.IsNull() {
 		return 0
 	}
-	//ds := C.dpiData_getIntervalDS(&d.dpiData)
+	// ds := C.ob_dpiData_getIntervalDS(&d.dpiData)
 	ds := *((*C.dpiIntervalDS)(unsafe.Pointer(&d.dpiData.value)))
 	return time.Duration(ds.days)*24*time.Hour +
 		time.Duration(ds.hours)*time.Hour +
@@ -203,7 +203,7 @@ func (d *Data) SetIntervalDS(dur time.Duration) {
 	secs := C.int32_t(dur / time.Second)
 	fsecs := C.int32_t(rem)
 	d.NativeTypeNum = C.DPI_NATIVE_TYPE_INTERVAL_DS
-	C.dpiData_setIntervalDS(&d.dpiData, days, hrs, mins, secs, fsecs)
+	C.ob_dpiData_setIntervalDS(&d.dpiData, days, hrs, mins, secs, fsecs)
 }
 
 // GetIntervalYM gets IntervalYM from the data.
@@ -211,7 +211,7 @@ func (d *Data) GetIntervalYM() IntervalYM {
 	if d.IsNull() {
 		return IntervalYM{}
 	}
-	//ym := C.dpiData_getIntervalYM(&d.dpiData)
+	// ym := C.ob_dpiData_getIntervalYM(&d.dpiData)
 	ym := *((*C.dpiIntervalYM)(unsafe.Pointer(&d.dpiData.value)))
 	return IntervalYM{Years: int(ym.years), Months: int(ym.months)}
 }
@@ -220,7 +220,7 @@ func (d *Data) GetIntervalYM() IntervalYM {
 func (d *Data) SetIntervalYM(ym IntervalYM) {
 	d.reset(ym.Months == 0 && ym.Years == 0)
 	d.NativeTypeNum = C.DPI_NATIVE_TYPE_INTERVAL_YM
-	C.dpiData_setIntervalYM(&d.dpiData, C.int32_t(ym.Years), C.int32_t(ym.Months))
+	C.ob_dpiData_setIntervalYM(&d.dpiData, C.int32_t(ym.Years), C.int32_t(ym.Months))
 }
 
 // GetLob gets data as Lob.
@@ -228,14 +228,14 @@ func (d *Data) GetLob() *Lob {
 	if d.IsNull() {
 		return nil
 	}
-	return &Lob{Reader: &dpiLobReader{dpiLob: C.dpiData_getLOB(&d.dpiData)}}
+	return &Lob{Reader: &dpiLobReader{dpiLob: C.ob_dpiData_getLOB(&d.dpiData)}}
 }
 
 // SetLob sets Lob to the data.
 func (d *Data) SetLob(lob *DirectLob) {
 	d.reset(lob == nil)
 	d.NativeTypeNum = C.DPI_NATIVE_TYPE_LOB
-	C.dpiData_setLOB(&d.dpiData, lob.dpiLob)
+	C.ob_dpiData_setLOB(&d.dpiData, lob.dpiLob)
 }
 
 // GetObject gets Object from data.
@@ -250,13 +250,13 @@ func (d *Data) GetObject() *Object {
 		return nil
 	}
 
-	o := C.dpiData_getObject(&d.dpiData)
+	o := C.ob_dpiData_getObject(&d.dpiData)
 	if o == nil {
 		return nil
 	}
 	if !d.implicitObj {
 		if err := d.ObjectType.drv.checkExec(func() C.int {
-			return C.dpiObject_addRef(o)
+			return C.ob_dpiObject_addRef(o)
 		}); err != nil {
 			panic(err)
 		}
@@ -276,7 +276,7 @@ func (d *Data) SetObject(o *Object) {
 		return
 	}
 	d.ObjectType = o.ObjectType
-	C.dpiData_setObject(&d.dpiData, o.dpiObject)
+	C.ob_dpiData_setObject(&d.dpiData, o.dpiObject)
 }
 
 // GetStmt gets Stmt from data.
@@ -284,14 +284,14 @@ func (d *Data) GetStmt() driver.Stmt {
 	if d.IsNull() {
 		return nil
 	}
-	return &statement{dpiStmt: C.dpiData_getStmt(&d.dpiData)}
+	return &statement{dpiStmt: C.ob_dpiData_getStmt(&d.dpiData)}
 }
 
 // SetStmt sets Stmt to data.
 func (d *Data) SetStmt(s *statement) {
 	d.reset(s == nil)
 	d.NativeTypeNum = C.DPI_NATIVE_TYPE_STMT
-	C.dpiData_setStmt(&d.dpiData, s.dpiStmt)
+	C.ob_dpiData_setStmt(&d.dpiData, s.dpiStmt)
 }
 
 // GetTime gets Time from data, in the local time zone.
@@ -304,7 +304,7 @@ func (d *Data) GetTimeIn(serverTZ *time.Location) time.Time {
 	if d.IsNull() {
 		return time.Time{}
 	}
-	//ts := C.dpiData_getTimestamp(&d.dpiData)
+	// ts := C.ob_dpiData_getTimestamp(&d.dpiData)
 	ts := *((*C.dpiTimestamp)(unsafe.Pointer(&d.dpiData.value)))
 	return time.Date(
 		int(ts.year), time.Month(ts.month), int(ts.day),
@@ -363,7 +363,7 @@ func dataSetTime(ctx context.Context, dpiData *C.dpiData, t time.Time, connTZ *t
 			"tzHour", tzOff/3600, "tzMin", (tzOff%3600)/60)
 	}
 
-	C.dpiData_setTimestamp(dpiData,
+	C.ob_dpiData_setTimestamp(dpiData,
 		C.int16_t(Y), C.uint8_t(M), C.uint8_t(D),
 		C.uint8_t(h), C.uint8_t(m), C.uint8_t(s), C.uint32_t(ns),
 		C.int8_t(tzOff/3600), C.int8_t((tzOff%3600)/60),
@@ -375,7 +375,7 @@ func (d *Data) GetUint64() uint64 {
 	if d.IsNull() {
 		return 0
 	}
-	//return uint64(C.dpiData_getUint64(&d.dpiData))
+	// return uint64(C.ob_dpiData_getUint64(&d.dpiData))
 	return *((*uint64)(unsafe.Pointer(&d.dpiData.value)))
 }
 
@@ -383,7 +383,7 @@ func (d *Data) GetUint64() uint64 {
 func (d *Data) SetUint64(u uint64) {
 	d.reset(false)
 	d.NativeTypeNum = C.DPI_NATIVE_TYPE_UINT64
-	C.dpiData_setUint64(&d.dpiData, C.uint64_t(u))
+	C.ob_dpiData_setUint64(&d.dpiData, C.uint64_t(u))
 }
 
 // IntervalYM holds Years and Months as interval.
@@ -509,9 +509,9 @@ func (d *Data) Set(v any) error {
 	case ObjectCollection:
 		d.ObjectType = x.Object.ObjectType
 		d.SetObject(x.Object)
-	//case *stmt:
-	//d.NativeTypeNum = C.DPI_NATIVE_TYPE_STMT
-	//d.SetStmt(x)
+	// case *stmt:
+	// d.NativeTypeNum = C.DPI_NATIVE_TYPE_STMT
+	// d.SetStmt(x)
 	case bool:
 		d.SetBool(x)
 	case sql.NullBool:
@@ -520,9 +520,9 @@ func (d *Data) Set(v any) error {
 		} else {
 			d.SetNull()
 		}
-	//case rowid:
-	//d.NativeTypeNum = C.DPI_NATIVE_TYPE_ROWID
-	//d.SetRowid(x)
+	// case rowid:
+	// d.NativeTypeNum = C.DPI_NATIVE_TYPE_ROWID
+	// d.SetRowid(x)
 	default:
 		if logger := getLogger(context.TODO()); logger != nil && logger.Enabled(context.TODO(), slog.LevelDebug) {
 			logger.Debug("Set", "data", d, "type", fmt.Sprintf("%T", v))
@@ -557,7 +557,7 @@ func (c *conn) NewData(baseType any, sliceLen, bufSize int) ([]*Data, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer C.dpiVar_release(v)
+	defer C.ob_dpiVar_release(v)
 
 	data := make([]*Data, sliceLen)
 	for i := 0; i < sliceLen; i++ {
@@ -663,7 +663,7 @@ func (d *Data) reset(null bool) {
 	d.dpiData.isNull = C.int(b2i(null))
 }
 
-func (d *Data) dpiDataGetBytes() *C.dpiBytes { return C.dpiData_getBytes(&d.dpiData) }
+func (d *Data) dpiDataGetBytes() *C.dpiBytes { return C.ob_dpiData_getBytes(&d.dpiData) }
 func (d *Data) dpiDataGetBytesUnsafe() *C.dpiBytes {
 	return ((*C.dpiBytes)(unsafe.Pointer(&d.dpiData.value)))
 }
@@ -684,7 +684,7 @@ func (d *Data) prepare(oracleTypeNum C.uint) {
 	if d.NativeTypeNum == C.DPI_NATIVE_TYPE_BYTES &&
 		oracleTypeNum == C.DPI_ORACLE_TYPE_NUMBER {
 		var a [39]byte
-		C.dpiData_setBytes(&d.dpiData, (*C.char)(unsafe.Pointer(&a[0])), C.uint32_t(len(a)))
+		C.ob_dpiData_setBytes(&d.dpiData, (*C.char)(unsafe.Pointer(&a[0])), C.uint32_t(len(a)))
 	}
 }
 

@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	godror "github.com/godror/godror"
+	godror "github.com/travelliu/godror_ob"
 )
 
 type execer interface {
@@ -495,7 +495,7 @@ func testQueue(
 				msgs = msgs[:1]
 			}
 
-			//t.Logf("name=%q q=%#v", q.Name(), q)
+			// t.Logf("name=%q q=%#v", q.Name(), q)
 			n, err := q.Dequeue(msgs)
 			t.Logf("%d. received %d message(s)", i, n)
 			if err != nil {
@@ -521,7 +521,7 @@ func testQueue(
 				t.Errorf("%q.PurgeExpired: %+v", q.Name(), err)
 			}
 
-			//i += n
+			// i += n
 			if err = tx.Commit(); err != nil {
 				t.Fatal(err)
 			}

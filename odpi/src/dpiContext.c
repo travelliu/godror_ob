@@ -31,14 +31,14 @@
 #include "dpiImpl.h"
 
 // forward declarations of internal functions only used in this file
-static void dpiContext__free(dpiContext *context);
+static void ob_dpiContext__free(dpiContext *context);
 
 
 //-----------------------------------------------------------------------------
-// dpiContext__create() [INTERNAL]
-//   Helper function for dpiContext__create().
+// ob_dpiContext__create() [INTERNAL]
+//   Helper function for ob_dpiContext__create().
 //-----------------------------------------------------------------------------
-static int dpiContext__create(const char *fnName, unsigned int majorVersion,
+static int ob_dpiContext__create(const char *fnName, unsigned int majorVersion,
         unsigned int minorVersion, dpiContextCreateParams *params,
         dpiContext **context, dpiError *error)
 {
@@ -46,22 +46,22 @@ static int dpiContext__create(const char *fnName, unsigned int majorVersion,
     dpiContext *tempContext;
 
     // ensure global infrastructure is initialized
-    if (dpiGlobal__ensureInitialized(fnName, params, &versionInfo, error) < 0)
+    if (ob_dpiGlobal__ensureInitialized(fnName, params, &versionInfo, error) < 0)
         return DPI_FAILURE;
 
     // validate context handle
     if (!context)
-        return dpiError__set(error, "check context handle",
+        return ob_dpiError__set(error, "check context handle",
                 DPI_ERR_NULL_POINTER_PARAMETER, "context");
 
     // verify that the supplied version is supported by the library
     if (majorVersion != DPI_MAJOR_VERSION || minorVersion > DPI_MINOR_VERSION)
-        return dpiError__set(error, "check version",
+        return ob_dpiError__set(error, "check version",
                 DPI_ERR_VERSION_NOT_SUPPORTED, majorVersion, majorVersion,
                 minorVersion, DPI_MAJOR_VERSION, DPI_MINOR_VERSION);
 
     // allocate context and initialize it
-    if (dpiGen__allocate(DPI_HTYPE_CONTEXT, NULL, (void**) &tempContext,
+    if (ob_dpiGen__allocate(DPI_HTYPE_CONTEXT, NULL, (void**) &tempContext,
             error) < 0)
         return DPI_FAILURE;
     tempContext->dpiMinorVersion = (uint8_t) minorVersion;
@@ -80,10 +80,10 @@ static int dpiContext__create(const char *fnName, unsigned int majorVersion,
 
     // store default encoding, if applicable
     if (params->defaultEncoding) {
-        if (dpiUtils__allocateMemory(1, strlen(params->defaultEncoding) + 1, 0,
+        if (ob_dpiUtils__allocateMemory(1, strlen(params->defaultEncoding) + 1, 0,
                 "allocate default encoding",
                 (void**) &tempContext->defaultEncoding, error) < 0) {
-            dpiContext__free(tempContext);
+            ob_dpiContext__free(tempContext);
             return DPI_FAILURE;
         }
         strcpy(tempContext->defaultEncoding, params->defaultEncoding);
@@ -91,10 +91,10 @@ static int dpiContext__create(const char *fnName, unsigned int majorVersion,
 
     // store default driver name, if applicable
     if (params->defaultDriverName) {
-        if (dpiUtils__allocateMemory(1, strlen(params->defaultDriverName) + 1,
+        if (ob_dpiUtils__allocateMemory(1, strlen(params->defaultDriverName) + 1,
                 0, "allocate default driver name",
                 (void**) &tempContext->defaultDriverName, error) < 0) {
-            dpiContext__free(tempContext);
+            ob_dpiContext__free(tempContext);
             return DPI_FAILURE;
         }
         strcpy(tempContext->defaultDriverName, params->defaultDriverName);
@@ -106,29 +106,29 @@ static int dpiContext__create(const char *fnName, unsigned int majorVersion,
 
 
 //-----------------------------------------------------------------------------
-// dpiContext__free() [INTERNAL]
+// ob_dpiContext__free() [INTERNAL]
 //   Free the memory and any resources associated with the context.
 //-----------------------------------------------------------------------------
-static void dpiContext__free(dpiContext *context)
+static void ob_dpiContext__free(dpiContext *context)
 {
     if (context->defaultDriverName) {
-        dpiUtils__freeMemory((void*) context->defaultDriverName);
+        ob_dpiUtils__freeMemory((void*) context->defaultDriverName);
         context->defaultDriverName = NULL;
     }
     if (context->defaultEncoding) {
-        dpiUtils__freeMemory((void*) context->defaultEncoding);
+        ob_dpiUtils__freeMemory((void*) context->defaultEncoding);
         context->defaultEncoding = NULL;
     }
-    dpiUtils__freeMemory(context);
+    ob_dpiUtils__freeMemory(context);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiContext__initCommonCreateParams() [INTERNAL]
+// ob_dpiContext__initCommonCreateParams() [INTERNAL]
 //   Initialize the common connection/pool creation parameters to default
 // values.
 //-----------------------------------------------------------------------------
-void dpiContext__initCommonCreateParams(const dpiContext *context,
+void ob_dpiContext__initCommonCreateParams(const dpiContext *context,
         dpiCommonCreateParams *params)
 {
     memset(params, 0, sizeof(dpiCommonCreateParams));
@@ -152,22 +152,22 @@ void dpiContext__initCommonCreateParams(const dpiContext *context,
 
 
 //-----------------------------------------------------------------------------
-// dpiContext__initConnCreateParams() [INTERNAL]
+// ob_dpiContext__initConnCreateParams() [INTERNAL]
 //   Initialize the connection creation parameters to default values. Return
 // the structure size as a convenience for calling functions which may have to
 // differentiate between different ODPI-C application versions.
 //-----------------------------------------------------------------------------
-void dpiContext__initConnCreateParams(dpiConnCreateParams *params)
+void ob_dpiContext__initConnCreateParams(dpiConnCreateParams *params)
 {
     memset(params, 0, sizeof(dpiConnCreateParams));
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiContext__initPoolCreateParams() [INTERNAL]
+// ob_dpiContext__initPoolCreateParams() [INTERNAL]
 //   Initialize the pool creation parameters to default values.
 //-----------------------------------------------------------------------------
-void dpiContext__initPoolCreateParams(dpiPoolCreateParams *params)
+void ob_dpiContext__initPoolCreateParams(dpiPoolCreateParams *params)
 {
     memset(params, 0, sizeof(dpiPoolCreateParams));
     params->minSessions = 1;
@@ -181,20 +181,20 @@ void dpiContext__initPoolCreateParams(dpiPoolCreateParams *params)
 
 
 //-----------------------------------------------------------------------------
-// dpiContext__initSodaOperOptions() [INTERNAL]
+// ob_dpiContext__initSodaOperOptions() [INTERNAL]
 //   Initialize the SODA operation options to default values.
 //-----------------------------------------------------------------------------
-void dpiContext__initSodaOperOptions(dpiSodaOperOptions *options)
+void ob_dpiContext__initSodaOperOptions(dpiSodaOperOptions *options)
 {
     memset(options, 0, sizeof(dpiSodaOperOptions));
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiContext__initSubscrCreateParams() [INTERNAL]
+// ob_dpiContext__initSubscrCreateParams() [INTERNAL]
 //   Initialize the subscription creation parameters to default values.
 //-----------------------------------------------------------------------------
-void dpiContext__initSubscrCreateParams(dpiSubscrCreateParams *params)
+void ob_dpiContext__initSubscrCreateParams(dpiSubscrCreateParams *params)
 {
     memset(params, 0, sizeof(dpiSubscrCreateParams));
     params->subscrNamespace = DPI_SUBSCR_NAMESPACE_DBCHANGE;
@@ -203,13 +203,13 @@ void dpiContext__initSubscrCreateParams(dpiSubscrCreateParams *params)
 
 
 //-----------------------------------------------------------------------------
-// dpiContext_createWithParams() [PUBLIC]
+// ob_dpiContext_createWithParams() [PUBLIC]
 //   Create a new context for interaction with the library. The major versions
 // must match and the minor version of the caller must be less than or equal to
 // the minor version compiled into the library. The supplied parameters can be
 // used to modify how the Oracle client library is loaded.
 //-----------------------------------------------------------------------------
-int dpiContext_createWithParams(unsigned int majorVersion,
+int ob_dpiContext_createWithParams(unsigned int majorVersion,
         unsigned int minorVersion, dpiContextCreateParams *params,
         dpiContext **context, dpiErrorInfo *errorInfo)
 {
@@ -223,7 +223,7 @@ int dpiContext_createWithParams(unsigned int majorVersion,
     // needed
     if (params) {
         if (majorVersion < 5 || (majorVersion == 5 && minorVersion < 2)) {
-            memcpy(&localParams, params, sizeof(dpiContextCreateParams__v51));
+            memcpy(&localParams, params, sizeof(ob_dpiContextCreateParams__v51));
         } else {
             memcpy(&localParams, params, sizeof(localParams));
             update_use_soda_json_desc = 1;
@@ -234,189 +234,189 @@ int dpiContext_createWithParams(unsigned int majorVersion,
     if (!localParams.loadErrorUrl)
         localParams.loadErrorUrl = DPI_DEFAULT_LOAD_ERROR_URL;
 
-    status = dpiContext__create(__func__, majorVersion, minorVersion,
+    status = ob_dpiContext__create(__func__, majorVersion, minorVersion,
             &localParams, context, &error);
     if (status < 0) {
-        dpiError__getInfo(&error, &localErrorInfo);
-        memcpy(errorInfo, &localErrorInfo, sizeof(dpiErrorInfo__v33));
+        ob_dpiError__getInfo(&error, &localErrorInfo);
+        memcpy(errorInfo, &localErrorInfo, sizeof(ob_dpiErrorInfo__v33));
     }
     if (update_use_soda_json_desc)
         params->sodaUseJsonDesc = localParams.sodaUseJsonDesc;
     if (params && !params->oracleClientConfigDir &&
             localParams.oracleClientConfigDir)
         params->oracleClientConfigDir = localParams.oracleClientConfigDir;
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_FNS)
-        dpiDebug__print("fn end %s -> %d\n", __func__, status);
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_FNS)
+        ob_dpiDebug__print("fn end %s -> %d\n", __func__, status);
     return status;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiContext_destroy() [PUBLIC]
+// ob_dpiContext_destroy() [PUBLIC]
 //   Destroy an existing context. The structure will be checked for validity
 // first.
 //-----------------------------------------------------------------------------
-int dpiContext_destroy(dpiContext *context)
+int ob_dpiContext_destroy(dpiContext *context)
 {
     char message[80];
     dpiError error;
 
-    if (dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
+    if (ob_dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
             &error) < 0)
-        return dpiGen__endPublicFn(context, DPI_FAILURE, &error);
-    dpiUtils__clearMemory(&context->checkInt, sizeof(context->checkInt));
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_REFS)
-        dpiDebug__print("ref %p (%s) -> 0\n", context, context->typeDef->name);
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_FNS)
+        return ob_dpiGen__endPublicFn(context, DPI_FAILURE, &error);
+    ob_dpiUtils__clearMemory(&context->checkInt, sizeof(context->checkInt));
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_REFS)
+        ob_dpiDebug__print("ref %p (%s) -> 0\n", context, context->typeDef->name);
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_FNS)
         (void) sprintf(message, "fn end %s(%p) -> %d", __func__, context,
                 DPI_SUCCESS);
-    dpiContext__free(context);
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_FNS)
-        dpiDebug__print("%s\n", message);
+    ob_dpiContext__free(context);
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_FNS)
+        ob_dpiDebug__print("%s\n", message);
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiContext_freeStringList() [PUBLIC]
+// ob_dpiContext_freeStringList() [PUBLIC]
 //   Frees the contents of a string list.
 //-----------------------------------------------------------------------------
-int dpiContext_freeStringList(dpiContext *context, dpiStringList *list)
+int ob_dpiContext_freeStringList(dpiContext *context, dpiStringList *list)
 {
     dpiError error;
 
-    if (dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
+    if (ob_dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
             &error) < 0)
-        return dpiGen__endPublicFn(context, DPI_FAILURE, &error);
+        return ob_dpiGen__endPublicFn(context, DPI_FAILURE, &error);
     DPI_CHECK_PTR_NOT_NULL(context, list)
-    dpiStringList__free(list);
-    return dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
+    ob_dpiStringList__free(list);
+    return ob_dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiContext_getClientVersion() [PUBLIC]
+// ob_dpiContext_getClientVersion() [PUBLIC]
 //   Return the version of the Oracle client that is in use.
 //-----------------------------------------------------------------------------
-int dpiContext_getClientVersion(const dpiContext *context,
+int ob_dpiContext_getClientVersion(const dpiContext *context,
         dpiVersionInfo *versionInfo)
 {
     dpiError error;
 
-    if (dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
+    if (ob_dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
             &error) < 0)
-        return dpiGen__endPublicFn(context, DPI_FAILURE, &error);
+        return ob_dpiGen__endPublicFn(context, DPI_FAILURE, &error);
     DPI_CHECK_PTR_NOT_NULL(context, versionInfo)
     memcpy(versionInfo, context->versionInfo, sizeof(dpiVersionInfo));
-    return dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
+    return ob_dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiContext_getError() [PUBLIC]
+// ob_dpiContext_getError() [PUBLIC]
 //   Return information about the error that was last populated.
 //-----------------------------------------------------------------------------
-void dpiContext_getError(const dpiContext *context, dpiErrorInfo *info)
+void ob_dpiContext_getError(const dpiContext *context, dpiErrorInfo *info)
 {
     dpiError error;
 
-    dpiGlobal__initError(NULL, &error);
-    dpiGen__checkHandle(context, DPI_HTYPE_CONTEXT, "check handle", &error);
-    dpiError__getInfo(&error, info);
+    ob_dpiGlobal__initError(NULL, &error);
+    ob_dpiGen__checkHandle(context, DPI_HTYPE_CONTEXT, "check handle", &error);
+    ob_dpiError__getInfo(&error, info);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiContext_initCommonCreateParams() [PUBLIC]
+// ob_dpiContext_initCommonCreateParams() [PUBLIC]
 //   Initialize the common connection/pool creation parameters to default
 // values.
 //-----------------------------------------------------------------------------
-int dpiContext_initCommonCreateParams(const dpiContext *context,
+int ob_dpiContext_initCommonCreateParams(const dpiContext *context,
         dpiCommonCreateParams *params)
 {
     dpiError error;
 
-    if (dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
+    if (ob_dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
             &error) < 0)
-        return dpiGen__endPublicFn(context, DPI_FAILURE, &error);
+        return ob_dpiGen__endPublicFn(context, DPI_FAILURE, &error);
     DPI_CHECK_PTR_NOT_NULL(context, params)
-    dpiContext__initCommonCreateParams(context, params);
+    ob_dpiContext__initCommonCreateParams(context, params);
 
-    return dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
+    return ob_dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiContext_initConnCreateParams() [PUBLIC]
+// ob_dpiContext_initConnCreateParams() [PUBLIC]
 //   Initialize the connection creation parameters to default values.
 //-----------------------------------------------------------------------------
-int dpiContext_initConnCreateParams(const dpiContext *context,
+int ob_dpiContext_initConnCreateParams(const dpiContext *context,
         dpiConnCreateParams *params)
 {
     dpiError error;
 
-    if (dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
+    if (ob_dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
             &error) < 0)
-        return dpiGen__endPublicFn(context, DPI_FAILURE, &error);
+        return ob_dpiGen__endPublicFn(context, DPI_FAILURE, &error);
     DPI_CHECK_PTR_NOT_NULL(context, params)
 
-    dpiContext__initConnCreateParams(params);
-    return dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
+    ob_dpiContext__initConnCreateParams(params);
+    return ob_dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiContext_initPoolCreateParams() [PUBLIC]
+// ob_dpiContext_initPoolCreateParams() [PUBLIC]
 //   Initialize the pool creation parameters to default values.
 //-----------------------------------------------------------------------------
-int dpiContext_initPoolCreateParams(const dpiContext *context,
+int ob_dpiContext_initPoolCreateParams(const dpiContext *context,
         dpiPoolCreateParams *params)
 {
     dpiError error;
 
-    if (dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
+    if (ob_dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
             &error) < 0)
-        return dpiGen__endPublicFn(context, DPI_FAILURE, &error);
+        return ob_dpiGen__endPublicFn(context, DPI_FAILURE, &error);
     DPI_CHECK_PTR_NOT_NULL(context, params)
-    dpiContext__initPoolCreateParams(params);
+    ob_dpiContext__initPoolCreateParams(params);
 
-    return dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
+    return ob_dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiContext_initSodaOperOptions() [PUBLIC]
+// ob_dpiContext_initSodaOperOptions() [PUBLIC]
 //   Initialize the SODA operation options to default values.
 //-----------------------------------------------------------------------------
-int dpiContext_initSodaOperOptions(const dpiContext *context,
+int ob_dpiContext_initSodaOperOptions(const dpiContext *context,
         dpiSodaOperOptions *options)
 {
     dpiError error;
 
-    if (dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
+    if (ob_dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
             &error) < 0)
-        return dpiGen__endPublicFn(context, DPI_FAILURE, &error);
+        return ob_dpiGen__endPublicFn(context, DPI_FAILURE, &error);
     DPI_CHECK_PTR_NOT_NULL(context, options)
-    dpiContext__initSodaOperOptions(options);
+    ob_dpiContext__initSodaOperOptions(options);
 
-    return dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
+    return ob_dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiContext_initSubscrCreateParams() [PUBLIC]
+// ob_dpiContext_initSubscrCreateParams() [PUBLIC]
 //   Initialize the subscription creation parameters to default values.
 //-----------------------------------------------------------------------------
-int dpiContext_initSubscrCreateParams(const dpiContext *context,
+int ob_dpiContext_initSubscrCreateParams(const dpiContext *context,
         dpiSubscrCreateParams *params)
 {
     dpiError error;
 
-    if (dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
+    if (ob_dpiGen__startPublicFn(context, DPI_HTYPE_CONTEXT, __func__,
             &error) < 0)
-        return dpiGen__endPublicFn(context, DPI_FAILURE, &error);
+        return ob_dpiGen__endPublicFn(context, DPI_FAILURE, &error);
     DPI_CHECK_PTR_NOT_NULL(context, params)
 
-    dpiContext__initSubscrCreateParams(params);
-    return dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
+    ob_dpiContext__initSubscrCreateParams(params);
+    return ob_dpiGen__endPublicFn(context, DPI_SUCCESS, &error);
 }

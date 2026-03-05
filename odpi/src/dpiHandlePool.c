@@ -32,7 +32,7 @@
 #include "dpiImpl.h"
 
 //-----------------------------------------------------------------------------
-// dpiHandlePool__acquire() [INTERNAL]
+// ob_dpiHandlePool__acquire() [INTERNAL]
 //   Acquire a handle from the pool. If a handle is available, it will be
 // cleared out of the pool and returned to the caller. It is the caller's
 // responsibility to return the handle back to the pool when it is finished
@@ -40,12 +40,12 @@
 // expected to create a new handle and return it to the pool when it is
 // finished with it.
 //-----------------------------------------------------------------------------
-int dpiHandlePool__acquire(dpiHandlePool *pool, void **handle, dpiError *error)
+int ob_dpiHandlePool__acquire(dpiHandlePool *pool, void **handle, dpiError *error)
 {
     void **tempHandles;
     uint32_t numSlots;
 
-    dpiMutex__acquire(pool->mutex);
+    ob_dpiMutex__acquire(pool->mutex);
     if (pool->acquirePos != pool->releasePos) {
         *handle = pool->handles[pool->acquirePos];
         pool->handles[pool->acquirePos++] = NULL;
@@ -56,43 +56,43 @@ int dpiHandlePool__acquire(dpiHandlePool *pool, void **handle, dpiError *error)
         pool->numUsedSlots++;
         if (pool->numUsedSlots > pool->numSlots) {
             numSlots = pool->numSlots + 8;
-            if (dpiUtils__allocateMemory(numSlots, sizeof(void*), 1,
+            if (ob_dpiUtils__allocateMemory(numSlots, sizeof(void*), 1,
                     "allocate slots", (void**) &tempHandles, error) < 0) {
-                dpiMutex__release(pool->mutex);
+                ob_dpiMutex__release(pool->mutex);
                 return DPI_FAILURE;
             }
             memcpy(tempHandles, pool->handles, pool->numSlots * sizeof(void*));
-            dpiUtils__freeMemory(pool->handles);
+            ob_dpiUtils__freeMemory(pool->handles);
             pool->handles = tempHandles;
             pool->numSlots = numSlots;
         }
     }
-    dpiMutex__release(pool->mutex);
+    ob_dpiMutex__release(pool->mutex);
 
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiHandlePool__create() [INTERNAL]
+// ob_dpiHandlePool__create() [INTERNAL]
 //   Create a new handle pool.
 //-----------------------------------------------------------------------------
-int dpiHandlePool__create(dpiHandlePool **pool, dpiError *error)
+int ob_dpiHandlePool__create(dpiHandlePool **pool, dpiError *error)
 {
     dpiHandlePool *tempPool;
 
-    if (dpiUtils__allocateMemory(1, sizeof(dpiHandlePool), 0,
+    if (ob_dpiUtils__allocateMemory(1, sizeof(dpiHandlePool), 0,
             "allocate handle pool", (void**) &tempPool, error) < 0)
         return DPI_FAILURE;
     tempPool->numSlots = 8;
     tempPool->numUsedSlots = 0;
-    if (dpiUtils__allocateMemory(tempPool->numSlots, sizeof(void*), 1,
+    if (ob_dpiUtils__allocateMemory(tempPool->numSlots, sizeof(void*), 1,
             "allocate handle pool slots", (void**) &tempPool->handles,
             error) < 0) {
-        dpiUtils__freeMemory(tempPool);
+        ob_dpiUtils__freeMemory(tempPool);
         return DPI_FAILURE;
     }
-    dpiMutex__initialize(tempPool->mutex);
+    ob_dpiMutex__initialize(tempPool->mutex);
     tempPool->acquirePos = 0;
     tempPool->releasePos = 0;
     *pool = tempPool;
@@ -100,33 +100,33 @@ int dpiHandlePool__create(dpiHandlePool **pool, dpiError *error)
 }
 
 //-----------------------------------------------------------------------------
-// dpiHandlePool__free() [INTERNAL]
+// ob_dpiHandlePool__free() [INTERNAL]
 //   Free the memory associated with the error pool.
 //-----------------------------------------------------------------------------
-void dpiHandlePool__free(dpiHandlePool *pool)
+void ob_dpiHandlePool__free(dpiHandlePool *pool)
 {
     if (pool->handles) {
-        dpiUtils__freeMemory(pool->handles);
+        ob_dpiUtils__freeMemory(pool->handles);
         pool->handles = NULL;
     }
-    dpiMutex__destroy(pool->mutex);
-    dpiUtils__freeMemory(pool);
+    ob_dpiMutex__destroy(pool->mutex);
+    ob_dpiUtils__freeMemory(pool);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiHandlePool__release() [INTERNAL]
+// ob_dpiHandlePool__release() [INTERNAL]
 //   Release a handle back to the pool. No checks are performed on the handle
 // that is being returned to the pool; It will simply be placed back in the
 // pool. The handle is then NULLed in order to avoid multiple attempts to
 // release the handle back to the pool.
 //-----------------------------------------------------------------------------
-void dpiHandlePool__release(dpiHandlePool *pool, void **handle)
+void ob_dpiHandlePool__release(dpiHandlePool *pool, void **handle)
 {
-    dpiMutex__acquire(pool->mutex);
+    ob_dpiMutex__acquire(pool->mutex);
     pool->handles[pool->releasePos++] = *handle;
     *handle = NULL;
     if (pool->releasePos == pool->numSlots)
         pool->releasePos = 0;
-    dpiMutex__release(pool->mutex);
+    ob_dpiMutex__release(pool->mutex);
 }

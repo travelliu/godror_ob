@@ -8,7 +8,7 @@
 package godror
 
 import (
-	_ "github.com/godror/godror/odpi/embed"   // ODPI-C
-	_ "github.com/godror/godror/odpi/include" // ODPI-C
-	_ "github.com/godror/godror/odpi/src"     // ODPI-C
+	_ "github.com/travelliu/godror_ob/odpi/embed"   // ODPI-C
+	_ "github.com/travelliu/godror_ob/odpi/include" // ODPI-C
+	_ "github.com/travelliu/godror_ob/odpi/src"     // ODPI-C
 )

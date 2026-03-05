@@ -30,18 +30,18 @@
 #include "dpiImpl.h"
 
 //-----------------------------------------------------------------------------
-// dpiSodaDocCursor__allocate() [INTERNAL]
+// ob_dpiSodaDocCursor__allocate() [INTERNAL]
 //   Allocate and initialize a SODA document cursor structure.
 //-----------------------------------------------------------------------------
-int dpiSodaDocCursor__allocate(dpiSodaColl *coll, void *handle,
+int ob_dpiSodaDocCursor__allocate(dpiSodaColl *coll, void *handle,
         dpiSodaDocCursor **cursor, dpiError *error)
 {
     dpiSodaDocCursor *tempCursor;
 
-    if (dpiGen__allocate(DPI_HTYPE_SODA_DOC_CURSOR, coll->env,
+    if (ob_dpiGen__allocate(DPI_HTYPE_SODA_DOC_CURSOR, coll->env,
             (void**) &tempCursor, error) < 0)
         return DPI_FAILURE;
-    dpiGen__setRefCount(coll, error, 1);
+    ob_dpiGen__setRefCount(coll, error, 1);
     tempCursor->coll = coll;
     tempCursor->handle = handle;
     *cursor = tempCursor;
@@ -50,104 +50,104 @@ int dpiSodaDocCursor__allocate(dpiSodaColl *coll, void *handle,
 
 
 //-----------------------------------------------------------------------------
-// dpiSodaDocCursor__check() [INTERNAL]
+// ob_dpiSodaDocCursor__check() [INTERNAL]
 //   Determine if the SODA document cursor is available to use.
 //-----------------------------------------------------------------------------
-static int dpiSodaDocCursor__check(dpiSodaDocCursor *cursor,
+static int ob_dpiSodaDocCursor__check(dpiSodaDocCursor *cursor,
         const char *fnName, dpiError *error)
 {
-    if (dpiGen__startPublicFn(cursor, DPI_HTYPE_SODA_DOC_CURSOR, fnName,
+    if (ob_dpiGen__startPublicFn(cursor, DPI_HTYPE_SODA_DOC_CURSOR, fnName,
             error) < 0)
         return DPI_FAILURE;
     if (!cursor->handle)
-        return dpiError__set(error, "check closed",
+        return ob_dpiError__set(error, "check closed",
                 DPI_ERR_SODA_CURSOR_CLOSED);
     if (!cursor->coll->db->conn->handle || cursor->coll->db->conn->closing)
-        return dpiError__set(error, "check connection", DPI_ERR_NOT_CONNECTED);
+        return ob_dpiError__set(error, "check connection", DPI_ERR_NOT_CONNECTED);
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiSodaDocCursor__free() [INTERNAL]
+// ob_dpiSodaDocCursor__free() [INTERNAL]
 //   Free the memory for a SODA document cursor. Note that the reference to the
 // collection must remain until after the handle is freed; otherwise, a
 // segfault can take place.
 //-----------------------------------------------------------------------------
-void dpiSodaDocCursor__free(dpiSodaDocCursor *cursor, dpiError *error)
+void ob_dpiSodaDocCursor__free(dpiSodaDocCursor *cursor, dpiError *error)
 {
     if (cursor->handle) {
-        dpiOci__handleFree(cursor->handle, DPI_OCI_HTYPE_SODA_DOC_CURSOR);
+        ob_dpiOci__handleFree(cursor->handle, DPI_OCI_HTYPE_SODA_DOC_CURSOR);
         cursor->handle = NULL;
     }
     if (cursor->coll) {
-        dpiGen__setRefCount(cursor->coll, error, -1);
+        ob_dpiGen__setRefCount(cursor->coll, error, -1);
         cursor->coll = NULL;
     }
-    dpiUtils__freeMemory(cursor);
+    ob_dpiUtils__freeMemory(cursor);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiSodaDocCursor_addRef() [PUBLIC]
+// ob_dpiSodaDocCursor_addRef() [PUBLIC]
 //   Add a reference to the SODA document cursor.
 //-----------------------------------------------------------------------------
-int dpiSodaDocCursor_addRef(dpiSodaDocCursor *cursor)
+int ob_dpiSodaDocCursor_addRef(dpiSodaDocCursor *cursor)
 {
-    return dpiGen__addRef(cursor, DPI_HTYPE_SODA_DOC_CURSOR, __func__);
+    return ob_dpiGen__addRef(cursor, DPI_HTYPE_SODA_DOC_CURSOR, __func__);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiSodaDocCursor_close() [PUBLIC]
+// ob_dpiSodaDocCursor_close() [PUBLIC]
 //   Close the cursor.
 //-----------------------------------------------------------------------------
-int dpiSodaDocCursor_close(dpiSodaDocCursor *cursor)
+int ob_dpiSodaDocCursor_close(dpiSodaDocCursor *cursor)
 {
     dpiError error;
 
-    if (dpiSodaDocCursor__check(cursor, __func__, &error) < 0)
-        return dpiGen__endPublicFn(cursor, DPI_FAILURE, &error);
+    if (ob_dpiSodaDocCursor__check(cursor, __func__, &error) < 0)
+        return ob_dpiGen__endPublicFn(cursor, DPI_FAILURE, &error);
     if (cursor->handle) {
-        dpiOci__handleFree(cursor->handle, DPI_OCI_HTYPE_SODA_DOC_CURSOR);
+        ob_dpiOci__handleFree(cursor->handle, DPI_OCI_HTYPE_SODA_DOC_CURSOR);
         cursor->handle = NULL;
     }
-    return dpiGen__endPublicFn(cursor, DPI_SUCCESS, &error);
+    return ob_dpiGen__endPublicFn(cursor, DPI_SUCCESS, &error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiSodaDocCursor_getNext() [PUBLIC]
+// ob_dpiSodaDocCursor_getNext() [PUBLIC]
 //   Return the next document available from the cursor.
 //-----------------------------------------------------------------------------
-int dpiSodaDocCursor_getNext(dpiSodaDocCursor *cursor, UNUSED uint32_t flags,
+int ob_dpiSodaDocCursor_getNext(dpiSodaDocCursor *cursor, UNUSED uint32_t flags,
         dpiSodaDoc **doc)
 {
     dpiError error;
     void *handle;
 
-    if (dpiSodaDocCursor__check(cursor, __func__, &error) < 0)
-        return dpiGen__endPublicFn(cursor, DPI_FAILURE, &error);
+    if (ob_dpiSodaDocCursor__check(cursor, __func__, &error) < 0)
+        return ob_dpiGen__endPublicFn(cursor, DPI_FAILURE, &error);
     DPI_CHECK_PTR_NOT_NULL(cursor, doc)
-    if (dpiOci__sodaDocGetNext(cursor, &handle, &error) < 0)
-        return dpiGen__endPublicFn(cursor, DPI_FAILURE, &error);
+    if (ob_dpiOci__sodaDocGetNext(cursor, &handle, &error) < 0)
+        return ob_dpiGen__endPublicFn(cursor, DPI_FAILURE, &error);
     *doc = NULL;
     if (handle) {
-        if (dpiSodaDoc__allocate(cursor->coll->db, handle, doc, &error) < 0) {
-            dpiOci__handleFree(handle, DPI_OCI_HTYPE_SODA_DOCUMENT);
-            return dpiGen__endPublicFn(cursor, DPI_FAILURE, &error);
+        if (ob_dpiSodaDoc__allocate(cursor->coll->db, handle, doc, &error) < 0) {
+            ob_dpiOci__handleFree(handle, DPI_OCI_HTYPE_SODA_DOCUMENT);
+            return ob_dpiGen__endPublicFn(cursor, DPI_FAILURE, &error);
         }
         (*doc)->binaryContent = cursor->coll->binaryContent;
     }
-    return dpiGen__endPublicFn(cursor, DPI_SUCCESS, &error);
+    return ob_dpiGen__endPublicFn(cursor, DPI_SUCCESS, &error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiSodaDocCursor_release() [PUBLIC]
+// ob_dpiSodaDocCursor_release() [PUBLIC]
 //   Release a reference to the SODA document cursor.
 //-----------------------------------------------------------------------------
-int dpiSodaDocCursor_release(dpiSodaDocCursor *cursor)
+int ob_dpiSodaDocCursor_release(dpiSodaDocCursor *cursor)
 {
-    return dpiGen__release(cursor, DPI_HTYPE_SODA_DOC_CURSOR, __func__);
+    return ob_dpiGen__release(cursor, DPI_HTYPE_SODA_DOC_CURSOR, __func__);
 }

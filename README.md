@@ -1,11 +1,11 @@
-![Go](https://github.com/godror/godror/workflows/Go/badge.svg)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/godror/godror)](https://pkg.go.dev/github.com/godror/godror)
-[![Go Report Card](https://goreportcard.com/badge/github.com/godror/godror)](https://goreportcard.com/report/github.com/godror/godror)
+![Go](https://github.com/travelliu/godror_ob/workflows/Go/badge.svg)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/travelliu/godror_ob)](https://pkg.go.dev/github.com/travelliu/godror_ob)
+[![Go Report Card](https://goreportcard.com/badge/github.com/travelliu/godror_ob)](https://goreportcard.com/report/github.com/travelliu/godror_ob)
 [![codecov](https://codecov.io/gh/godror/godror/branch/master/graph/badge.svg)](https://codecov.io/gh/godror/godror)
 
 # Go DRiver for ORacle
 
-[godror](https://godoc.org/pkg/github.com/godror/godror) is a package which is a
+[godror](https://godoc.org/pkg/github.com/travelliu/godror_ob) is a package which is a
 [database/sql/driver.Driver](http://golang.org/pkg/database/sql/driver/#Driver)
 for connecting to Oracle DB, using Anthony Tuininga's excellent OCI wrapper,
 [ODPI-C](https://www.github.com/oracle/odpi).
@@ -32,7 +32,7 @@ For example, the array size of the returned PL/SQL arrays can be set with
 
 ## Documentation
 
-See [Godror API Documentation](https://pkg.go.dev/github.com/godror/godror?tab=doc) and
+See [Godror API Documentation](https://pkg.go.dev/github.com/travelliu/godror_ob?tab=doc) and
 the [Godror User Guide](https://godror.github.io/godror/doc/contents.html).
 
 ## Installation
@@ -40,7 +40,7 @@ the [Godror User Guide](https://godror.github.io/godror/doc/contents.html).
 Run:
 
 ```bash
-go get github.com/godror/godror@latest
+go get github.com/travelliu/godror_ob@latest
 ```
 
 Then install Oracle Client libraries and you're ready to go!
@@ -88,7 +88,7 @@ or the driver's built-in session pooling (standaloneConnection=0, poolMinSession
 To use the godror-specific functions, you'll need a `*godror.conn`.
 That's what `godror.DriverConn` is for!
 See [z_qrcn_test.go](./z_qrcn_test.go) for using that to reach
-[NewSubscription](https://godoc.org/github.com/godror/godror#Subscription).
+[NewSubscription](https://godoc.org/github.com/travelliu/godror_ob#Subscription).
 
 ### Calling stored procedures
 
@@ -232,8 +232,8 @@ Just as with other Go projects, you don't want to change the import paths, but y
 in place, just set up different remotes:
 
 ```bash
-cd $GOPATH/src/github.com/godror/godror
-git remote add upstream https://github.com/godror/godror.git
+cd $GOPATH/src/github.com/travelliu/godror_ob
+git remote add upstream https://github.com/travelliu/godror_ob.git
 git fetch upstream
 git checkout -b master upstream/master
 
@@ -283,7 +283,7 @@ error is retrieved on the same thread as the prvious function executed on.
 
 This means we have to encapsulate each execute-then-retrieve-error sequence in
 `runtime.LockOSThread()` and `runtime.UnlockOSThread()`.
-For details, see [#120](https://github.com/godror/godror/issues/120).
+For details, see [#120](https://github.com/travelliu/godror_ob/issues/120).
 
 This is automatically detected by [go run ./check](./check/check.go) which should be called
 in the pre-commit hook.

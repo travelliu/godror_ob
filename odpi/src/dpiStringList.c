@@ -30,23 +30,23 @@
 #include "dpiImpl.h"
 
 //-----------------------------------------------------------------------------
-// dpiStringList__free() [INTERNAL]
+// ob_dpiStringList__free() [INTERNAL]
 //   Frees the memory associated with the string list. Note that the strings
 // themselves are stored in one contiguous block pointed to by the first
 // string.
 //-----------------------------------------------------------------------------
-void dpiStringList__free(dpiStringList *list)
+void ob_dpiStringList__free(dpiStringList *list)
 {
     uint32_t i;
 
     if (list->strings) {
         for (i = 0; i < list->numStrings; i++)
-            dpiUtils__freeMemory((void*) list->strings[i]);
-        dpiUtils__freeMemory((void*) list->strings);
+            ob_dpiUtils__freeMemory((void*) list->strings[i]);
+        ob_dpiUtils__freeMemory((void*) list->strings);
         list->strings = NULL;
     }
     if (list->stringLengths) {
-        dpiUtils__freeMemory(list->stringLengths);
+        ob_dpiUtils__freeMemory(list->stringLengths);
         list->stringLengths = NULL;
     }
     list->numStrings = 0;
@@ -54,12 +54,12 @@ void dpiStringList__free(dpiStringList *list)
 
 
 //-----------------------------------------------------------------------------
-// dpiStringList__addElement() [INTERNAL]
+// ob_dpiStringList__addElement() [INTERNAL]
 //   Adds an element to the list, allocating additional space if needed. The
 // memory accounting is done independently so that it does not need to be
 // present in the public structure.
 //-----------------------------------------------------------------------------
-int dpiStringList__addElement(dpiStringList *list, const char *value,
+int ob_dpiStringList__addElement(dpiStringList *list, const char *value,
         uint32_t valueLength, uint32_t *numStringsAllocated, dpiError *error)
 {
     uint32_t *tempStringLengths;
@@ -69,29 +69,29 @@ int dpiStringList__addElement(dpiStringList *list, const char *value,
     // allocate more space in the array, if needed
     if (*numStringsAllocated <= list->numStrings) {
         *numStringsAllocated += 64;
-        if (dpiUtils__allocateMemory(*numStringsAllocated, sizeof(uint32_t), 0,
+        if (ob_dpiUtils__allocateMemory(*numStringsAllocated, sizeof(uint32_t), 0,
                 "allocate lengths array", (void**) &tempStringLengths,
                 error) < 0)
             return DPI_FAILURE;
         if (list->stringLengths) {
             memcpy(tempStringLengths, list->stringLengths,
                     list->numStrings * sizeof(uint32_t));
-            dpiUtils__freeMemory(list->stringLengths);
+            ob_dpiUtils__freeMemory(list->stringLengths);
         }
         list->stringLengths = tempStringLengths;
-        if (dpiUtils__allocateMemory(*numStringsAllocated, sizeof(char*), 0,
+        if (ob_dpiUtils__allocateMemory(*numStringsAllocated, sizeof(char*), 0,
                 "allocate strings array", (void**) &tempStrings, error) < 0)
             return DPI_FAILURE;
         if (list->strings) {
             memcpy(tempStrings, list->strings,
                     list->numStrings * sizeof(char*));
-            dpiUtils__freeMemory((void*) list->strings);
+            ob_dpiUtils__freeMemory((void*) list->strings);
         }
         list->strings = (const char**) tempStrings;
     }
 
     // add a copy of the string to the list
-    if (dpiUtils__allocateMemory(valueLength, 1, 0, "allocate string",
+    if (ob_dpiUtils__allocateMemory(valueLength, 1, 0, "allocate string",
             (void**) &ptr, error) < 0)
         return DPI_FAILURE;
     memcpy(ptr, value, valueLength);

@@ -368,11 +368,11 @@ static const dpiOracleType
 
 
 //-----------------------------------------------------------------------------
-// dpiOracleType__convertFromOracle() [INTERNAL]
+// ob_dpiOracleType__convertFromOracle() [INTERNAL]
 //   Return a value from the dpiOracleTypeNum enumeration for the OCI data type
 // and charset form. If the OCI data type is not supported, 0 is returned.
 //-----------------------------------------------------------------------------
-static dpiOracleTypeNum dpiOracleType__convertFromOracle(uint16_t typeCode,
+static dpiOracleTypeNum ob_dpiOracleType__convertFromOracle(uint16_t typeCode,
         uint8_t charsetForm)
 {
     switch(typeCode) {
@@ -453,27 +453,27 @@ static dpiOracleTypeNum dpiOracleType__convertFromOracle(uint16_t typeCode,
 
 
 //-----------------------------------------------------------------------------
-// dpiOracleType__getFromNum() [INTERNAL]
+// ob_dpiOracleType__getFromNum() [INTERNAL]
 //   Return the type associated with the type number.
 //-----------------------------------------------------------------------------
-const dpiOracleType *dpiOracleType__getFromNum(dpiOracleTypeNum typeNum,
+const dpiOracleType *ob_dpiOracleType__getFromNum(dpiOracleTypeNum typeNum,
         dpiError *error)
 {
     if (typeNum > DPI_ORACLE_TYPE_NONE && typeNum < DPI_ORACLE_TYPE_MAX)
         return &dpiAllOracleTypes[typeNum - DPI_ORACLE_TYPE_NONE - 1];
-    dpiError__set(error, "check type", DPI_ERR_INVALID_ORACLE_TYPE, typeNum);
+    ob_dpiError__set(error, "check type", DPI_ERR_INVALID_ORACLE_TYPE, typeNum);
     return NULL;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiOracleType__populateTypeInfo() [INTERNAL]
+// ob_dpiOracleType__populateTypeInfo() [INTERNAL]
 //   Populate dpiDataTypeInfo structure given an Oracle descriptor. Note that
 // no error is raised by this function if the data type is not supported. This
 // method is called for both implicit and explicit describes (which behave
 // slightly differently).
 //-----------------------------------------------------------------------------
-int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
+int ob_dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
         uint32_t handleType, dpiDataTypeInfo *info, dpiError *error)
 {
     uint32_t dataTypeAttribute, i, tempFlags;
@@ -488,7 +488,7 @@ int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
     if (handleType == DPI_OCI_DTYPE_PARAM)
         dataTypeAttribute = DPI_OCI_ATTR_TYPECODE;
     else dataTypeAttribute = DPI_OCI_ATTR_DATA_TYPE;
-    if (dpiOci__attrGet(handle, handleType, (void*) &info->ociTypeCode, 0,
+    if (ob_dpiOci__attrGet(handle, handleType, (void*) &info->ociTypeCode, 0,
             dataTypeAttribute, "get data type", error) < 0)
         return DPI_FAILURE;
 
@@ -498,17 +498,17 @@ int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
             info->ociTypeCode != DPI_SQLT_VCS &&
             info->ociTypeCode != DPI_SQLT_CLOB)
         charsetForm = DPI_SQLCS_IMPLICIT;
-    else if (dpiOci__attrGet(handle, handleType, (void*) &charsetForm, 0,
+    else if (ob_dpiOci__attrGet(handle, handleType, (void*) &charsetForm, 0,
             DPI_OCI_ATTR_CHARSET_FORM, "get charset form", error) < 0)
         return DPI_FAILURE;
 
     // convert Oracle type to ODPI-C enumerations, if possible
-    info->oracleTypeNum = dpiOracleType__convertFromOracle(info->ociTypeCode,
+    info->oracleTypeNum = ob_dpiOracleType__convertFromOracle(info->ociTypeCode,
             charsetForm);
     if (!info->oracleTypeNum)
         info->defaultNativeTypeNum = (dpiNativeTypeNum) 0;
     else {
-        oracleType = dpiOracleType__getFromNum(info->oracleTypeNum, error);
+        oracleType = ob_dpiOracleType__getFromNum(info->oracleTypeNum, error);
         if (!oracleType)
             return DPI_FAILURE;
         info->defaultNativeTypeNum = oracleType->defaultNativeTypeNum;
@@ -523,10 +523,10 @@ int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
         case DPI_NATIVE_TYPE_TIMESTAMP:
         case DPI_NATIVE_TYPE_INTERVAL_YM:
         case DPI_NATIVE_TYPE_INTERVAL_DS:
-            if (dpiOci__attrGet(handle, handleType, (void*) &info->scale, 0,
+            if (ob_dpiOci__attrGet(handle, handleType, (void*) &info->scale, 0,
                     DPI_OCI_ATTR_SCALE, "get scale", error) < 0)
                 return DPI_FAILURE;
-            if (dpiOci__attrGet(handle, handleType, (void*) &info->precision,
+            if (ob_dpiOci__attrGet(handle, handleType, (void*) &info->precision,
                     0, DPI_OCI_ATTR_PRECISION, "get precision", error) < 0)
                 return DPI_FAILURE;
             if (nativeTypeNum == DPI_NATIVE_TYPE_TIMESTAMP ||
@@ -550,7 +550,7 @@ int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
     // acquire size (in bytes) of item
     info->sizeInChars = 0;
     if (oracleType && oracleType->sizeInBytes == 0) {
-        if (dpiOci__attrGet(handle, handleType, (void*) &ociSize, 0,
+        if (ob_dpiOci__attrGet(handle, handleType, (void*) &ociSize, 0,
                 DPI_OCI_ATTR_DATA_SIZE, "get size (bytes)", error) < 0)
             return DPI_FAILURE;
         info->dbSizeInBytes = ociSize;
@@ -563,7 +563,7 @@ int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
     // acquire size (in characters) of item, if applicable
     if (oracleType && oracleType->isCharacterData &&
             oracleType->sizeInBytes == 0) {
-        if (dpiOci__attrGet(handle, handleType, (void*) &ociSize, 0,
+        if (ob_dpiOci__attrGet(handle, handleType, (void*) &ociSize, 0,
                 DPI_OCI_ATTR_CHAR_SIZE, "get size (chars)", error) < 0)
             return DPI_FAILURE;
         info->sizeInChars = ociSize;
@@ -577,11 +577,11 @@ int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
 
     // acquire object type, if applicable
     if (info->oracleTypeNum == DPI_ORACLE_TYPE_OBJECT) {
-        if (dpiObjectType__allocate(conn, handle, handleType,
+        if (ob_dpiObjectType__allocate(conn, handle, handleType,
                 &info->objectType, error) < 0)
             return DPI_FAILURE;
-        if (dpiObjectType__isXmlType(info->objectType)) {
-            dpiObjectType__free(info->objectType, error);
+        if (ob_dpiObjectType__isXmlType(info->objectType)) {
+            ob_dpiObjectType__free(info->objectType, error);
             info->objectType = NULL;
             info->ociTypeCode = DPI_SQLT_CHR;
             info->oracleTypeNum = DPI_ORACLE_TYPE_XMLTYPE;
@@ -592,7 +592,7 @@ int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
     // determine if the data refers to a JSON column
     if (handleType == DPI_OCI_HTYPE_DESCRIBE &&
             conn->env->versionInfo->versionNum >= 19) {
-        if (dpiOci__attrGet(handle, handleType, (void*) &isJson, 0,
+        if (ob_dpiOci__attrGet(handle, handleType, (void*) &isJson, 0,
                 DPI_OCI_ATTR_JSON_COL, "get is JSON column", error) < 0)
             return DPI_FAILURE;
         info->isJson = isJson;
@@ -601,7 +601,7 @@ int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
     // determine if the data refers to an OSON column
     if (handleType == DPI_OCI_HTYPE_DESCRIBE &&
             conn->env->versionInfo->versionNum >= 21) {
-        if (dpiOci__attrGet(handle, handleType, (void*) &isOson, 0,
+        if (ob_dpiOci__attrGet(handle, handleType, (void*) &isOson, 0,
                 DPI_OCI_ATTR_OSON_COL, "get is OSON column", error) < 0)
             return DPI_FAILURE;
         info->isOson = isOson;
@@ -612,30 +612,30 @@ int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
             conn->env->versionInfo->versionNum >= 23) {
 
         // check for domain
-        if (dpiOci__attrGet(handle, handleType, (void*) &info->domainSchema,
+        if (ob_dpiOci__attrGet(handle, handleType, (void*) &info->domainSchema,
                 &info->domainSchemaLength, DPI_OCI_ATTR_DOMAIN_SCHEMA,
                 "get domain schema", error) < 0)
             return DPI_FAILURE;
-        if (dpiOci__attrGet(handle, handleType, (void*) &info->domainName,
+        if (ob_dpiOci__attrGet(handle, handleType, (void*) &info->domainName,
                 &info->domainNameLength, DPI_OCI_ATTR_DOMAIN_NAME,
                 "get domain name", error) < 0)
             return DPI_FAILURE;
 
         // check for annotations
-        if (dpiOci__attrGet(handle, handleType, (void*) &info->numAnnotations,
+        if (ob_dpiOci__attrGet(handle, handleType, (void*) &info->numAnnotations,
                 0, DPI_OCI_ATTR_NUM_ANNOTATIONS, "get number of annotations",
                 error) < 0)
             return DPI_FAILURE;
         if (info->numAnnotations > 0) {
 
             // allocate memory for the array
-            if (dpiUtils__allocateMemory(info->numAnnotations,
+            if (ob_dpiUtils__allocateMemory(info->numAnnotations,
                     sizeof(dpiAnnotation), 1, "allocate annotation array",
                     (void**) &info->annotations, error) < 0)
                 return DPI_FAILURE;
 
             // get the list parameter
-            if (dpiOci__attrGet(handle, handleType,
+            if (ob_dpiOci__attrGet(handle, handleType,
                     (void*) &listParam, 0, DPI_OCI_ATTR_LIST_ANNOTATIONS,
                     "get annotation list param", error) < 0)
                 return DPI_FAILURE;
@@ -643,16 +643,16 @@ int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
             // populate the arrays
             for (i = 0 ; i < info->numAnnotations; i++) {
                 annotation = &info->annotations[i];
-                if (dpiOci__paramGet(listParam, DPI_OCI_DTYPE_PARAM,
+                if (ob_dpiOci__paramGet(listParam, DPI_OCI_DTYPE_PARAM,
                         &itemParam, (uint32_t) i + 1, "get annotation",
                         error) < 0)
                     return DPI_FAILURE;
-                if (dpiOci__attrGet(itemParam, DPI_OCI_DTYPE_PARAM,
+                if (ob_dpiOci__attrGet(itemParam, DPI_OCI_DTYPE_PARAM,
                         (void*) &annotation->key, &annotation->keyLength,
                         DPI_OCI_ATTR_ANNOTATION_KEY,
                         "get annotation key", error) < 0)
                     return DPI_FAILURE;
-                if (dpiOci__attrGet(itemParam, DPI_OCI_DTYPE_PARAM,
+                if (ob_dpiOci__attrGet(itemParam, DPI_OCI_DTYPE_PARAM,
                         (void*) &annotation->value, &annotation->valueLength,
                         DPI_OCI_ATTR_ANNOTATION_VALUE,
                         "get annotation value", error) < 0)
@@ -667,13 +667,13 @@ int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
     if (info->oracleTypeNum == DPI_ORACLE_TYPE_VECTOR) {
 
         // get vector format
-        if (dpiOci__attrGet(handle, handleType, &info->vectorFormat, 0,
+        if (ob_dpiOci__attrGet(handle, handleType, &info->vectorFormat, 0,
                 DPI_OCI_ATTR_VECTOR_DATA_FORMAT, "get vector column format",
                 error) < 0)
             return DPI_FAILURE;
 
         // get number of dimensions
-        if (dpiOci__attrGet(handle, handleType, &info->vectorDimensions, 0,
+        if (ob_dpiOci__attrGet(handle, handleType, &info->vectorDimensions, 0,
                 DPI_OCI_ATTR_VECTOR_DIMENSION,
                 "get number of vector dimensions in column", error) < 0)
             return DPI_FAILURE;
@@ -683,7 +683,7 @@ int dpiOracleType__populateTypeInfo(dpiConn *conn, void *handle,
         // single byte, but the Oracle Client libraries still expect a pointer
         // to a four byte value and failing to do so causes a segfault on some
         // platforms
-        if (dpiOci__attrGet(handle, handleType, &tempFlags, 0,
+        if (ob_dpiOci__attrGet(handle, handleType, &tempFlags, 0,
                 DPI_OCI_ATTR_VECTOR_PROPERTY, "get vector column flags",
                 error) < 0)
             return DPI_FAILURE;

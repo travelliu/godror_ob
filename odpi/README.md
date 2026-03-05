@@ -42,7 +42,7 @@ Oracle Drivers:
 * [node-oracledb](https://oracle.github.io/node-oracledb) Node.js module.
 
 Third-party Drivers:
-* [godror](https://github.com/godror/godror) Go Driver.
+* [godror](https://github.com/travelliu/godror_ob) Go Driver.
 * [odpic-raw](https://github.com/leptonyu/odpic-raw)  Haskell Raw Bindings.
 * [oracle-simple](https://github.com/haskell-oracle/oracle-simple) Haskell driver.
 * [ruby-ODPI ](https://github.com/kubo/ruby-odpi) Ruby Interface.

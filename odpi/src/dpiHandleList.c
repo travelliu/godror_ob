@@ -32,29 +32,29 @@
 #include "dpiImpl.h"
 
 //-----------------------------------------------------------------------------
-// dpiHandleList__addHandle() [INTERNAL]
+// ob_dpiHandleList__addHandle() [INTERNAL]
 //   Add a handle to the list. The list is expanded in sets of 8 handles as
 // needed. A current position is maintained to reduce the number of scans of
 // the list are required. An empty slot is designated by a NULL pointer. The
 // slot number returned is incremented by 1 so that a non-zero slot number is
 // indicative that the handle was added to the list.
 //-----------------------------------------------------------------------------
-int dpiHandleList__addHandle(dpiHandleList *list, void *handle,
+int ob_dpiHandleList__addHandle(dpiHandleList *list, void *handle,
         uint32_t *slotNum, dpiError *error)
 {
     uint32_t numSlots, i, actualSlotNum;
     void **tempHandles;
 
-    dpiMutex__acquire(list->mutex);
+    ob_dpiMutex__acquire(list->mutex);
     if (list->numUsedSlots == list->numSlots) {
         numSlots = list->numSlots + 8;
-        if (dpiUtils__allocateMemory(numSlots, sizeof(void*), 1,
+        if (ob_dpiUtils__allocateMemory(numSlots, sizeof(void*), 1,
                 "allocate slots", (void**) &tempHandles, error) < 0) {
-            dpiMutex__release(list->mutex);
+            ob_dpiMutex__release(list->mutex);
             return DPI_FAILURE;
         }
         memcpy(tempHandles, list->handles, list->numSlots * sizeof(void*));
-        dpiUtils__freeMemory(list->handles);
+        ob_dpiUtils__freeMemory(list->handles);
         list->handles = tempHandles;
         list->numSlots = numSlots;
         actualSlotNum = list->numUsedSlots++;
@@ -73,62 +73,62 @@ int dpiHandleList__addHandle(dpiHandleList *list, void *handle,
             list->currentPos = 0;
     }
     list->handles[actualSlotNum] = handle;
-    dpiMutex__release(list->mutex);
+    ob_dpiMutex__release(list->mutex);
     *slotNum = actualSlotNum + 1;
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiHandleList__create() [INTERNAL]
+// ob_dpiHandleList__create() [INTERNAL]
 //   Create a new (empty) list of handles.
 //-----------------------------------------------------------------------------
-int dpiHandleList__create(dpiHandleList **list, dpiError *error)
+int ob_dpiHandleList__create(dpiHandleList **list, dpiError *error)
 {
     dpiHandleList *tempList;
 
-    if (dpiUtils__allocateMemory(1, sizeof(dpiHandleList), 0,
+    if (ob_dpiUtils__allocateMemory(1, sizeof(dpiHandleList), 0,
             "allocate handle list", (void**) &tempList, error) < 0)
         return DPI_FAILURE;
     tempList->numSlots = 8;
     tempList->numUsedSlots = 0;
-    if (dpiUtils__allocateMemory(tempList->numSlots, sizeof(void*), 1,
+    if (ob_dpiUtils__allocateMemory(tempList->numSlots, sizeof(void*), 1,
             "allocate handle list slots", (void**) &tempList->handles,
             error) < 0) {
-        dpiUtils__freeMemory(tempList);
+        ob_dpiUtils__freeMemory(tempList);
         return DPI_FAILURE;
     }
-    dpiMutex__initialize(tempList->mutex);
+    ob_dpiMutex__initialize(tempList->mutex);
     tempList->currentPos = 0;
     *list = tempList;
     return DPI_SUCCESS;
 }
 
 //-----------------------------------------------------------------------------
-// dpiHandleList__free() [INTERNAL]
+// ob_dpiHandleList__free() [INTERNAL]
 //   Free the memory associated with the handle list.
 //-----------------------------------------------------------------------------
-void dpiHandleList__free(dpiHandleList *list)
+void ob_dpiHandleList__free(dpiHandleList *list)
 {
     if (list->handles) {
-        dpiUtils__freeMemory(list->handles);
+        ob_dpiUtils__freeMemory(list->handles);
         list->handles = NULL;
     }
-    dpiMutex__destroy(list->mutex);
-    dpiUtils__freeMemory(list);
+    ob_dpiMutex__destroy(list->mutex);
+    ob_dpiUtils__freeMemory(list);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiHandleList__removeHandle() [INTERNAL]
+// ob_dpiHandleList__removeHandle() [INTERNAL]
 //   Remove the handle at the specified location from the list.
 //-----------------------------------------------------------------------------
-void dpiHandleList__removeHandle(dpiHandleList *list, uint32_t slotNum)
+void ob_dpiHandleList__removeHandle(dpiHandleList *list, uint32_t slotNum)
 {
     if (slotNum > 0) {
-        dpiMutex__acquire(list->mutex);
+        ob_dpiMutex__acquire(list->mutex);
         list->handles[slotNum - 1] = NULL;
         list->numUsedSlots--;
-        dpiMutex__release(list->mutex);
+        ob_dpiMutex__release(list->mutex);
     }
 }

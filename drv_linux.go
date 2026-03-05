@@ -13,7 +13,7 @@ package godror
 /*
 #cgo LDFLAGS: -ldl -lpthread
 
-// https://github.com/godror/godror/issues/139
+// https://github.com/travelliu/godror_ob/issues/139
 // https://www.win.tue.nl/~aeb/linux/misc/gcc-semibug.html
 __asm__(".symver memcpy,memcpy@GLIBC_2.2.5");
 */

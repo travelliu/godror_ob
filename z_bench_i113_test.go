@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godror/godror"
+	"github.com/travelliu/godror_ob"
 )
 
 func BenchmarkSelect113(b *testing.B) {
@@ -136,5 +136,5 @@ func fetchRows(b *testing.B, rows *sql.Rows, maxRows int, first bool) {
 		b.ReportMetric(float64(time.Since(t)/time.Microsecond), "oneRowMs")
 	}
 	rows.Close()
-	//b.Logf("Selected %d records in %s.", n, time.Since(t))
+	// b.Logf("Selected %d records in %s.", n, time.Since(t))
 }

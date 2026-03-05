@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godror/godror"
+	"github.com/travelliu/godror_ob"
 )
 
 // TestConnCut tests prepared statements handling connection cuting.
@@ -244,7 +244,7 @@ func (px *tcpProxy) handleConn(ctx context.Context, down *net.TCPConn) error {
 	pipe := func(ctx context.Context, dst, src *net.TCPConn) error {
 		buf := make([]byte, 512)
 		var consecEOF int
-		//remote := src.RemoteAddr()
+		// remote := src.RemoteAddr()
 		for {
 			if err := ctx.Err(); err != nil {
 				dst.Close()
@@ -266,7 +266,7 @@ func (px *tcpProxy) handleConn(ctx context.Context, down *net.TCPConn) error {
 				time.Sleep(time.Second)
 				continue
 			} else {
-				//consecEOF = 0
+				// consecEOF = 0
 				if px.T != nil {
 					px.Logf("Copy from %s to %s: %v", src.RemoteAddr(), dst.RemoteAddr(), err)
 				}

@@ -1,4 +1,4 @@
-module github.com/godror/godror/contrib
+module github.com/travelliu/godror_ob/contrib
 
 go 1.17
 

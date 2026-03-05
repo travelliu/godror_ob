@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"log"
 
-	godror "github.com/godror/godror"
+	godror "github.com/travelliu/godror_ob"
 )
 
 // ExampleStartupMode calls exampleStartup to start a database.

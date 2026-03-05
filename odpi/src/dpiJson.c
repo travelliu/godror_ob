@@ -37,45 +37,45 @@
 #define DPI_JSON_TEMP_BUFFER_SIZE       1024
 
 // forward declarations of internal functions only used in this file
-static int dpiJsonNode__fromOracleArrayToNative(dpiJson *json,
+static int ob_dpiJsonNode__fromOracleArrayToNative(dpiJson *json,
         dpiJsonNode *node, dpiJznDomDoc *domDoc, void *oracleNode,
         uint32_t options, dpiError *error);
-static int dpiJsonNode__fromOracleObjectToNative(dpiJson *json,
+static int ob_dpiJsonNode__fromOracleObjectToNative(dpiJson *json,
         dpiJsonNode *node, dpiJznDomDoc *domDoc, void *oracleNode,
         uint32_t options, dpiError *error);
-static int dpiJsonNode__fromOracleScalarToNative(dpiJson *json,
+static int ob_dpiJsonNode__fromOracleScalarToNative(dpiJson *json,
         dpiJsonNode *node, dpiJznDomDoc *domDoc, void *oracleNode,
         uint32_t options, dpiError *error);
-static int dpiJsonNode__fromOracleToNative(dpiJson *json, dpiJsonNode *node,
+static int ob_dpiJsonNode__fromOracleToNative(dpiJson *json, dpiJsonNode *node,
         dpiJznDomDoc *domDoc, void *oracleNode, uint32_t options,
         dpiError *error);
-static int dpiJsonNode__toOracleFromNative(dpiJson *json,
+static int ob_dpiJsonNode__toOracleFromNative(dpiJson *json,
         const dpiJsonNode *node, dpiJznDomDoc *domDoc, void **oracleNode,
         dpiError *error);
 
 
 //-----------------------------------------------------------------------------
-// dpiJson__allocate() [INTERNAL]
+// ob_dpiJson__allocate() [INTERNAL]
 //   Allocate and initialize a JSON object.
 //-----------------------------------------------------------------------------
-int dpiJson__allocate(dpiConn *conn, void *handle, dpiJson **json,
+int ob_dpiJson__allocate(dpiConn *conn, void *handle, dpiJson **json,
         dpiError *error)
 {
     dpiJson *tempJson;
 
-    if (dpiUtils__checkClientVersion(conn->env->versionInfo, 21, 0, error) < 0)
+    if (ob_dpiUtils__checkClientVersion(conn->env->versionInfo, 21, 0, error) < 0)
         return DPI_FAILURE;
-    if (dpiGen__allocate(DPI_HTYPE_JSON, conn->env, (void**) &tempJson,
+    if (ob_dpiGen__allocate(DPI_HTYPE_JSON, conn->env, (void**) &tempJson,
             error) < 0)
         return DPI_FAILURE;
-    dpiGen__setRefCount(conn, error, 1);
+    ob_dpiGen__setRefCount(conn, error, 1);
     tempJson->conn = conn;
     if (handle) {
         tempJson->handle = handle;
     } else {
-        if (dpiOci__descriptorAlloc(conn->env->handle, &tempJson->handle,
+        if (ob_dpiOci__descriptorAlloc(conn->env->handle, &tempJson->handle,
                 DPI_OCI_DTYPE_JSON, "allocate JSON descriptor", error) < 0) {
-            dpiJson__free(tempJson, error);
+            ob_dpiJson__free(tempJson, error);
             return DPI_FAILURE;
         }
         tempJson->handleIsOwned = 1;
@@ -90,10 +90,10 @@ int dpiJson__allocate(dpiConn *conn, void *handle, dpiJson **json,
 
 
 //-----------------------------------------------------------------------------
-// dpiJsonNode__fromOracleArrayToNative() [INTERNAL]
+// ob_dpiJsonNode__fromOracleArrayToNative() [INTERNAL]
 //   Populate an array node from the Oracle JSON node.
 //-----------------------------------------------------------------------------
-static int dpiJsonNode__fromOracleArrayToNative(dpiJson *json,
+static int ob_dpiJsonNode__fromOracleArrayToNative(dpiJson *json,
         dpiJsonNode *node, dpiJznDomDoc *domDoc, void *oracleNode,
         uint32_t options, dpiError *error)
 {
@@ -115,11 +115,11 @@ static int dpiJsonNode__fromOracleArrayToNative(dpiJson *json,
         return DPI_SUCCESS;
 
     // allocate memory
-    if (dpiUtils__allocateMemory(array->numElements, sizeof(dpiJsonNode), 1,
+    if (ob_dpiUtils__allocateMemory(array->numElements, sizeof(dpiJsonNode), 1,
             "allocate JSON array element nodes", (void**) &array->elements,
             error) < 0)
         return DPI_FAILURE;
-    if (dpiUtils__allocateMemory(array->numElements, sizeof(dpiDataBuffer), 1,
+    if (ob_dpiUtils__allocateMemory(array->numElements, sizeof(dpiDataBuffer), 1,
             "allocate JSON array element values",
             (void**) &array->elementValues, error) < 0)
         return DPI_FAILURE;
@@ -133,7 +133,7 @@ static int dpiJsonNode__fromOracleArrayToNative(dpiJson *json,
         for (i = 0; i < numInBatch; i++) {
             elementNode = &array->elements[pos + i];
             elementNode->value = &array->elementValues[pos + i];
-            if (dpiJsonNode__fromOracleToNative(json, elementNode, domDoc,
+            if (ob_dpiJsonNode__fromOracleToNative(json, elementNode, domDoc,
                     oracleElementNodes[i], options, error) < 0)
                 return DPI_FAILURE;
         }
@@ -145,10 +145,10 @@ static int dpiJsonNode__fromOracleArrayToNative(dpiJson *json,
 
 
 //-----------------------------------------------------------------------------
-// dpiJsonNode__fromOracleObjectToNative() [INTERNAL]
+// ob_dpiJsonNode__fromOracleObjectToNative() [INTERNAL]
 //   Populate an object node from the Oracle JSON node.
 //-----------------------------------------------------------------------------
-static int dpiJsonNode__fromOracleObjectToNative(dpiJson *json,
+static int ob_dpiJsonNode__fromOracleObjectToNative(dpiJson *json,
         dpiJsonNode *node, dpiJznDomDoc *domDoc, void *oracleNode,
         uint32_t options, dpiError *error)
 {
@@ -169,19 +169,19 @@ static int dpiJsonNode__fromOracleObjectToNative(dpiJson *json,
         return DPI_SUCCESS;
 
     // allocate memory
-    if (dpiUtils__allocateMemory(obj->numFields, sizeof(char*), 1,
+    if (ob_dpiUtils__allocateMemory(obj->numFields, sizeof(char*), 1,
             "allocate JSON object field names", (void**) &obj->fieldNames,
             error) < 0)
         return DPI_FAILURE;
-    if (dpiUtils__allocateMemory(obj->numFields, sizeof(uint32_t), 1,
+    if (ob_dpiUtils__allocateMemory(obj->numFields, sizeof(uint32_t), 1,
             "allocate JSON object field name lengths",
             (void**) &obj->fieldNameLengths, error) < 0)
         return DPI_FAILURE;
-    if (dpiUtils__allocateMemory(obj->numFields, sizeof(dpiJsonNode), 1,
+    if (ob_dpiUtils__allocateMemory(obj->numFields, sizeof(dpiJsonNode), 1,
             "allocate JSON object field nodes", (void**) &obj->fields,
             error) < 0)
         return DPI_FAILURE;
-    if (dpiUtils__allocateMemory(obj->numFields, sizeof(dpiDataBuffer), 1,
+    if (ob_dpiUtils__allocateMemory(obj->numFields, sizeof(dpiDataBuffer), 1,
             "allocate JSON object field values", (void**) &obj->fieldValues,
             error) < 0)
         return DPI_FAILURE;
@@ -196,7 +196,7 @@ static int dpiJsonNode__fromOracleObjectToNative(dpiJson *json,
             obj->fieldNameLengths[pos + i] = nameValuePairs[i].name.length;
             fieldNode = &obj->fields[pos + i];
             fieldNode->value = &obj->fieldValues[pos + i];
-            if (dpiJsonNode__fromOracleToNative(json, fieldNode, domDoc,
+            if (ob_dpiJsonNode__fromOracleToNative(json, fieldNode, domDoc,
                     nameValuePairs[i].value, options, error) < 0)
                 return DPI_FAILURE;
         }
@@ -208,13 +208,13 @@ static int dpiJsonNode__fromOracleObjectToNative(dpiJson *json,
 
 
 //-----------------------------------------------------------------------------
-// dpiJsonNode__fromOracleNumberAsText() [INTERNAL]
+// ob_dpiJsonNode__fromOracleNumberAsText() [INTERNAL]
 //   Populate a scalar number as a text buffer. Temporary buffers are allocated
 // as needed and an array of these are stored in the JSON object. Each
 // temporary buffer contains as many numbers as can be fit before a new
 // temporary buffer is allocated.
 //-----------------------------------------------------------------------------
-static int dpiJsonNode__fromOracleNumberAsText(dpiJson *json,
+static int ob_dpiJsonNode__fromOracleNumberAsText(dpiJson *json,
         dpiJsonNode *node, uint8_t *numBuffer, dpiError *error)
 {
     char **tempBuffers;
@@ -227,20 +227,20 @@ static int dpiJsonNode__fromOracleNumberAsText(dpiJson *json,
         // of the array
         if (json->numTempBuffers == json->allocatedTempBuffers) {
             json->allocatedTempBuffers += 16;
-            if (dpiUtils__allocateMemory(json->allocatedTempBuffers,
+            if (ob_dpiUtils__allocateMemory(json->allocatedTempBuffers,
                     sizeof(char*), 0, "allocate JSON temp buffer array",
                     (void**) &tempBuffers, error) < 0)
                 return DPI_FAILURE;
             if (json->numTempBuffers > 0) {
                 memcpy(tempBuffers, json->tempBuffers,
                         json->numTempBuffers * sizeof(char*));
-                dpiUtils__freeMemory(json->tempBuffers);
+                ob_dpiUtils__freeMemory(json->tempBuffers);
             }
             json->tempBuffers = tempBuffers;
         }
 
         // allocate a new temporary buffer
-        if (dpiUtils__allocateMemory(1, DPI_JSON_TEMP_BUFFER_SIZE, 0,
+        if (ob_dpiUtils__allocateMemory(1, DPI_JSON_TEMP_BUFFER_SIZE, 0,
                 "allocate JSON temp buffer",
                 (void**) &json->tempBuffers[json->numTempBuffers], error) < 0)
             return DPI_FAILURE;
@@ -253,16 +253,16 @@ static int dpiJsonNode__fromOracleNumberAsText(dpiJson *json,
     node->value->asBytes.ptr = json->tempBuffers[json->numTempBuffers - 1] +
             json->tempBufferUsed;
     node->value->asBytes.length = DPI_NUMBER_AS_TEXT_CHARS;
-    return dpiDataBuffer__fromOracleNumberAsText(node->value, json->env,
+    return ob_dpiDataBuffer__fromOracleNumberAsText(node->value, json->env,
             error, numBuffer);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiJsonNode__fromOracleScalarToNative() [INTERNAL]
+// ob_dpiJsonNode__fromOracleScalarToNative() [INTERNAL]
 //   Populate a scalar node from the Oracle JSON node.
 //-----------------------------------------------------------------------------
-static int dpiJsonNode__fromOracleScalarToNative(dpiJson *json,
+static int ob_dpiJsonNode__fromOracleScalarToNative(dpiJson *json,
         dpiJsonNode *node, dpiJznDomDoc *domDoc, void *oracleNode,
         uint32_t options, dpiError *error)
 {
@@ -314,11 +314,11 @@ static int dpiJsonNode__fromOracleScalarToNative(dpiJson *json,
             node->oracleTypeNum = DPI_ORACLE_TYPE_NUMBER;
             if (options & DPI_JSON_OPT_NUMBER_AS_STRING) {
                 node->nativeTypeNum = DPI_NATIVE_TYPE_BYTES;
-                return dpiJsonNode__fromOracleNumberAsText(json, node,
+                return ob_dpiJsonNode__fromOracleNumberAsText(json, node,
                         ociVal.asJsonNumber, error);
             }
             node->nativeTypeNum = DPI_NATIVE_TYPE_DOUBLE;
-            return dpiDataBuffer__fromOracleNumberAsDouble(node->value, error,
+            return ob_dpiDataBuffer__fromOracleNumberAsDouble(node->value, error,
                     ociVal.asJsonNumber);
         case DPI_JZNVAL_ORA_DATE:
         case DPI_JZNVAL_ORA_TIMESTAMP:
@@ -327,7 +327,7 @@ static int dpiJsonNode__fromOracleScalarToNative(dpiJson *json,
                     DPI_ORACLE_TYPE_DATE : DPI_ORACLE_TYPE_TIMESTAMP;
             if (options & DPI_JSON_OPT_DATE_AS_DOUBLE) {
                 node->nativeTypeNum = DPI_NATIVE_TYPE_DOUBLE;
-                if (dpiDataBuffer__fromOracleDateAsDouble(node->value,
+                if (ob_dpiDataBuffer__fromOracleDateAsDouble(node->value,
                         json->env, error,
                         (dpiOciDate*) &ociVal.asJsonDateTime) < 0)
                     return DPI_FAILURE;
@@ -387,16 +387,16 @@ static int dpiJsonNode__fromOracleScalarToNative(dpiJson *json,
             break;
     }
 
-    return dpiError__set(error, "populate scalar node from Oracle",
+    return ob_dpiError__set(error, "populate scalar node from Oracle",
             DPI_ERR_UNHANDLED_JSON_SCALAR_TYPE, scalar.valueType);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiJsonNode__fromOracleToNative() [INTERNAL]
+// ob_dpiJsonNode__fromOracleToNative() [INTERNAL]
 //   Populate the JSON node structure from the Oracle JSON node.
 //-----------------------------------------------------------------------------
-static int dpiJsonNode__fromOracleToNative(dpiJson *json, dpiJsonNode *node,
+static int ob_dpiJsonNode__fromOracleToNative(dpiJson *json, dpiJsonNode *node,
         dpiJznDomDoc *domDoc, void *oracleNode, uint32_t options,
         dpiError *error)
 {
@@ -405,27 +405,27 @@ static int dpiJsonNode__fromOracleToNative(dpiJson *json, dpiJsonNode *node,
     nodeType = (*domDoc->methods->fnGetNodeType)(domDoc, oracleNode);
     switch (nodeType) {
         case DPI_JZNDOM_ARRAY:
-            return dpiJsonNode__fromOracleArrayToNative(json, node, domDoc,
+            return ob_dpiJsonNode__fromOracleArrayToNative(json, node, domDoc,
                     oracleNode, options, error);
         case DPI_JZNDOM_OBJECT:
-            return dpiJsonNode__fromOracleObjectToNative(json, node, domDoc,
+            return ob_dpiJsonNode__fromOracleObjectToNative(json, node, domDoc,
                     oracleNode, options, error);
         case DPI_JZNDOM_SCALAR:
-            return dpiJsonNode__fromOracleScalarToNative(json, node, domDoc,
+            return ob_dpiJsonNode__fromOracleScalarToNative(json, node, domDoc,
                     oracleNode, options, error);
         default:
             break;
     }
-    return dpiError__set(error, "from Oracle to native node",
+    return ob_dpiError__set(error, "from Oracle to native node",
             DPI_ERR_UNHANDLED_JSON_NODE_TYPE, nodeType);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiJsonNode__toOracleArrayFromNative() [INTERNAL]
+// ob_dpiJsonNode__toOracleArrayFromNative() [INTERNAL]
 //   Populate an Oracle array node from the JSON array node.
 //-----------------------------------------------------------------------------
-static int dpiJsonNode__toOracleArrayFromNative(dpiJson *json,
+static int ob_dpiJsonNode__toOracleArrayFromNative(dpiJson *json,
         dpiJsonArray *array, dpiJznDomDoc *domDoc, void **oracleNode,
         dpiError *error)
 {
@@ -436,7 +436,7 @@ static int dpiJsonNode__toOracleArrayFromNative(dpiJson *json,
     *oracleNode = domDoc->methods->fnNewArray(domDoc, array->numElements);
     for (i = 0; i < array->numElements; i++) {
         childNode = &array->elements[i];
-        if (dpiJsonNode__toOracleFromNative(json, childNode, domDoc,
+        if (ob_dpiJsonNode__toOracleFromNative(json, childNode, domDoc,
                 &oracleChildNode, error) < 0) {
             domDoc->methods->fnFreeNode(domDoc, *oracleNode);
             return DPI_FAILURE;
@@ -449,10 +449,10 @@ static int dpiJsonNode__toOracleArrayFromNative(dpiJson *json,
 
 
 //-----------------------------------------------------------------------------
-// dpiJsonNode__toOracleObjectFromNative() [INTERNAL]
+// ob_dpiJsonNode__toOracleObjectFromNative() [INTERNAL]
 //   Populate an Oracle object node from the JSON object node.
 //-----------------------------------------------------------------------------
-static int dpiJsonNode__toOracleObjectFromNative(dpiJson *json,
+static int ob_dpiJsonNode__toOracleObjectFromNative(dpiJson *json,
         dpiJsonObject *obj, dpiJznDomDoc *domDoc, void **oracleNode,
         dpiError *error)
 {
@@ -463,7 +463,7 @@ static int dpiJsonNode__toOracleObjectFromNative(dpiJson *json,
     *oracleNode = domDoc->methods->fnNewObject(domDoc, obj->numFields);
     for (i = 0; i < obj->numFields; i++) {
         childNode = &obj->fields[i];
-        if (dpiJsonNode__toOracleFromNative(json, childNode, domDoc,
+        if (ob_dpiJsonNode__toOracleFromNative(json, childNode, domDoc,
                 &oracleChildNode, error) < 0) {
             domDoc->methods->fnFreeNode(domDoc, *oracleNode);
             return DPI_FAILURE;
@@ -478,10 +478,10 @@ static int dpiJsonNode__toOracleObjectFromNative(dpiJson *json,
 
 
 //-----------------------------------------------------------------------------
-// dpiJsonNode__toOracleFromNative() [INTERNAL]
+// ob_dpiJsonNode__toOracleFromNative() [INTERNAL]
 //   Create an Oracle node from the native node.
 //-----------------------------------------------------------------------------
-static int dpiJsonNode__toOracleFromNative(dpiJson *json,
+static int ob_dpiJsonNode__toOracleFromNative(dpiJson *json,
         const dpiJsonNode *node, dpiJznDomDoc *domDoc, void **oracleNode,
         dpiError *error)
 {
@@ -491,31 +491,31 @@ static int dpiJsonNode__toOracleFromNative(dpiJson *json,
     switch (node->oracleTypeNum) {
         case DPI_ORACLE_TYPE_JSON_ARRAY:
             if (node->nativeTypeNum == DPI_NATIVE_TYPE_JSON_ARRAY) {
-                return dpiJsonNode__toOracleArrayFromNative(json,
+                return ob_dpiJsonNode__toOracleArrayFromNative(json,
                         &node->value->asJsonArray, domDoc, oracleNode, error);
             }
             break;
         case DPI_ORACLE_TYPE_JSON_OBJECT:
             if (node->nativeTypeNum == DPI_NATIVE_TYPE_JSON_OBJECT) {
-                return dpiJsonNode__toOracleObjectFromNative(json,
+                return ob_dpiJsonNode__toOracleObjectFromNative(json,
                         &node->value->asJsonObject, domDoc, oracleNode, error);
             }
             break;
         case DPI_ORACLE_TYPE_NUMBER:
             if (node->nativeTypeNum == DPI_NATIVE_TYPE_DOUBLE) {
-                if (dpiDataBuffer__toOracleNumberFromDouble(node->value,
+                if (ob_dpiDataBuffer__toOracleNumberFromDouble(node->value,
                         error, &dataBuffer.asNumber) < 0)
                     return DPI_FAILURE;
             } else if (node->nativeTypeNum == DPI_NATIVE_TYPE_INT64) {
-                if (dpiDataBuffer__toOracleNumberFromInteger(node->value,
+                if (ob_dpiDataBuffer__toOracleNumberFromInteger(node->value,
                         error, &dataBuffer.asNumber) < 0)
                     return DPI_FAILURE;
             } else if (node->nativeTypeNum == DPI_NATIVE_TYPE_UINT64) {
-                if (dpiDataBuffer__toOracleNumberFromUnsignedInteger(
+                if (ob_dpiDataBuffer__toOracleNumberFromUnsignedInteger(
                         node->value, error, &dataBuffer.asNumber) < 0)
                     return DPI_FAILURE;
             } else if (node->nativeTypeNum == DPI_NATIVE_TYPE_BYTES) {
-                if (dpiDataBuffer__toOracleNumberFromText(node->value,
+                if (ob_dpiDataBuffer__toOracleNumberFromText(node->value,
                         json->env, error, &dataBuffer.asNumber) < 0)
                     return DPI_FAILURE;
             } else {
@@ -562,11 +562,11 @@ static int dpiJsonNode__toOracleFromNative(dpiJson *json,
             break;
         case DPI_ORACLE_TYPE_DATE:
             if (node->nativeTypeNum == DPI_NATIVE_TYPE_TIMESTAMP) {
-                if (dpiDataBuffer__toOracleDate(node->value,
+                if (ob_dpiDataBuffer__toOracleDate(node->value,
                         &dataBuffer.asDate) < 0)
                     return DPI_FAILURE;
             } else if (node->nativeTypeNum == DPI_NATIVE_TYPE_DOUBLE) {
-                if (dpiDataBuffer__toOracleDateFromDouble(node->value,
+                if (ob_dpiDataBuffer__toOracleDateFromDouble(node->value,
                         json->env, error, &dataBuffer.asDate) < 0)
                     return DPI_FAILURE;
             } else {
@@ -577,17 +577,17 @@ static int dpiJsonNode__toOracleFromNative(dpiJson *json,
             return DPI_SUCCESS;
         case DPI_ORACLE_TYPE_TIMESTAMP:
             if (!json->convTimestamp) {
-                if (dpiOci__descriptorAlloc(json->env->handle,
+                if (ob_dpiOci__descriptorAlloc(json->env->handle,
                         &json->convTimestamp, DPI_OCI_DTYPE_TIMESTAMP,
                         "alloc timestamp for JSON", error) < 0)
                     return DPI_FAILURE;
             }
             if (node->nativeTypeNum == DPI_NATIVE_TYPE_TIMESTAMP) {
-                if (dpiDataBuffer__toOracleTimestamp(node->value, json->env,
+                if (ob_dpiDataBuffer__toOracleTimestamp(node->value, json->env,
                         error, json->convTimestamp, 0) < 0)
                     return DPI_FAILURE;
             } else if (node->nativeTypeNum == DPI_NATIVE_TYPE_DOUBLE) {
-                if (dpiDataBuffer__toOracleTimestampFromDouble(node->value,
+                if (ob_dpiDataBuffer__toOracleTimestampFromDouble(node->value,
                         node->oracleTypeNum, json->env, error,
                         json->convTimestamp) < 0)
                     return DPI_FAILURE;
@@ -599,13 +599,13 @@ static int dpiJsonNode__toOracleFromNative(dpiJson *json,
             return DPI_SUCCESS;
         case DPI_ORACLE_TYPE_INTERVAL_DS:
             if (!json->convIntervalDS) {
-                if (dpiOci__descriptorAlloc(json->env->handle,
+                if (ob_dpiOci__descriptorAlloc(json->env->handle,
                         &json->convIntervalDS, DPI_OCI_DTYPE_INTERVAL_DS,
                         "alloc interval DS for JSON", error) < 0)
                     return DPI_FAILURE;
             }
             if (node->nativeTypeNum == DPI_NATIVE_TYPE_INTERVAL_DS) {
-                if (dpiDataBuffer__toOracleIntervalDS(node->value, json->env,
+                if (ob_dpiDataBuffer__toOracleIntervalDS(node->value, json->env,
                         error, json->convIntervalDS) < 0)
                     return DPI_FAILURE;
                 *oracleNode = domDoc->methods->fnNewScalarVal(domDoc,
@@ -615,13 +615,13 @@ static int dpiJsonNode__toOracleFromNative(dpiJson *json,
             break;
         case DPI_ORACLE_TYPE_INTERVAL_YM:
             if (!json->convIntervalYM) {
-                if (dpiOci__descriptorAlloc(json->env->handle,
+                if (ob_dpiOci__descriptorAlloc(json->env->handle,
                         &json->convIntervalYM, DPI_OCI_DTYPE_INTERVAL_YM,
                         "alloc interval YM for JSON", error) < 0)
                     return DPI_FAILURE;
             }
             if (node->nativeTypeNum == DPI_NATIVE_TYPE_INTERVAL_YM) {
-                if (dpiDataBuffer__toOracleIntervalYM(node->value, json->env,
+                if (ob_dpiDataBuffer__toOracleIntervalYM(node->value, json->env,
                         error, json->convIntervalYM) < 0)
                     return DPI_FAILURE;
                 *oracleNode = domDoc->methods->fnNewScalarVal(domDoc,
@@ -655,17 +655,17 @@ static int dpiJsonNode__toOracleFromNative(dpiJson *json,
             break;
     }
     *oracleNode = NULL;
-    return dpiError__set(error, "from native to Oracle node",
+    return ob_dpiError__set(error, "from native to Oracle node",
             DPI_ERR_UNHANDLED_CONVERSION_TO_JSON, node->nativeTypeNum,
             node->oracleTypeNum);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiJson__setValue() [INTERNAL]
+// ob_dpiJson__setValue() [INTERNAL]
 //   Sets the value of the JSON object, given a hierarchy of nodes.
 //-----------------------------------------------------------------------------
-int dpiJson__setValue(dpiJson *json, const dpiJsonNode *topNode,
+int ob_dpiJson__setValue(dpiJson *json, const dpiJsonNode *topNode,
         dpiError *error)
 {
     const char *dummyValue = "0";
@@ -674,22 +674,22 @@ int dpiJson__setValue(dpiJson *json, const dpiJsonNode *topNode,
     int mutable = 1;
 
     // first, set the JSON descriptor as mutable
-    if (dpiOci__attrSet(json->handle, DPI_OCI_DTYPE_JSON,
+    if (ob_dpiOci__attrSet(json->handle, DPI_OCI_DTYPE_JSON,
             (void*) &mutable, 0, DPI_OCI_ATTR_JSON_DOM_MUTABLE,
             "set JSON descriptor mutable", error) < 0)
         return DPI_FAILURE;
 
     // write a dummy value to the JSON descriptor
-    if (dpiOci__jsonTextBufferParse(json, dummyValue, strlen(dummyValue), 0,
+    if (ob_dpiOci__jsonTextBufferParse(json, dummyValue, strlen(dummyValue), 0,
             error) < 0)
         return DPI_FAILURE;
 
     // acquire the DOM doc which will be used to create the Oracle nodes
-    if (dpiOci__jsonDomDocGet(json, &domDoc, error) < 0)
+    if (ob_dpiOci__jsonDomDocGet(json, &domDoc, error) < 0)
         return DPI_FAILURE;
 
     // convert the top node (and all of the child nodes to Oracle nodes)
-    if (dpiJsonNode__toOracleFromNative(json, topNode, domDoc, &oracleTopNode,
+    if (ob_dpiJsonNode__toOracleFromNative(json, topNode, domDoc, &oracleTopNode,
             error) < 0)
         return DPI_FAILURE;
 
@@ -701,10 +701,10 @@ int dpiJson__setValue(dpiJson *json, const dpiJsonNode *topNode,
 
 
 //-----------------------------------------------------------------------------
-// dpiJsonNode__free() [INTERNAL]
+// ob_dpiJsonNode__free() [INTERNAL]
 //   Free the buffers allocated for the JSON node.
 //-----------------------------------------------------------------------------
-static void dpiJsonNode__free(dpiJsonNode *node)
+static void ob_dpiJsonNode__free(dpiJsonNode *node)
 {
     dpiJsonArray *array;
     dpiJsonObject *obj;
@@ -715,13 +715,13 @@ static void dpiJsonNode__free(dpiJsonNode *node)
         if (array->elements) {
             for (i = 0; i < array->numElements; i++) {
                 if (array->elements[i].value)
-                    dpiJsonNode__free(&array->elements[i]);
+                    ob_dpiJsonNode__free(&array->elements[i]);
             }
-            dpiUtils__freeMemory(array->elements);
+            ob_dpiUtils__freeMemory(array->elements);
             array->elements = NULL;
         }
         if (array->elementValues) {
-            dpiUtils__freeMemory(array->elementValues);
+            ob_dpiUtils__freeMemory(array->elementValues);
             array->elementValues = NULL;
         }
     } else if (node->oracleTypeNum == DPI_ORACLE_TYPE_JSON_OBJECT) {
@@ -729,21 +729,21 @@ static void dpiJsonNode__free(dpiJsonNode *node)
         if (obj->fields) {
             for (i = 0; i < obj->numFields; i++) {
                 if (obj->fields[i].value)
-                    dpiJsonNode__free(&obj->fields[i]);
+                    ob_dpiJsonNode__free(&obj->fields[i]);
             }
-            dpiUtils__freeMemory(obj->fields);
+            ob_dpiUtils__freeMemory(obj->fields);
             obj->fields = NULL;
         }
         if (obj->fieldNames) {
-            dpiUtils__freeMemory(obj->fieldNames);
+            ob_dpiUtils__freeMemory(obj->fieldNames);
             obj->fieldNames = NULL;
         }
         if (obj->fieldNameLengths) {
-            dpiUtils__freeMemory(obj->fieldNameLengths);
+            ob_dpiUtils__freeMemory(obj->fieldNameLengths);
             obj->fieldNameLengths = NULL;
         }
         if (obj->fieldValues) {
-            dpiUtils__freeMemory(obj->fieldValues);
+            ob_dpiUtils__freeMemory(obj->fieldValues);
             obj->fieldValues = NULL;
         }
     }
@@ -751,127 +751,127 @@ static void dpiJsonNode__free(dpiJsonNode *node)
 
 
 //-----------------------------------------------------------------------------
-// dpiJson__free() [INTERNAL]
+// ob_dpiJson__free() [INTERNAL]
 //   Free the buffers allocated for the JSON value and all of its nodes, if
 // applicable.
 //-----------------------------------------------------------------------------
-void dpiJson__free(dpiJson *json, dpiError *error)
+void ob_dpiJson__free(dpiJson *json, dpiError *error)
 {
     uint32_t i;
 
     if (json->handle && json->handleIsOwned) {
-        dpiOci__descriptorFree(json->handle, DPI_OCI_DTYPE_JSON);
+        ob_dpiOci__descriptorFree(json->handle, DPI_OCI_DTYPE_JSON);
         json->handle = NULL;
     }
     if (json->conn) {
-        dpiGen__setRefCount(json->conn, error, -1);
+        ob_dpiGen__setRefCount(json->conn, error, -1);
         json->conn = NULL;
     }
     if (json->tempBuffers) {
         for (i = 0; i < json->numTempBuffers; i++)
-            dpiUtils__freeMemory(json->tempBuffers[i]);
-        dpiUtils__freeMemory(json->tempBuffers);
+            ob_dpiUtils__freeMemory(json->tempBuffers[i]);
+        ob_dpiUtils__freeMemory(json->tempBuffers);
         json->tempBuffers = NULL;
     }
     if (json->convTimestamp) {
-        dpiOci__descriptorFree(json->convTimestamp, DPI_OCI_DTYPE_TIMESTAMP);
+        ob_dpiOci__descriptorFree(json->convTimestamp, DPI_OCI_DTYPE_TIMESTAMP);
         json->convTimestamp = NULL;
     }
     if (json->convIntervalDS) {
-        dpiOci__descriptorFree(json->convIntervalDS,
+        ob_dpiOci__descriptorFree(json->convIntervalDS,
                 DPI_OCI_DTYPE_INTERVAL_DS);
         json->convIntervalDS = NULL;
     }
     if (json->convIntervalYM) {
-        dpiOci__descriptorFree(json->convIntervalYM,
+        ob_dpiOci__descriptorFree(json->convIntervalYM,
                 DPI_OCI_DTYPE_INTERVAL_YM);
         json->convIntervalYM = NULL;
     }
-    dpiJsonNode__free(&json->topNode);
-    dpiUtils__freeMemory(json);
+    ob_dpiJsonNode__free(&json->topNode);
+    ob_dpiUtils__freeMemory(json);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiJson_addRef() [PUBLIC]
+// ob_dpiJson_addRef() [PUBLIC]
 //   Add a reference to the JSON object.
 //-----------------------------------------------------------------------------
-int dpiJson_addRef(dpiJson *json)
+int ob_dpiJson_addRef(dpiJson *json)
 {
-    return dpiGen__addRef(json, DPI_HTYPE_JSON, __func__);
+    return ob_dpiGen__addRef(json, DPI_HTYPE_JSON, __func__);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiJson_getValue() [PUBLIC]
+// ob_dpiJson_getValue() [PUBLIC]
 //   Gets the value of the JSON object as a hierarchy of nodes.
 //-----------------------------------------------------------------------------
-int dpiJson_getValue(dpiJson *json, uint32_t options, dpiJsonNode **topNode)
+int ob_dpiJson_getValue(dpiJson *json, uint32_t options, dpiJsonNode **topNode)
 {
     dpiJznDomDoc *domDoc;
     void *oracleNode;
     dpiError error;
 
-    if (dpiGen__startPublicFn(json, DPI_HTYPE_JSON, __func__, &error) < 0)
-        return dpiGen__endPublicFn(json, DPI_FAILURE, &error);
-    dpiJsonNode__free(&json->topNode);
+    if (ob_dpiGen__startPublicFn(json, DPI_HTYPE_JSON, __func__, &error) < 0)
+        return ob_dpiGen__endPublicFn(json, DPI_FAILURE, &error);
+    ob_dpiJsonNode__free(&json->topNode);
     json->topNode.value = &json->topNodeBuffer;
     json->topNode.oracleTypeNum = DPI_ORACLE_TYPE_NONE;
     json->topNode.nativeTypeNum = DPI_NATIVE_TYPE_NULL;
-    if (dpiOci__jsonDomDocGet(json, &domDoc, &error) < 0)
-        return dpiGen__endPublicFn(json, DPI_FAILURE, &error);
+    if (ob_dpiOci__jsonDomDocGet(json, &domDoc, &error) < 0)
+        return ob_dpiGen__endPublicFn(json, DPI_FAILURE, &error);
     if (domDoc) {
         oracleNode = (*domDoc->methods->fnGetRootNode)(domDoc);
-        if (dpiJsonNode__fromOracleToNative(json, &json->topNode, domDoc,
+        if (ob_dpiJsonNode__fromOracleToNative(json, &json->topNode, domDoc,
                 oracleNode, options, &error) < 0)
-            return dpiGen__endPublicFn(json, DPI_FAILURE, &error);
+            return ob_dpiGen__endPublicFn(json, DPI_FAILURE, &error);
     }
 
     *topNode = &json->topNode;
-    return dpiGen__endPublicFn(json, DPI_SUCCESS, &error);
+    return ob_dpiGen__endPublicFn(json, DPI_SUCCESS, &error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiJson_release() [PUBLIC]
+// ob_dpiJson_release() [PUBLIC]
 //   Release a reference to the JSON object.
 //-----------------------------------------------------------------------------
-int dpiJson_release(dpiJson *json)
+int ob_dpiJson_release(dpiJson *json)
 {
-    return dpiGen__release(json, DPI_HTYPE_JSON, __func__);
+    return ob_dpiGen__release(json, DPI_HTYPE_JSON, __func__);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiJson_setFromText() [PUBLIC]
+// ob_dpiJson_setFromText() [PUBLIC]
 //   Sets the value of the JSON handle, given a JSON string.
 //-----------------------------------------------------------------------------
-int dpiJson_setFromText(dpiJson *json, const char *value, uint64_t valueLength,
+int ob_dpiJson_setFromText(dpiJson *json, const char *value, uint64_t valueLength,
         uint32_t flags)
 {
     dpiError error;
     int status;
 
-    if (dpiGen__startPublicFn(json, DPI_HTYPE_JSON, __func__, &error) < 0)
-        return dpiGen__endPublicFn(json, DPI_FAILURE, &error);
+    if (ob_dpiGen__startPublicFn(json, DPI_HTYPE_JSON, __func__, &error) < 0)
+        return ob_dpiGen__endPublicFn(json, DPI_FAILURE, &error);
     DPI_CHECK_PTR_AND_LENGTH(json, value)
-    status = dpiOci__jsonTextBufferParse(json, value, valueLength,
+    status = ob_dpiOci__jsonTextBufferParse(json, value, valueLength,
                 flags, &error);
-    return dpiGen__endPublicFn(json, status, &error);
+    return ob_dpiGen__endPublicFn(json, status, &error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiJson_setValue() [PUBLIC]
+// ob_dpiJson_setValue() [PUBLIC]
 //   Sets the value of the JSON object, given a hierarchy of nodes.
 //-----------------------------------------------------------------------------
-int dpiJson_setValue(dpiJson *json, dpiJsonNode *topNode)
+int ob_dpiJson_setValue(dpiJson *json, dpiJsonNode *topNode)
 {
     dpiError error;
     int status;
 
-    if (dpiGen__startPublicFn(json, DPI_HTYPE_JSON, __func__, &error) < 0)
-        return dpiGen__endPublicFn(json, DPI_FAILURE, &error);
-    status = dpiJson__setValue(json, topNode, &error);
-    return dpiGen__endPublicFn(json, status, &error);
+    if (ob_dpiGen__startPublicFn(json, DPI_HTYPE_JSON, __func__, &error) < 0)
+        return ob_dpiGen__endPublicFn(json, DPI_FAILURE, &error);
+    status = ob_dpiJson__setValue(json, topNode, &error);
+    return ob_dpiGen__endPublicFn(json, status, &error);
 }

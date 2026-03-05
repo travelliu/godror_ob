@@ -7,13 +7,13 @@ package godror
 // All CGO functions are used because handling unions, indexing,
 // nested callocs for substructures is hard to handle in Go code
 
-void godror_allocate_dpiNode(dpiJsonNode **dpijsonnode) {
+void ob_godror_allocate_dpiNode(dpiJsonNode **dpijsonnode) {
 	*dpijsonnode = (dpiJsonNode *)(calloc(1, sizeof(dpiJsonNode)));
 	dpiDataBuffer *dpijsonDataBuffer = (dpiDataBuffer *)(calloc(1, sizeof(dpiDataBuffer)));
 	(*dpijsonnode)->value = dpijsonDataBuffer;
 }
 
-void godror_free_dpiNode(dpiJsonNode *node) {
+void ob_godror_free_dpiNode(dpiJsonNode *node) {
     if(node == NULL) {
         return;
     }
@@ -25,13 +25,13 @@ void godror_free_dpiNode(dpiJsonNode *node) {
     node = NULL;
 }
 
-void godror_setObjectFields(dpiJsonObject * jsonobj, int i, dpiJsonNode **jnode)
+void ob_godror_setObjectFields(dpiJsonObject * jsonobj, int i, dpiJsonNode **jnode)
 {
     *jnode = &(jsonobj->fields[i]);
     jsonobj->fields[i].value = &jsonobj->fieldValues[i];
 }
 
-void godror_dpiJsonObject_setKey(dpiJsonNode *dpijsonnode, int index, const char *key, uint32_t keyLength) {
+void ob_godror_dpiJsonObject_setKey(dpiJsonNode *dpijsonnode, int index, const char *key, uint32_t keyLength) {
     dpiJsonObject *dpijsonobj = &(dpijsonnode->value->asJsonObject);
     dpijsonobj->fieldNames[index] = calloc((keyLength + 1), sizeof(char));
     memcpy(dpijsonobj->fieldNames[index], key, keyLength);
@@ -39,47 +39,47 @@ void godror_dpiJsonObject_setKey(dpiJsonNode *dpijsonnode, int index, const char
     dpijsonobj->fieldNameLengths[index] = keyLength;
 }
 
-void godror_dpiasJsonObject(dpiJsonNode *dpijsonnode, dpiJsonObject **dpijsonobj)
+void ob_godror_dpiasJsonObject(dpiJsonNode *dpijsonnode, dpiJsonObject **dpijsonobj)
 {
     *dpijsonobj = &(dpijsonnode->value->asJsonObject);
 }
 
-void godror_dpiasJsonArray(dpiJsonNode *dpijsonnode, dpiJsonArray **dpijsonobj)
+void ob_godror_dpiasJsonArray(dpiJsonNode *dpijsonnode, dpiJsonArray **dpijsonobj)
 {
     *dpijsonobj = &(dpijsonnode->value->asJsonArray);
 }
 
-void godror_setArrayElements(dpiJsonArray * jsonarr, int i, dpiJsonNode **jnode)
+void ob_godror_setArrayElements(dpiJsonArray * jsonarr, int i, dpiJsonNode **jnode)
 {
     *jnode = &(jsonarr->elements[i]);
     jsonarr->elements[i].value = &jsonarr->elementValues[i];
 }
 
-void godror_dpiJson_setDouble(dpiJsonNode *topNode, double value) {
+void ob_godror_dpiJson_setDouble(dpiJsonNode *topNode, double value) {
     topNode->oracleTypeNum = DPI_ORACLE_TYPE_NUMBER;
     topNode->nativeTypeNum = DPI_NATIVE_TYPE_DOUBLE;
     topNode->value->asDouble = value;
 }
 
-void godror_dpiJson_setInt64(dpiJsonNode *topNode, int64_t value) {
+void ob_godror_dpiJson_setInt64(dpiJsonNode *topNode, int64_t value) {
     topNode->oracleTypeNum = DPI_ORACLE_TYPE_NUMBER;
     topNode->nativeTypeNum = DPI_NATIVE_TYPE_INT64;
     topNode->value->asInt64 = value;
 }
 
-void godror_dpiJson_setUint64(dpiJsonNode *topNode, uint64_t value) {
+void ob_godror_dpiJson_setUint64(dpiJsonNode *topNode, uint64_t value) {
     topNode->oracleTypeNum = DPI_ORACLE_TYPE_NUMBER;
     topNode->nativeTypeNum = DPI_NATIVE_TYPE_UINT64;
     topNode->value->asUint64 = value;
 }
 
-void godror_dpiJson_setTime(dpiJsonNode *topNode, dpiData *data) {
+void ob_godror_dpiJson_setTime(dpiJsonNode *topNode, dpiData *data) {
     topNode->oracleTypeNum = DPI_ORACLE_TYPE_TIMESTAMP;
     topNode->nativeTypeNum = DPI_NATIVE_TYPE_TIMESTAMP;
     topNode->value->asTimestamp = data->value.asTimestamp;
 }
 
-void godror_dpiJson_setBytes(dpiJsonNode *topNode, dpiData *data) {
+void ob_godror_dpiJson_setBytes(dpiJsonNode *topNode, dpiData *data) {
     uint32_t size = data->value.asBytes.length;
     topNode->oracleTypeNum = DPI_ORACLE_TYPE_RAW;
     topNode->nativeTypeNum = DPI_NATIVE_TYPE_BYTES;
@@ -88,7 +88,7 @@ void godror_dpiJson_setBytes(dpiJsonNode *topNode, dpiData *data) {
     topNode->value->asBytes.length = size;
 }
 
-void godror_dpiJson_setNumber(dpiJsonNode *topNode, const _GoString_ value) {
+void ob_godror_dpiJson_setNumber(dpiJsonNode *topNode, const _GoString_ value) {
     uint32_t length;
     length = _GoStringLen(value);
     topNode->oracleTypeNum = DPI_ORACLE_TYPE_NUMBER;
@@ -98,19 +98,19 @@ void godror_dpiJson_setNumber(dpiJsonNode *topNode, const _GoString_ value) {
     topNode->value->asBytes.length = length;
 }
 
-void godror_dpiJson_setIntervalDS(dpiJsonNode *topNode, dpiData *data) {
+void ob_godror_dpiJson_setIntervalDS(dpiJsonNode *topNode, dpiData *data) {
     topNode->oracleTypeNum = DPI_ORACLE_TYPE_INTERVAL_DS;
     topNode->nativeTypeNum = DPI_NATIVE_TYPE_INTERVAL_DS;
     topNode->value->asIntervalDS = data->value.asIntervalDS;
 }
 
-void godror_dpiJson_setBool(dpiJsonNode *topNode, dpiData *data) {
+void ob_godror_dpiJson_setBool(dpiJsonNode *topNode, dpiData *data) {
     topNode->oracleTypeNum = DPI_ORACLE_TYPE_BOOLEAN;
     topNode->nativeTypeNum = DPI_NATIVE_TYPE_BOOLEAN;
     topNode->value->asBoolean = data->value.asBoolean;
 }
 
-void godror_dpiJson_setString(dpiJsonNode *topNode, dpiData *data) {
+void ob_godror_dpiJson_setString(dpiJsonNode *topNode, dpiData *data) {
     uint32_t size = data->value.asBytes.length;
     topNode->oracleTypeNum = DPI_ORACLE_TYPE_VARCHAR;
     topNode->nativeTypeNum = DPI_NATIVE_TYPE_BYTES;
@@ -120,7 +120,7 @@ void godror_dpiJson_setString(dpiJsonNode *topNode, dpiData *data) {
     topNode->value->asBytes.length = size;
 }
 
-void godror_dpiJsonObject_initialize(dpiJsonNode **dpijsonnode, uint32_t numfields) {
+void ob_godror_dpiJsonObject_initialize(dpiJsonNode **dpijsonnode, uint32_t numfields) {
     dpiJsonObject dpijsonobjtmp;
     dpiJsonObject *dpijsonobj = &dpijsonobjtmp;
     (*dpijsonnode)->oracleTypeNum = DPI_ORACLE_TYPE_JSON_OBJECT;
@@ -133,7 +133,7 @@ void godror_dpiJsonObject_initialize(dpiJsonNode **dpijsonnode, uint32_t numfiel
     (*dpijsonnode)->value->asJsonObject = *dpijsonobj;
 }
 
-void godror_dpiJsonArray_initialize(dpiJsonNode **dpijsonnode, uint32_t numelem) {
+void ob_godror_dpiJsonArray_initialize(dpiJsonNode **dpijsonnode, uint32_t numelem) {
     dpiJsonArray dpijsonarrtmp;
     dpiJsonArray *dpijsonarr = &dpijsonarrtmp;
     (*dpijsonnode)->oracleTypeNum = DPI_ORACLE_TYPE_JSON_ARRAY;
@@ -144,7 +144,7 @@ void godror_dpiJsonArray_initialize(dpiJsonNode **dpijsonnode, uint32_t numelem)
     (*dpijsonnode)->value->asJsonArray = *dpijsonarr;
 }
 
-void godror_dpiJsonNodeFree(dpiJsonNode *node)
+void ob_godror_dpiJsonNodeFree(dpiJsonNode *node)
 {
     dpiJsonArray *array;
     dpiJsonObject *obj;
@@ -167,7 +167,7 @@ void godror_dpiJsonNodeFree(dpiJsonNode *node)
             if (array->elements) {
                 for (i = 0; i < array->numElements; i++) {
                     if (array->elements[i].value) {
-                        godror_dpiJsonNodeFree(&array->elements[i]);
+                        ob_godror_dpiJsonNodeFree(&array->elements[i]);
                     }
                 }
                 free(array->elements);
@@ -183,7 +183,7 @@ void godror_dpiJsonNodeFree(dpiJsonNode *node)
             if (obj->fields) {
                 for (i = 0; i < obj->numFields; i++) {
                     if (obj->fields[i].value)
-                        godror_dpiJsonNodeFree(&obj->fields[i]);
+                        ob_godror_dpiJsonNodeFree(&obj->fields[i]);
                 }
                 free(obj->fields);
                 obj->fields = NULL;
@@ -210,13 +210,13 @@ void godror_dpiJsonNodeFree(dpiJsonNode *node)
     }
 }
 
-void godror_dpiJsonfreeMem(dpiJsonNode *node) {
+void ob_godror_dpiJsonfreeMem(dpiJsonNode *node) {
     if (node == NULL)
     {
         return;
     }
-    godror_dpiJsonNodeFree(node);
-    godror_free_dpiNode(node);
+    ob_godror_dpiJsonNodeFree(node);
+    ob_godror_free_dpiNode(node);
 }
 
 */
@@ -274,7 +274,7 @@ func (j JSON) StringWithOption(opts JSONOption) (string, error) {
 // Get retrieves the data stored in JSON based on option, opts.
 func (j JSON) Get(data *Data, opts JSONOption) error {
 	var node *C.dpiJsonNode
-	if C.dpiJson_getValue(j.dpiJson, C.uint32_t(opts), (**C.dpiJsonNode)(unsafe.Pointer(&node))) == C.DPI_FAILURE {
+	if C.ob_dpiJson_getValue(j.dpiJson, C.uint32_t(opts), (**C.dpiJsonNode)(unsafe.Pointer(&node))) == C.DPI_FAILURE {
 		return ErrInvalidJSON
 	}
 	jsonNodeToData(data, node)
@@ -286,21 +286,21 @@ func (j JSON) Get(data *Data, opts JSONOption) error {
 func (j JSON) GetJSONObject(opts JSONOption) (JSONObject, error) {
 	var node *C.dpiJsonNode
 	var d Data
-	if C.dpiJson_getValue(j.dpiJson, C.uint32_t(opts), (**C.dpiJsonNode)(unsafe.Pointer(&node))) == C.DPI_FAILURE {
+	if C.ob_dpiJson_getValue(j.dpiJson, C.uint32_t(opts), (**C.dpiJsonNode)(unsafe.Pointer(&node))) == C.DPI_FAILURE {
 		return JSONObject{}, ErrInvalidJSON
 	}
 	jsonNodeToData(&d, node)
 	if C.dpiOracleTypeNum(node.oracleTypeNum) != C.DPI_ORACLE_TYPE_JSON_OBJECT {
 		return JSONObject{}, ErrInvalidType
 	}
-	return JSONObject{dpiJsonObject: C.dpiData_getJsonObject(&(d.dpiData))}, nil
+	return JSONObject{dpiJsonObject: C.ob_dpiData_getJsonObject(&(d.dpiData))}, nil
 }
 
 // GetJSONArray retrieves JSONArray from JSON based on option, opts.
 // It returns error if JSON doesnt represent array type.
 func (j JSON) GetJSONArray(opts JSONOption) (JSONArray, error) {
 	var node *C.dpiJsonNode
-	if C.dpiJson_getValue(j.dpiJson, C.uint32_t(opts), (**C.dpiJsonNode)(unsafe.Pointer(&node))) == C.DPI_FAILURE {
+	if C.ob_dpiJson_getValue(j.dpiJson, C.uint32_t(opts), (**C.dpiJsonNode)(unsafe.Pointer(&node))) == C.DPI_FAILURE {
 		return JSONArray{}, ErrInvalidJSON
 	}
 	var d Data
@@ -308,13 +308,13 @@ func (j JSON) GetJSONArray(opts JSONOption) (JSONArray, error) {
 	if C.dpiOracleTypeNum(node.oracleTypeNum) != C.DPI_ORACLE_TYPE_JSON_ARRAY {
 		return JSONArray{}, ErrInvalidType
 	}
-	return JSONArray{dpiJsonArray: C.dpiData_getJsonArray(&(d.dpiData))}, nil
+	return JSONArray{dpiJsonArray: C.ob_dpiData_getJsonArray(&(d.dpiData))}, nil
 }
 
 // GetJSONScalar retrieves JSONScalar from JSON based on option, opts.
 func (j JSON) GetJSONScalar(opts JSONOption) (JSONScalar, error) {
 	var node *C.dpiJsonNode
-	if C.dpiJson_getValue(j.dpiJson, C.uint32_t(opts), (**C.dpiJsonNode)(unsafe.Pointer(&node))) == C.DPI_FAILURE {
+	if C.ob_dpiJson_getValue(j.dpiJson, C.uint32_t(opts), (**C.dpiJsonNode)(unsafe.Pointer(&node))) == C.DPI_FAILURE {
 		return JSONScalar{}, ErrInvalidJSON
 	}
 	return JSONScalar{dpiJsonNode: node, stringOption: j.stringOption}, nil
@@ -508,14 +508,14 @@ func (j JSONArray) GetValue() (nodes []any, err error) {
 		jsonNodeToData(&d, &elts[i])
 		if d.NativeTypeNum == C.DPI_NATIVE_TYPE_JSON_OBJECT {
 
-			jsobj := JSONObject{dpiJsonObject: C.dpiData_getJsonObject(&(d.dpiData)), stringOption: j.stringOption}
+			jsobj := JSONObject{dpiJsonObject: C.ob_dpiData_getJsonObject(&(d.dpiData)), stringOption: j.stringOption}
 			m, err := jsobj.GetValue()
 			if err != nil {
 				return nil, err
 			}
 			nodes = append(nodes, m)
 		} else if d.NativeTypeNum == C.DPI_NATIVE_TYPE_JSON_ARRAY {
-			jsarr := JSONArray{dpiJsonArray: C.dpiData_getJsonArray(&(d.dpiData)), stringOption: j.stringOption}
+			jsarr := JSONArray{dpiJsonArray: C.ob_dpiData_getJsonArray(&(d.dpiData)), stringOption: j.stringOption}
 			ua, err := jsarr.GetValue()
 			if err != nil {
 				return nil, err
@@ -541,7 +541,7 @@ func (j JSONArray) GetValue() (nodes []any, err error) {
 
 func jsonArraySlice(arr *C.dpiJsonArray) []C.dpiJsonNode {
 	n := int(arr.numElements)
-	//return ((*[maxArraySize]C.dpiJsonNode)(unsafe.Pointer(arr.elements)))[:n:n]
+	// return ((*[maxArraySize]C.dpiJsonNode)(unsafe.Pointer(arr.elements)))[:n:n]
 	return unsafe.Slice(arr.elements, n)
 }
 
@@ -573,14 +573,14 @@ func (j JSONObject) GetValue() (m map[string]any, err error) {
 		var d Data
 		jsonNodeToData(&d, f.Value)
 		if d.NativeTypeNum == C.DPI_NATIVE_TYPE_JSON_OBJECT {
-			jsobj := JSONObject{dpiJsonObject: C.dpiData_getJsonObject(&(d.dpiData)), stringOption: j.stringOption}
+			jsobj := JSONObject{dpiJsonObject: C.ob_dpiData_getJsonObject(&(d.dpiData)), stringOption: j.stringOption}
 			um, err := jsobj.GetValue()
 			if err != nil {
 				return nil, err
 			}
 			m[f.Name] = um
 		} else if d.NativeTypeNum == C.DPI_NATIVE_TYPE_JSON_ARRAY {
-			jsobj := JSONArray{dpiJsonArray: C.dpiData_getJsonArray(&(d.dpiData)), stringOption: j.stringOption}
+			jsobj := JSONArray{dpiJsonArray: C.ob_dpiData_getJsonArray(&(d.dpiData)), stringOption: j.stringOption}
 			ua, err := jsobj.GetValue()
 			if err != nil {
 				return nil, err
@@ -622,11 +622,11 @@ type jsonField struct {
 
 func jsonObjectFields(obj *C.dpiJsonObject) []jsonField {
 	n := int(obj.numFields)
-	//names := ((*[maxArraySize]*C.char)(unsafe.Pointer(obj.fieldNames)))[:n:n]
+	// names := ((*[maxArraySize]*C.char)(unsafe.Pointer(obj.fieldNames)))[:n:n]
 	names := unsafe.Slice(obj.fieldNames, n)
-	//nameLengths := ((*[maxArraySize]C.uint32_t)(unsafe.Pointer(obj.fieldNameLengths)))[:n:n]
+	// nameLengths := ((*[maxArraySize]C.uint32_t)(unsafe.Pointer(obj.fieldNameLengths)))[:n:n]
 	nameLengths := unsafe.Slice(obj.fieldNameLengths, n)
-	//fields := ((*[maxArraySize]C.dpiJsonNode)(unsafe.Pointer(obj.fields)))[:n:n]
+	// fields := ((*[maxArraySize]C.dpiJsonNode)(unsafe.Pointer(obj.fields)))[:n:n]
 	fields := unsafe.Slice(obj.fields, n)
 	ff := make([]jsonField, n)
 	for i := range fields {
@@ -642,18 +642,18 @@ func jsonObjectFields(obj *C.dpiJsonObject) []jsonField {
 // populateJSONNode populates dpiJsonNode from user inputs.
 // It creates a seperate memory for the new output value, jsonnode.
 // memory from user input, in is not shared with jsonnode.
-// Caller has to explicitly free using godror_dpiJsonfreeMem
+// Caller has to explicitly free using ob_godror_dpiJsonfreeMem
 func populateJSONNode(jsonnode *C.dpiJsonNode, in any) error {
 	switch x := in.(type) {
 	case []any:
 		arr, _ := in.([]any)
-		C.godror_dpiJsonArray_initialize((**C.dpiJsonNode)(unsafe.Pointer(&jsonnode)), C.uint32_t(len(arr)))
+		C.ob_godror_dpiJsonArray_initialize((**C.dpiJsonNode)(unsafe.Pointer(&jsonnode)), C.uint32_t(len(arr)))
 
 		var dpijsonarr *C.dpiJsonArray
-		C.godror_dpiasJsonArray(jsonnode, (**C.dpiJsonArray)(unsafe.Pointer(&dpijsonarr)))
+		C.ob_godror_dpiasJsonArray(jsonnode, (**C.dpiJsonArray)(unsafe.Pointer(&dpijsonarr)))
 		for index, entry := range arr {
 			var jsonnodelocal *C.dpiJsonNode
-			C.godror_setArrayElements(dpijsonarr, C.int(index), (**C.dpiJsonNode)(unsafe.Pointer(&jsonnodelocal)))
+			C.ob_godror_setArrayElements(dpijsonarr, C.int(index), (**C.dpiJsonNode)(unsafe.Pointer(&jsonnodelocal)))
 			err := populateJSONNode(jsonnodelocal, entry)
 			if err != nil {
 				return err
@@ -662,20 +662,20 @@ func populateJSONNode(jsonnode *C.dpiJsonNode, in any) error {
 	case map[string]any:
 		m, _ := in.(map[string]any)
 		// Initialize dpiJsonObjectNode
-		C.godror_dpiJsonObject_initialize((**C.dpiJsonNode)(unsafe.Pointer(&jsonnode)), C.uint32_t(len(m)))
+		C.ob_godror_dpiJsonObject_initialize((**C.dpiJsonNode)(unsafe.Pointer(&jsonnode)), C.uint32_t(len(m)))
 
 		var dpijsonobj *C.dpiJsonObject
-		C.godror_dpiasJsonObject(jsonnode, (**C.dpiJsonObject)(unsafe.Pointer(&dpijsonobj)))
+		C.ob_godror_dpiasJsonObject(jsonnode, (**C.dpiJsonObject)(unsafe.Pointer(&dpijsonobj)))
 
 		var i C.int = 0
 		var cKey *C.char
 
 		for k, v := range m {
 			cKey = C.CString(k)
-			C.godror_dpiJsonObject_setKey(jsonnode, i, cKey, C.uint32_t(len(k)))
+			C.ob_godror_dpiJsonObject_setKey(jsonnode, i, cKey, C.uint32_t(len(k)))
 			C.free(unsafe.Pointer(cKey))
 			var jsonnodelocal *C.dpiJsonNode
-			C.godror_setObjectFields(dpijsonobj, i, (**C.dpiJsonNode)(unsafe.Pointer(&jsonnodelocal)))
+			C.ob_godror_setObjectFields(dpijsonobj, i, (**C.dpiJsonNode)(unsafe.Pointer(&jsonnodelocal)))
 			err := populateJSONNode(jsonnodelocal, v)
 			if err != nil {
 				return err
@@ -684,61 +684,61 @@ func populateJSONNode(jsonnode *C.dpiJsonNode, in any) error {
 		}
 
 	case int:
-		C.godror_dpiJson_setInt64(jsonnode, C.int64_t(x))
+		C.ob_godror_dpiJson_setInt64(jsonnode, C.int64_t(x))
 	case int8:
-		C.godror_dpiJson_setInt64(jsonnode, C.int64_t(x))
+		C.ob_godror_dpiJson_setInt64(jsonnode, C.int64_t(x))
 	case int16:
-		C.godror_dpiJson_setInt64(jsonnode, C.int64_t(x))
+		C.ob_godror_dpiJson_setInt64(jsonnode, C.int64_t(x))
 	case int32:
-		C.godror_dpiJson_setInt64(jsonnode, C.int64_t(x))
+		C.ob_godror_dpiJson_setInt64(jsonnode, C.int64_t(x))
 	case int64:
-		C.godror_dpiJson_setInt64(jsonnode, C.int64_t(x))
+		C.ob_godror_dpiJson_setInt64(jsonnode, C.int64_t(x))
 	case uint:
-		C.godror_dpiJson_setUint64(jsonnode, C.uint64_t(x))
+		C.ob_godror_dpiJson_setUint64(jsonnode, C.uint64_t(x))
 	case uint8:
-		C.godror_dpiJson_setUint64(jsonnode, C.uint64_t(x))
+		C.ob_godror_dpiJson_setUint64(jsonnode, C.uint64_t(x))
 	case uint16:
-		C.godror_dpiJson_setUint64(jsonnode, C.uint64_t(x))
+		C.ob_godror_dpiJson_setUint64(jsonnode, C.uint64_t(x))
 	case uint32:
-		C.godror_dpiJson_setUint64(jsonnode, C.uint64_t(x))
+		C.ob_godror_dpiJson_setUint64(jsonnode, C.uint64_t(x))
 	case uint64:
-		C.godror_dpiJson_setUint64(jsonnode, C.uint64_t(x))
+		C.ob_godror_dpiJson_setUint64(jsonnode, C.uint64_t(x))
 	case float32:
-		C.godror_dpiJson_setDouble(jsonnode, C.double(x))
+		C.ob_godror_dpiJson_setDouble(jsonnode, C.double(x))
 	case float64:
-		C.godror_dpiJson_setDouble(jsonnode, C.double(x))
+		C.ob_godror_dpiJson_setDouble(jsonnode, C.double(x))
 	case Number:
-		C.godror_dpiJson_setNumber(jsonnode, x.String())
+		C.ob_godror_dpiJson_setNumber(jsonnode, x.String())
 	case string:
 		data, err := NewData(x)
 		if err != nil {
 			return err
 		}
-		C.godror_dpiJson_setString(jsonnode, &(data.dpiData))
+		C.ob_godror_dpiJson_setString(jsonnode, &(data.dpiData))
 	case time.Time:
 		data, err := NewData(x)
 		if err != nil {
 			return err
 		}
-		C.godror_dpiJson_setTime(jsonnode, &(data.dpiData))
+		C.ob_godror_dpiJson_setTime(jsonnode, &(data.dpiData))
 	case time.Duration:
 		data, err := NewData(x)
 		if err != nil {
 			return err
 		}
-		C.godror_dpiJson_setIntervalDS(jsonnode, &(data.dpiData))
+		C.ob_godror_dpiJson_setIntervalDS(jsonnode, &(data.dpiData))
 	case []byte:
 		data, err := NewData(x)
 		if err != nil {
 			return err
 		}
-		C.godror_dpiJson_setBytes(jsonnode, &(data.dpiData))
+		C.ob_godror_dpiJson_setBytes(jsonnode, &(data.dpiData))
 	case bool:
 		data, err := NewData(x)
 		if err != nil {
 			return err
 		}
-		C.godror_dpiJson_setBool(jsonnode, &(data.dpiData))
+		C.ob_godror_dpiJson_setBool(jsonnode, &(data.dpiData))
 	default:
 		return fmt.Errorf("unsupported type %T", in)
 	}
@@ -747,16 +747,16 @@ func populateJSONNode(jsonnode *C.dpiJsonNode, in any) error {
 
 // freedpiJSONNode deallocates the dpiJsonNode
 func freedpiJSONNode(node *C.dpiJsonNode) error {
-	C.godror_dpiJsonfreeMem(node)
+	C.ob_godror_dpiJsonfreeMem(node)
 	return nil
 }
 
 // allocdpiJSONNode allocates dpiJsonNode from interface value, val
 func allocdpiJSONNode(val any, node **C.dpiJsonNode) error {
-	C.godror_allocate_dpiNode((**C.dpiJsonNode)(unsafe.Pointer(node)))
+	C.ob_godror_allocate_dpiNode((**C.dpiJsonNode)(unsafe.Pointer(node)))
 	err := populateJSONNode(*node, val)
 	if err != nil {
-		C.godror_dpiJsonfreeMem(*node)
+		C.ob_godror_dpiJsonfreeMem(*node)
 	}
 	return err
 }

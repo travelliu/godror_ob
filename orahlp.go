@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/godror/godror/slog"
+	"github.com/travelliu/godror_ob/slog"
 )
 
 // Number as string
@@ -290,8 +290,8 @@ type QueryColumn struct {
 	Name                           string
 	Type, Length, Precision, Scale int
 	Nullable                       bool
-	//Schema string
-	//CharsetID, CharsetForm         int
+	// Schema string
+	// CharsetID, CharsetForm         int
 }
 
 // Execer is the ExecContext of sql.Conn.
@@ -757,7 +757,7 @@ func ReplaceQuestionPlacholders(qry string) string {
 		nLog10++
 		x *= 10
 	}
-	//fmt.Println("\n## n:", n, "x:", x, "nLog10:", nLog10)
+	// fmt.Println("\n## n:", n, "x:", x, "nLog10:", nLog10)
 	num := make([]byte, 0, nLog10)
 	var buf strings.Builder
 	buf.Grow(len(qry) + n*(nLog10))

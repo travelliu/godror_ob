@@ -30,37 +30,37 @@
 #include "dpiImpl.h"
 
 //-----------------------------------------------------------------------------
-// dpiUtils__allocateMemory() [INTERNAL]
+// ob_dpiUtils__allocateMemory() [INTERNAL]
 //   Method for allocating memory which permits tracing and populates the error
 // structure in the event of a memory allocation failure.
 //-----------------------------------------------------------------------------
-int dpiUtils__allocateMemory(size_t numMembers, size_t memberSize,
+int ob_dpiUtils__allocateMemory(size_t numMembers, size_t memberSize,
         int clearMemory, const char *action, void **ptr, dpiError *error)
 {
     if (clearMemory)
         *ptr = calloc(numMembers, memberSize);
     else *ptr = malloc(numMembers * memberSize);
     if (!*ptr)
-        return dpiError__set(error, action, DPI_ERR_NO_MEMORY);
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_MEM)
-        dpiDebug__print("allocated %u bytes at %p (%s)\n",
+        return ob_dpiError__set(error, action, DPI_ERR_NO_MEMORY);
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_MEM)
+        ob_dpiDebug__print("allocated %u bytes at %p (%s)\n",
                 numMembers * memberSize, *ptr, action);
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiUtils__checkClientVersion() [INTERNAL]
+// ob_dpiUtils__checkClientVersion() [INTERNAL]
 //   Check the Oracle Client version and verify that it is at least at the
 // minimum version that is required.
 //-----------------------------------------------------------------------------
-int dpiUtils__checkClientVersion(dpiVersionInfo *versionInfo,
+int ob_dpiUtils__checkClientVersion(dpiVersionInfo *versionInfo,
         int minVersionNum, int minReleaseNum, dpiError *error)
 {
     if (versionInfo->versionNum < minVersionNum ||
             (versionInfo->versionNum == minVersionNum &&
                     versionInfo->releaseNum < minReleaseNum))
-        return dpiError__set(error, "check Oracle Client version",
+        return ob_dpiError__set(error, "check Oracle Client version",
                 DPI_ERR_ORACLE_CLIENT_TOO_OLD, versionInfo->versionNum,
                 versionInfo->releaseNum, minVersionNum, minReleaseNum);
     return DPI_SUCCESS;
@@ -68,11 +68,11 @@ int dpiUtils__checkClientVersion(dpiVersionInfo *versionInfo,
 
 
 //-----------------------------------------------------------------------------
-// dpiUtils__checkClientVersionMulti() [INTERNAL]
+// ob_dpiUtils__checkClientVersionMulti() [INTERNAL]
 //   Check the Oracle Client version and verify that it is at least at the
 // minimum version that is required.
 //-----------------------------------------------------------------------------
-int dpiUtils__checkClientVersionMulti(dpiVersionInfo *versionInfo,
+int ob_dpiUtils__checkClientVersionMulti(dpiVersionInfo *versionInfo,
         int minVersionNum1, int minReleaseNum1, int minVersionNum2,
         int minReleaseNum2, dpiError *error)
 {
@@ -83,7 +83,7 @@ int dpiUtils__checkClientVersionMulti(dpiVersionInfo *versionInfo,
                     versionInfo->versionNum < minVersionNum2) ||
             (versionInfo->versionNum == minVersionNum2 &&
                     versionInfo->releaseNum < minReleaseNum2))
-        return dpiError__set(error, "check Oracle Client version",
+        return ob_dpiError__set(error, "check Oracle Client version",
                 DPI_ERR_ORACLE_CLIENT_TOO_OLD_MULTI, versionInfo->versionNum,
                 versionInfo->releaseNum, minVersionNum1, minReleaseNum1,
                 minVersionNum2, minReleaseNum2);
@@ -92,19 +92,19 @@ int dpiUtils__checkClientVersionMulti(dpiVersionInfo *versionInfo,
 
 
 //-----------------------------------------------------------------------------
-// dpiUtils__checkDatabaseVersion() [INTERNAL]
+// ob_dpiUtils__checkDatabaseVersion() [INTERNAL]
 //   Check the Oracle Database version and verify that it is at least at the
 // minimum version that is required.
 //-----------------------------------------------------------------------------
-int dpiUtils__checkDatabaseVersion(dpiConn *conn, int minVersionNum,
+int ob_dpiUtils__checkDatabaseVersion(dpiConn *conn, int minVersionNum,
         int minReleaseNum, dpiError *error)
 {
-    if (dpiConn__getServerVersion(conn, 0, error) < 0)
+    if (ob_dpiConn__getServerVersion(conn, 0, error) < 0)
         return DPI_FAILURE;
     if (conn->versionInfo.versionNum < minVersionNum ||
             (conn->versionInfo.versionNum == minVersionNum &&
                     conn->versionInfo.releaseNum < minReleaseNum))
-        return dpiError__set(error, "check Oracle Database version",
+        return ob_dpiError__set(error, "check Oracle Database version",
                 DPI_ERR_ORACLE_DB_TOO_OLD, conn->versionInfo.versionNum,
                 conn->versionInfo.releaseNum, minVersionNum, minReleaseNum);
     return DPI_SUCCESS;
@@ -112,13 +112,13 @@ int dpiUtils__checkDatabaseVersion(dpiConn *conn, int minVersionNum,
 
 
 //-----------------------------------------------------------------------------
-// dpiUtils__clearMemory() [INTERNAL]
+// ob_dpiUtils__clearMemory() [INTERNAL]
 //   Method for clearing memory that will not be optimised away by the
 // compiler. Simple use of memset() can be optimised away. This routine makes
 // use of a volatile pointer which most compilers will avoid optimising away,
 // even if the pointer appears to be unused after the call.
 //-----------------------------------------------------------------------------
-void dpiUtils__clearMemory(void *ptr, size_t length)
+void ob_dpiUtils__clearMemory(void *ptr, size_t length)
 {
     volatile unsigned char *temp = (unsigned char *) ptr;
 
@@ -128,22 +128,22 @@ void dpiUtils__clearMemory(void *ptr, size_t length)
 
 
 //-----------------------------------------------------------------------------
-// dpiUtils__ensureBuffer() [INTERNAL]
+// ob_dpiUtils__ensureBuffer() [INTERNAL]
 //   Ensure that a buffer of the specified size is available. If a buffer of
 // the requested size is not available, free any existing buffer and allocate a
 // new, larger buffer.
 //-----------------------------------------------------------------------------
-int dpiUtils__ensureBuffer(size_t desiredSize, const char *action,
+int ob_dpiUtils__ensureBuffer(size_t desiredSize, const char *action,
         void **ptr, size_t *currentSize, dpiError *error)
 {
     if (desiredSize <= *currentSize)
         return DPI_SUCCESS;
     if (*ptr) {
-        dpiUtils__freeMemory(*ptr);
+        ob_dpiUtils__freeMemory(*ptr);
         *ptr = NULL;
         *currentSize = 0;
     }
-    if (dpiUtils__allocateMemory(1, desiredSize, 0, action, ptr, error) < 0)
+    if (ob_dpiUtils__allocateMemory(1, desiredSize, 0, action, ptr, error) < 0)
         return DPI_FAILURE;
     *currentSize = desiredSize;
     return DPI_SUCCESS;
@@ -151,35 +151,35 @@ int dpiUtils__ensureBuffer(size_t desiredSize, const char *action,
 
 
 //-----------------------------------------------------------------------------
-// dpiUtils__freeMemory() [INTERNAL]
+// ob_dpiUtils__freeMemory() [INTERNAL]
 //   Method for allocating memory which permits tracing and populates the error
 // structure in the event of a memory allocation failure.
 //-----------------------------------------------------------------------------
-void dpiUtils__freeMemory(void *ptr)
+void ob_dpiUtils__freeMemory(void *ptr)
 {
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_MEM)
-        dpiDebug__print("freed ptr at %p\n", ptr);
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_MEM)
+        ob_dpiDebug__print("freed ptr at %p\n", ptr);
     free(ptr);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiUtils__getAttrStringWithDup() [INTERNAL]
+// ob_dpiUtils__getAttrStringWithDup() [INTERNAL]
 //   Get the string attribute from the OCI and duplicate its contents.
 //-----------------------------------------------------------------------------
-int dpiUtils__getAttrStringWithDup(const char *action, const void *ociHandle,
+int ob_dpiUtils__getAttrStringWithDup(const char *action, const void *ociHandle,
         uint32_t ociHandleType, uint32_t ociAttribute, const char **value,
         uint32_t *valueLength, dpiError *error)
 {
     char *source, *temp;
 
-    if (dpiOci__attrGet(ociHandle, ociHandleType, (void*) &source,
+    if (ob_dpiOci__attrGet(ociHandle, ociHandleType, (void*) &source,
             valueLength, ociAttribute, action, error) < 0)
         return DPI_FAILURE;
     if (*valueLength == 0) {
         *value = NULL;
     } else {
-        if (dpiUtils__allocateMemory(1, *valueLength, 0, action,
+        if (ob_dpiUtils__allocateMemory(1, *valueLength, 0, action,
                 (void**) &temp, error) < 0)
             return DPI_FAILURE;
         *value = (const char*) memcpy(temp, source, *valueLength);
@@ -190,12 +190,12 @@ int dpiUtils__getAttrStringWithDup(const char *action, const void *ociHandle,
 
 #ifdef _WIN32
 //-----------------------------------------------------------------------------
-// dpiUtils__getWindowsError() [INTERNAL]
+// ob_dpiUtils__getWindowsError() [INTERNAL]
 //   Get the error message from Windows and place into the supplied buffer. The
 // buffer and length are provided as pointers and memory is allocated as needed
 // in order to be able to store the entire error message.
 //-----------------------------------------------------------------------------
-int dpiUtils__getWindowsError(DWORD errorNum, char **buffer,
+int ob_dpiUtils__getWindowsError(DWORD errorNum, char **buffer,
         size_t *bufferLength, dpiError *error)
 {
     char *fallbackErrorFormat = "failed to get message for Windows Error %d";
@@ -232,7 +232,7 @@ int dpiUtils__getWindowsError(DWORD errorNum, char **buffer,
             length = WideCharToMultiByte(CP_UTF8, 0, wLoadError, -1, NULL, 0,
                     NULL, NULL);
             if (length > 0) {
-                if (dpiUtils__ensureBuffer(length,
+                if (ob_dpiUtils__ensureBuffer(length,
                         "allocate buffer for Windows error message",
                         (void**) buffer, bufferLength, error) < 0) {
                     LocalFree(wLoadError);
@@ -247,7 +247,7 @@ int dpiUtils__getWindowsError(DWORD errorNum, char **buffer,
     }
 
     if (length == 0) {
-        if (dpiUtils__ensureBuffer(strlen(fallbackErrorFormat) + 20,
+        if (ob_dpiUtils__ensureBuffer(strlen(fallbackErrorFormat) + 20,
                 "allocate buffer for fallback error message",
                 (void**) buffer, bufferLength, error) < 0)
             return DPI_FAILURE;
@@ -260,7 +260,7 @@ int dpiUtils__getWindowsError(DWORD errorNum, char **buffer,
 
 
 //-----------------------------------------------------------------------------
-// dpiUtils__parseNumberString() [INTERNAL]
+// ob_dpiUtils__parseNumberString() [INTERNAL]
 //   Parse the contents of a string that is supposed to contain a number. The
 // number is expected to be in the format (www.json.org):
 //   - optional negative sign (-)
@@ -279,7 +279,7 @@ int dpiUtils__getWindowsError(DWORD errorNum, char **buffer,
 // check for this value as well and if smaller than that value simply return
 // zero.
 //-----------------------------------------------------------------------------
-int dpiUtils__parseNumberString(const char *value, uint32_t valueLength,
+int ob_dpiUtils__parseNumberString(const char *value, uint32_t valueLength,
         uint16_t charsetId, int *isNegative, int16_t *decimalPointIndex,
         uint8_t *numDigits, uint8_t *digits, dpiError *error)
 {
@@ -293,7 +293,7 @@ int dpiUtils__parseNumberString(const char *value, uint32_t valueLength,
 
     // empty strings are not valid numbers
     if (valueLength == 0)
-        return dpiError__set(error, "zero length", DPI_ERR_INVALID_NUMBER);
+        return ob_dpiError__set(error, "zero length", DPI_ERR_INVALID_NUMBER);
 
     // strings longer than the maximum length of a valid number are also
     // excluded
@@ -301,7 +301,7 @@ int dpiUtils__parseNumberString(const char *value, uint32_t valueLength,
                     valueLength > DPI_NUMBER_AS_TEXT_CHARS * 2) ||
             (charsetId != DPI_CHARSET_ID_UTF16 &&
                     valueLength > DPI_NUMBER_AS_TEXT_CHARS))
-        return dpiError__set(error, "check length",
+        return ob_dpiError__set(error, "check length",
                 DPI_ERR_NUMBER_STRING_TOO_LONG);
 
     // if value is encoded in UTF-16, convert to single byte encoding first
@@ -314,7 +314,7 @@ int dpiUtils__parseNumberString(const char *value, uint32_t valueLength,
         convertedValueLength = valueLength / 2;
         for (i = 0; i < convertedValueLength; i++) {
             if (*utf16chars > 127)
-                return dpiError__set(error, "convert from UTF-16",
+                return ob_dpiError__set(error, "convert from UTF-16",
                         DPI_ERR_INVALID_NUMBER);
             convertedValue[i] = (char) *utf16chars++;
         }
@@ -334,7 +334,7 @@ int dpiUtils__parseNumberString(const char *value, uint32_t valueLength,
         if (*value == '.' || *value == 'e' || *value == 'E')
             break;
         if (*value < '0' || *value > '9')
-            return dpiError__set(error, "check digits before decimal point",
+            return ob_dpiError__set(error, "check digits before decimal point",
                     DPI_ERR_INVALID_NUMBER);
         digit = (uint8_t) (*value++ - '0');
         if (digit == 0 && *numDigits == 0)
@@ -351,7 +351,7 @@ int dpiUtils__parseNumberString(const char *value, uint32_t valueLength,
             if (*value == 'e' || *value == 'E')
                 break;
             if (*value < '0' || *value > '9')
-                return dpiError__set(error, "check digits after decimal point",
+                return ob_dpiError__set(error, "check digits after decimal point",
                         DPI_ERR_INVALID_NUMBER);
             digit = (uint8_t) (*value++ - '0');
             if (digit == 0 && *numDigits == 0) {
@@ -374,16 +374,16 @@ int dpiUtils__parseNumberString(const char *value, uint32_t valueLength,
         }
         while (value < endValue) {
             if (*value < '0' || *value > '9')
-                return dpiError__set(error, "check digits in exponent",
+                return ob_dpiError__set(error, "check digits in exponent",
                         DPI_ERR_INVALID_NUMBER);
             if (numExponentDigits == 3)
-                return dpiError__set(error, "check exponent digits > 3",
+                return ob_dpiError__set(error, "check exponent digits > 3",
                         DPI_ERR_NOT_SUPPORTED);
             exponentDigits[numExponentDigits] = *value++;
             numExponentDigits++;
         }
         if (numExponentDigits == 0)
-            return dpiError__set(error, "no digits in exponent",
+            return ob_dpiError__set(error, "no digits in exponent",
                     DPI_ERR_INVALID_NUMBER);
         exponentDigits[numExponentDigits] = '\0';
         exponent = (int16_t) strtol(exponentDigits, NULL, 10);
@@ -395,7 +395,7 @@ int dpiUtils__parseNumberString(const char *value, uint32_t valueLength,
     // if there is anything left in the string, that indicates an invalid
     // number as well
     if (value < endValue)
-        return dpiError__set(error, "check string used",
+        return ob_dpiError__set(error, "check string used",
                 DPI_ERR_INVALID_NUMBER);
 
     // strip trailing zeroes
@@ -407,7 +407,7 @@ int dpiUtils__parseNumberString(const char *value, uint32_t valueLength,
     // digits also cannot exceed the maximum precision of Oracle numbers
     if (*numDigits > DPI_NUMBER_MAX_DIGITS || *decimalPointIndex > 126 ||
             *decimalPointIndex < -129) {
-        return dpiError__set(error, "check value can be represented",
+        return ob_dpiError__set(error, "check value can be represented",
                 DPI_ERR_NUMBER_NO_REPR);
     }
 
@@ -416,11 +416,11 @@ int dpiUtils__parseNumberString(const char *value, uint32_t valueLength,
 
 
 //-----------------------------------------------------------------------------
-// dpiUtils__parseOracleNumber() [INTERNAL]
+// ob_dpiUtils__parseOracleNumber() [INTERNAL]
 //   Parse the contents of an Oracle number and return its constituent parts
 // so that a string can be generated from it easily.
 //-----------------------------------------------------------------------------
-int dpiUtils__parseOracleNumber(void *oracleValue, int *isNegative,
+int ob_dpiUtils__parseOracleNumber(void *oracleValue, int *isNegative,
         int16_t *decimalPointIndex, uint8_t *numDigits, uint8_t *digits,
         dpiError *error)
 {
@@ -434,7 +434,7 @@ int dpiUtils__parseOracleNumber(void *oracleValue, int *isNegative,
 
     // a mantissa length longer than 20 signals corruption of some kind
     if (length > 20)
-        return dpiError__set(error, "check mantissa length",
+        return ob_dpiError__set(error, "check mantissa length",
                 DPI_ERR_INVALID_OCI_NUMBER);
 
     // the second byte of the structure is the exponent
@@ -504,21 +504,21 @@ int dpiUtils__parseOracleNumber(void *oracleValue, int *isNegative,
 
 
 //-----------------------------------------------------------------------------
-// dpiUtils__setAttributesFromCommonCreateParams() [INTERNAL]
+// ob_dpiUtils__setAttributesFromCommonCreateParams() [INTERNAL]
 //   Set the attributes on the authorization info structure or session handle
 // using the specified parameters.
 //-----------------------------------------------------------------------------
-int dpiUtils__setAttributesFromCommonCreateParams(void *handle,
+int ob_dpiUtils__setAttributesFromCommonCreateParams(void *handle,
         uint32_t handleType, const dpiCommonCreateParams *params,
         dpiError *error)
 {
     if (params->driverName && params->driverNameLength > 0 &&
-            dpiOci__attrSet(handle, handleType, (void*) params->driverName,
+            ob_dpiOci__attrSet(handle, handleType, (void*) params->driverName,
                     params->driverNameLength, DPI_OCI_ATTR_DRIVER_NAME,
                     "set driver name", error) < 0)
         return DPI_FAILURE;
     if (params->edition && params->editionLength > 0 &&
-            dpiOci__attrSet(handle, handleType,
+            ob_dpiOci__attrSet(handle, handleType,
                     (void*) params->edition, params->editionLength,
                     DPI_OCI_ATTR_EDITION, "set edition", error) < 0)
         return DPI_FAILURE;
@@ -529,11 +529,11 @@ int dpiUtils__setAttributesFromCommonCreateParams(void *handle,
 
 
 //-----------------------------------------------------------------------------
-// dpiUtils__setAccessTokenAttributes() [INTERNAL]
+// ob_dpiUtils__setAccessTokenAttributes() [INTERNAL]
 //   Set the token and private key for token based authentication on the auth
 // handle.
 //-----------------------------------------------------------------------------
-int dpiUtils__setAccessTokenAttributes(void *handle,
+int ob_dpiUtils__setAccessTokenAttributes(void *handle,
         dpiAccessToken *accessToken, dpiVersionInfo *versionInfo,
         dpiError *error)
 {
@@ -542,32 +542,32 @@ int dpiUtils__setAccessTokenAttributes(void *handle,
     // check validity of access token
     if (!accessToken->token || accessToken->tokenLength == 0 ||
             (accessToken->privateKey && accessToken->privateKeyLength == 0))
-        return dpiError__set(error,
+        return ob_dpiError__set(error,
                 "check token based authentication parameters",
                 DPI_ERR_TOKEN_BASED_AUTH);
 
     // IAM feature only available in Oracle Client 19.14+ and 21.5+ libraries
     if (accessToken->privateKey) {
-        if (dpiUtils__checkClientVersionMulti(versionInfo, 19, 14, 21, 5,
+        if (ob_dpiUtils__checkClientVersionMulti(versionInfo, 19, 14, 21, 5,
                 error) < 0)
             return DPI_FAILURE;
 
     // OAuth feature only available in Oracle Client 19.15+ and 21.7+ libraries
     } else {
-        if (dpiUtils__checkClientVersionMulti(versionInfo, 19, 15, 21, 7,
+        if (ob_dpiUtils__checkClientVersionMulti(versionInfo, 19, 15, 21, 7,
                 error) < 0)
             return DPI_FAILURE;
     }
 
     // set token on auth handle
-    if (dpiOci__attrSet(handle, DPI_OCI_HTYPE_AUTHINFO,
+    if (ob_dpiOci__attrSet(handle, DPI_OCI_HTYPE_AUTHINFO,
             (void*) accessToken->token, accessToken->tokenLength,
             DPI_OCI_ATTR_TOKEN, "set access token", error) < 0)
         return DPI_FAILURE;
 
     // set IAM private key on auth handle
     if (accessToken->privateKey) {
-        if (dpiOci__attrSet(handle, DPI_OCI_HTYPE_AUTHINFO,
+        if (ob_dpiOci__attrSet(handle, DPI_OCI_HTYPE_AUTHINFO,
                 (void*) accessToken->privateKey,
                 accessToken->privateKeyLength, DPI_OCI_ATTR_IAM_PRIVKEY,
                 "set access token private key", error) < 0)
@@ -575,7 +575,7 @@ int dpiUtils__setAccessTokenAttributes(void *handle,
 
     // set OAuth bearer flag on auth handle
     } else {
-        if (dpiOci__attrSet(handle, DPI_OCI_HTYPE_AUTHINFO,
+        if (ob_dpiOci__attrSet(handle, DPI_OCI_HTYPE_AUTHINFO,
                 (void*) &isBearer, 0, DPI_OCI_ATTR_TOKEN_ISBEARER,
                 "set bearer flag", error) < 0)
             return DPI_FAILURE;
@@ -586,7 +586,7 @@ int dpiUtils__setAccessTokenAttributes(void *handle,
 
 
 //-----------------------------------------------------------------------------
-// dpiUtils__getTransactionHandle() [INTERNAL]
+// ob_dpiUtils__getTransactionHandle() [INTERNAL]
 //   Returns a transaction handle that may be manipulated, if possible. A new
 // transaction handle is allocated if needed but only if there is no
 // transaction handle already associated with the service context. Note that
@@ -596,13 +596,13 @@ int dpiUtils__setAccessTokenAttributes(void *handle,
 // handle to the service context, NULL is returned and no attempt is made to
 // manipulate that transaction.
 //-----------------------------------------------------------------------------
-int dpiUtils__getTransactionHandle(dpiConn *conn, void **transactionHandle,
+int ob_dpiUtils__getTransactionHandle(dpiConn *conn, void **transactionHandle,
         dpiError *error)
 {
     void *currentTransactionHandle;
 
     // check if a transaction handle is already associated with the connection
-    if (dpiOci__attrGet(conn->handle, DPI_OCI_HTYPE_SVCCTX,
+    if (ob_dpiOci__attrGet(conn->handle, DPI_OCI_HTYPE_SVCCTX,
             &currentTransactionHandle, NULL, DPI_OCI_ATTR_TRANS,
             "get associated transaction handle", error) < 0)
         return DPI_FAILURE;
@@ -613,14 +613,14 @@ int dpiUtils__getTransactionHandle(dpiConn *conn, void **transactionHandle,
 
         // allocate a new transaction handle, if needed
         if (!conn->transactionHandle) {
-            if (dpiOci__handleAlloc(conn->env->handle,
+            if (ob_dpiOci__handleAlloc(conn->env->handle,
                     &conn->transactionHandle, DPI_OCI_HTYPE_TRANS,
                     "allocate a transaction handle", error) < 0)
                 return DPI_FAILURE;
         }
 
         // associate the transaction with the connection
-        if (dpiOci__attrSet(conn->handle, DPI_OCI_HTYPE_SVCCTX,
+        if (ob_dpiOci__attrSet(conn->handle, DPI_OCI_HTYPE_SVCCTX,
                 conn->transactionHandle, 0, DPI_OCI_ATTR_TRANS,
                 "associate transaction", error) < 0)
             return DPI_FAILURE;

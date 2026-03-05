@@ -70,7 +70,7 @@ func SetVectorValue(c *conn, v *Vector, data *C.dpiData) error {
 	default:
 		return fmt.Errorf("SetVectorValue Unsupported type: %T in Vector Values", v.Values)
 	}
-	C.setVectorInfoDimensions(&vectorInfo, valuesPtr) //update values
+	C.setVectorInfoDimensions(&vectorInfo, valuesPtr) // update values
 
 	// update sparse indices and numDimensions
 	if v.IsSparse || numSparseValues > 0 {
@@ -82,7 +82,7 @@ func SetVectorValue(c *conn, v *Vector, data *C.dpiData) error {
 				cArray[i] = C.uint32_t(val)
 			}
 			// below causes hang for uint32 alone ..
-			//sparseIndices = (*C.uint32_t)(unsafe.Pointer(&(v.Indices[0])))
+			// sparseIndices = (*C.uint32_t)(unsafe.Pointer(&(v.Indices[0])))
 		}
 		vectorInfo.numDimensions = C.uint32_t(v.Dimensions)
 	} else {
@@ -101,7 +101,7 @@ func SetVectorValue(c *conn, v *Vector, data *C.dpiData) error {
 
 	// Set vector value.
 	if err := c.checkExec(func() C.int {
-		return C.dpiVector_setValue(C.dpiData_getVector(data), &vectorInfo)
+		return C.ob_dpiVector_setValue(C.ob_dpiData_getVector(data), &vectorInfo)
 	}); err != nil {
 		return fmt.Errorf("SetVectorValue %w", err)
 	}

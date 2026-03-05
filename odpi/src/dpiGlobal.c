@@ -73,21 +73,21 @@ static dpiMutexType dpiGlobalMutex;
 static char *dpiGlobalConfigDir = NULL;
 
 // forward declarations of internal functions only used in this file
-static int dpiGlobal__extendedInitialize(dpiContextCreateParams *params,
+static int ob_dpiGlobal__extendedInitialize(dpiContextCreateParams *params,
         const char *fnName, dpiError *error);
-static void dpiGlobal__finalize(void);
-static int dpiGlobal__getErrorBuffer(const char *fnName, dpiError *error);
+static void ob_dpiGlobal__finalize(void);
+static int ob_dpiGlobal__getErrorBuffer(const char *fnName, dpiError *error);
 
 
 //-----------------------------------------------------------------------------
-// dpiGlobal__ensureInitialized() [INTERNAL]
+// ob_dpiGlobal__ensureInitialized() [INTERNAL]
 //   Ensure that all initializations of the global infrastructure used by
 // ODPI-C have been performed.  This is done by the first thread to execute
 // this function and includes loading the Oracle Call Interface (OCI) library
 // and creating a thread key used for managing error buffers in a thread-safe
 // manner.
 //-----------------------------------------------------------------------------
-int dpiGlobal__ensureInitialized(const char *fnName,
+int ob_dpiGlobal__ensureInitialized(const char *fnName,
         dpiContextCreateParams *params, dpiVersionInfo **clientVersionInfo,
         dpiError *error)
 {
@@ -100,38 +100,38 @@ int dpiGlobal__ensureInitialized(const char *fnName,
 
     // perform global initializations, if needed
     if (!dpiGlobalInitialized) {
-        dpiMutex__acquire(dpiGlobalMutex);
+        ob_dpiMutex__acquire(dpiGlobalMutex);
         if (!dpiGlobalInitialized)
-            dpiGlobal__extendedInitialize(params, fnName, error);
-        dpiMutex__release(dpiGlobalMutex);
+            ob_dpiGlobal__extendedInitialize(params, fnName, error);
+        ob_dpiMutex__release(dpiGlobalMutex);
         if (!dpiGlobalInitialized)
             return DPI_FAILURE;
     }
 
     *clientVersionInfo = &dpiGlobalClientVersionInfo;
-    return dpiGlobal__getErrorBuffer(fnName, error);
+    return ob_dpiGlobal__getErrorBuffer(fnName, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiGlobal__extendedInitialize() [INTERNAL]
+// ob_dpiGlobal__extendedInitialize() [INTERNAL]
 //   Create the global environment used for managing error buffers in a
 // thread-safe manner. This environment is solely used for implementing thread
 // local storage for the error buffers and for looking up encodings given an
 // IANA or Oracle character set name.
 //-----------------------------------------------------------------------------
-static int dpiGlobal__extendedInitialize(dpiContextCreateParams *params,
+static int ob_dpiGlobal__extendedInitialize(dpiContextCreateParams *params,
         const char *fnName, dpiError *error)
 {
     int status;
 
     // initialize debugging
-    dpiDebug__initialize();
-    if (dpiDebugLevel & DPI_DEBUG_LEVEL_FNS)
-        dpiDebug__print("fn start %s\n", fnName);
+    ob_dpiDebug__initialize();
+    if (ob_dpiDebugLevel & DPI_DEBUG_LEVEL_FNS)
+        ob_dpiDebug__print("fn start %s\n", fnName);
 
     // load OCI library
-    if (dpiOci__loadLib(params, &dpiGlobalClientVersionInfo,
+    if (ob_dpiOci__loadLib(params, &dpiGlobalClientVersionInfo,
             &dpiGlobalConfigDir, error) < 0)
         return DPI_FAILURE;
 
@@ -140,22 +140,22 @@ static int dpiGlobal__extendedInitialize(dpiContextCreateParams *params,
     // the overhead of processing the environment variables; no error messages
     // from this environment are ever used (ODPI-C specific error messages are
     // used)
-    if (dpiOci__envNlsCreate(&dpiGlobalEnvHandle, DPI_OCI_THREADED,
+    if (ob_dpiOci__envNlsCreate(&dpiGlobalEnvHandle, DPI_OCI_THREADED,
             DPI_CHARSET_ID_UTF8, DPI_CHARSET_ID_UTF8, error) < 0)
         return DPI_FAILURE;
 
     // create global error handle
-    if (dpiOci__handleAlloc(dpiGlobalEnvHandle, &dpiGlobalErrorHandle,
+    if (ob_dpiOci__handleAlloc(dpiGlobalEnvHandle, &dpiGlobalErrorHandle,
             DPI_OCI_HTYPE_ERROR, "create global error", error) < 0) {
-        dpiOci__handleFree(dpiGlobalEnvHandle, DPI_OCI_HTYPE_ENV);
+        ob_dpiOci__handleFree(dpiGlobalEnvHandle, DPI_OCI_HTYPE_ENV);
         return DPI_FAILURE;
     }
 
     // create global thread key
-    status = dpiOci__threadKeyInit(dpiGlobalEnvHandle, dpiGlobalErrorHandle,
-            &dpiGlobalThreadKey, (void*) dpiUtils__freeMemory, error);
+    status = ob_dpiOci__threadKeyInit(dpiGlobalEnvHandle, dpiGlobalErrorHandle,
+            &dpiGlobalThreadKey, (void*) ob_dpiUtils__freeMemory, error);
     if (status < 0) {
-        dpiOci__handleFree(dpiGlobalEnvHandle, DPI_OCI_HTYPE_ENV);
+        ob_dpiOci__handleFree(dpiGlobalEnvHandle, DPI_OCI_HTYPE_ENV);
         return DPI_FAILURE;
     }
 
@@ -167,74 +167,74 @@ static int dpiGlobal__extendedInitialize(dpiContextCreateParams *params,
 
 
 //-----------------------------------------------------------------------------
-// dpiGlobal__finalize() [INTERNAL]
+// ob_dpiGlobal__finalize() [INTERNAL]
 //   Called when the process terminates and ensures that everything is cleaned
 // up.
 //-----------------------------------------------------------------------------
-static void dpiGlobal__finalize(void)
+static void ob_dpiGlobal__finalize(void)
 {
     void *errorBuffer = NULL;
     dpiError error;
 
-    dpiMutex__acquire(dpiGlobalMutex);
+    ob_dpiMutex__acquire(dpiGlobalMutex);
     dpiGlobalInitialized = 0;
     error.buffer = &dpiGlobalErrorBuffer;
     if (dpiGlobalThreadKey) {
-        dpiOci__threadKeyGet(dpiGlobalEnvHandle, dpiGlobalErrorHandle,
+        ob_dpiOci__threadKeyGet(dpiGlobalEnvHandle, dpiGlobalErrorHandle,
                 dpiGlobalThreadKey, &errorBuffer, &error);
         if (errorBuffer) {
-            dpiOci__threadKeySet(dpiGlobalEnvHandle, dpiGlobalErrorHandle,
+            ob_dpiOci__threadKeySet(dpiGlobalEnvHandle, dpiGlobalErrorHandle,
                     dpiGlobalThreadKey, NULL, &error);
-            dpiUtils__freeMemory(errorBuffer);
+            ob_dpiUtils__freeMemory(errorBuffer);
         }
-        dpiOci__threadKeyDestroy(dpiGlobalEnvHandle, dpiGlobalErrorHandle,
+        ob_dpiOci__threadKeyDestroy(dpiGlobalEnvHandle, dpiGlobalErrorHandle,
                 &dpiGlobalThreadKey, &error);
         dpiGlobalThreadKey = NULL;
     }
     if (dpiGlobalEnvHandle) {
-        dpiOci__handleFree(dpiGlobalEnvHandle, DPI_OCI_HTYPE_ENV);
+        ob_dpiOci__handleFree(dpiGlobalEnvHandle, DPI_OCI_HTYPE_ENV);
         dpiGlobalEnvHandle = NULL;
     }
     if (dpiGlobalConfigDir) {
         free(dpiGlobalConfigDir);
         dpiGlobalConfigDir = NULL;
     }
-    dpiMutex__release(dpiGlobalMutex);
+    ob_dpiMutex__release(dpiGlobalMutex);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiGlobal__getErrorBuffer() [INTERNAL]
+// ob_dpiGlobal__getErrorBuffer() [INTERNAL]
 //   Get the thread local error buffer. This will replace use of the global
 // error buffer which is used until this function has completed successfully.
 // At this point it is assumed that the global infrastructure has been
 // initialialized successfully.
 //-----------------------------------------------------------------------------
-static int dpiGlobal__getErrorBuffer(const char *fnName, dpiError *error)
+static int ob_dpiGlobal__getErrorBuffer(const char *fnName, dpiError *error)
 {
     dpiErrorBuffer *tempErrorBuffer;
 
     // look up the error buffer specific to this thread
-    if (dpiOci__threadKeyGet(dpiGlobalEnvHandle, dpiGlobalErrorHandle,
+    if (ob_dpiOci__threadKeyGet(dpiGlobalEnvHandle, dpiGlobalErrorHandle,
             dpiGlobalThreadKey, (void**) &tempErrorBuffer, error) < 0)
         return DPI_FAILURE;
 
     // if NULL, key has never been set for this thread, allocate new error
     // buffer and set it
     if (!tempErrorBuffer) {
-        if (dpiUtils__allocateMemory(1, sizeof(dpiErrorBuffer), 1,
+        if (ob_dpiUtils__allocateMemory(1, sizeof(dpiErrorBuffer), 1,
                 "allocate error buffer", (void**) &tempErrorBuffer, error) < 0)
             return DPI_FAILURE;
-        if (dpiOci__threadKeySet(dpiGlobalEnvHandle, dpiGlobalErrorHandle,
+        if (ob_dpiOci__threadKeySet(dpiGlobalEnvHandle, dpiGlobalErrorHandle,
                 dpiGlobalThreadKey, tempErrorBuffer, error) < 0) {
-            dpiUtils__freeMemory(tempErrorBuffer);
+            ob_dpiUtils__freeMemory(tempErrorBuffer);
             return DPI_FAILURE;
         }
     }
 
     // if a function name has been specified, clear error
     // the only time a function name is not specified is for
-    // dpiContext_getError() when the error information is being retrieved
+    // ob_dpiContext_getError() when the error information is being retrieved
     if (fnName) {
         tempErrorBuffer->code = 0;
         tempErrorBuffer->offset = 0;
@@ -253,12 +253,12 @@ static int dpiGlobal__getErrorBuffer(const char *fnName, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiGlobal__initError() [INTERNAL]
+// ob_dpiGlobal__initError() [INTERNAL]
 //   Get the thread local error structure for use in all other functions. If
 // an error structure cannot be determined for some reason, the global error
 // buffer structure is returned instead.
 //-----------------------------------------------------------------------------
-int dpiGlobal__initError(const char *fnName, dpiError *error)
+int ob_dpiGlobal__initError(const char *fnName, dpiError *error)
 {
     // initialize error buffer output to global error buffer structure; this is
     // the value that is used if an error takes place before the thread local
@@ -269,39 +269,39 @@ int dpiGlobal__initError(const char *fnName, dpiError *error)
         error->buffer->fnName = fnName;
 
     // check to see if global environment has been initialized; if not, no call
-    // to dpiContext_createWithParams() was made successfully
+    // to ob_dpiContext_createWithParams() was made successfully
     if (!dpiGlobalInitialized)
-        return dpiError__set(error, "check context creation",
+        return ob_dpiError__set(error, "check context creation",
                 DPI_ERR_CONTEXT_NOT_CREATED);
 
     // acquire error buffer for the thread, if possible
-    return dpiGlobal__getErrorBuffer(fnName, error);
+    return ob_dpiGlobal__getErrorBuffer(fnName, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiGlobal__initialize() [INTERNAL]
+// ob_dpiGlobal__initialize() [INTERNAL]
 //   Initialization function that runs at process startup or when the library
 // is first loaded. Some operating systems have limits on what can be run in
-// this function, so most work is done in the dpiGlobal__extendedInitialize()
-// function that runs when the first call to dpiContext_createWithParams() is
+// this function, so most work is done in the ob_dpiGlobal__extendedInitialize()
+// function that runs when the first call to ob_dpiContext_createWithParams() is
 // made.
 //-----------------------------------------------------------------------------
-DPI_INITIALIZER(dpiGlobal__initialize)
+DPI_INITIALIZER(ob_dpiGlobal__initialize)
 {
     memset(&dpiGlobalErrorBuffer, 0, sizeof(dpiGlobalErrorBuffer));
     strcpy(dpiGlobalErrorBuffer.encoding, DPI_CHARSET_NAME_UTF8);
-    dpiMutex__initialize(dpiGlobalMutex);
-    atexit(dpiGlobal__finalize);
+    ob_dpiMutex__initialize(dpiGlobalMutex);
+    atexit(ob_dpiGlobal__finalize);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiGlobal__lookupCharSet() [INTERNAL]
+// ob_dpiGlobal__lookupCharSet() [INTERNAL]
 //   Lookup the character set id that can be used in the call to
 // OCINlsEnvCreate().
 //-----------------------------------------------------------------------------
-int dpiGlobal__lookupCharSet(const char *name, uint16_t *charsetId,
+int ob_dpiGlobal__lookupCharSet(const char *name, uint16_t *charsetId,
         dpiError *error)
 {
     char oraCharsetName[DPI_OCI_NLS_MAXBUFSZ];
@@ -315,21 +315,21 @@ int dpiGlobal__lookupCharSet(const char *name, uint16_t *charsetId,
         *charsetId = DPI_CHARSET_ID_ASCII;
     else if (strcmp(name, DPI_CHARSET_NAME_UTF16LE) == 0 ||
             strcmp(name, DPI_CHARSET_NAME_UTF16BE) == 0)
-        return dpiError__set(error, "check encoding", DPI_ERR_NOT_SUPPORTED);
+        return ob_dpiError__set(error, "check encoding", DPI_ERR_NOT_SUPPORTED);
 
     // perform lookup; check for the Oracle character set name first and if
     // that fails, lookup using the IANA character set name
     else {
-        if (dpiOci__nlsCharSetNameToId(dpiGlobalEnvHandle, name, charsetId,
+        if (ob_dpiOci__nlsCharSetNameToId(dpiGlobalEnvHandle, name, charsetId,
                 error) < 0)
             return DPI_FAILURE;
         if (!*charsetId) {
-            if (dpiOci__nlsNameMap(dpiGlobalEnvHandle, oraCharsetName,
+            if (ob_dpiOci__nlsNameMap(dpiGlobalEnvHandle, oraCharsetName,
                     sizeof(oraCharsetName), name, DPI_OCI_NLS_CS_IANA_TO_ORA,
                     error) < 0)
-                return dpiError__set(error, "lookup charset",
+                return ob_dpiError__set(error, "lookup charset",
                         DPI_ERR_INVALID_CHARSET, name);
-            dpiOci__nlsCharSetNameToId(dpiGlobalEnvHandle, oraCharsetName,
+            ob_dpiOci__nlsCharSetNameToId(dpiGlobalEnvHandle, oraCharsetName,
                     charsetId, error);
         }
     }
@@ -339,11 +339,11 @@ int dpiGlobal__lookupCharSet(const char *name, uint16_t *charsetId,
 
 
 //-----------------------------------------------------------------------------
-// dpiGlobal__lookupEncoding() [INTERNAL]
+// ob_dpiGlobal__lookupEncoding() [INTERNAL]
 //   Get the IANA character set name (encoding) given the Oracle character set
 // id.
 //-----------------------------------------------------------------------------
-int dpiGlobal__lookupEncoding(uint16_t charsetId, char *encoding,
+int ob_dpiGlobal__lookupEncoding(uint16_t charsetId, char *encoding,
         dpiError *error)
 {
     char oracleName[DPI_OCI_NLS_MAXBUFSZ];
@@ -362,15 +362,15 @@ int dpiGlobal__lookupEncoding(uint16_t charsetId, char *encoding,
     }
 
     // get character set name
-    if (dpiOci__nlsCharSetIdToName(dpiGlobalEnvHandle, oracleName,
+    if (ob_dpiOci__nlsCharSetIdToName(dpiGlobalEnvHandle, oracleName,
             sizeof(oracleName), charsetId, error) < 0)
-        return dpiError__set(error, "lookup Oracle character set name",
+        return ob_dpiError__set(error, "lookup Oracle character set name",
                 DPI_ERR_INVALID_CHARSET_ID, charsetId);
 
     // get IANA character set name
-    if (dpiOci__nlsNameMap(dpiGlobalEnvHandle, encoding, DPI_OCI_NLS_MAXBUFSZ,
+    if (ob_dpiOci__nlsNameMap(dpiGlobalEnvHandle, encoding, DPI_OCI_NLS_MAXBUFSZ,
             oracleName, DPI_OCI_NLS_CS_ORA_TO_IANA, error) < 0)
-        return dpiError__set(error, "lookup IANA name",
+        return ob_dpiError__set(error, "lookup IANA name",
                 DPI_ERR_INVALID_CHARSET_ID, charsetId);
 
     return DPI_SUCCESS;

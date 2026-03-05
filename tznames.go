@@ -16,8 +16,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/godror/godror/dsn"
-	"github.com/godror/godror/slog"
+	"github.com/travelliu/godror_ob/dsn"
+	"github.com/travelliu/godror_ob/slog"
 )
 
 //go:generate go run generate_tznames.go -o tznames_generated.txt
@@ -91,7 +91,7 @@ func calculateTZ(dbTZ, dbOSTZ string, noTZCheck bool, logger *slog.Logger) (*tim
 			if dbI, err := atoi(dbTZ); err == nil {
 				if tzI, err := atoi(dbOSTZ); err == nil && dbI != tzI &&
 					dbI+100 != tzI && tzI+100 != dbI { // Compensate for Daylight Savings
-					fmt.Fprintf(os.Stderr, "godror WARNING: discrepancy between SESSIONTIMEZONE (%q=%d) and SYSTIMESTAMP (%q=%d) - set connection timezone, see https://github.com/godror/godror/blob/master/doc/timezone.md\n", dbTZ, dbI, dbOSTZ, tzI)
+					fmt.Fprintf(os.Stderr, "godror WARNING: discrepancy between SESSIONTIMEZONE (%q=%d) and SYSTIMESTAMP (%q=%d) - set connection timezone, see https://github.com/travelliu/godror_ob/blob/master/doc/timezone.md\n", dbTZ, dbI, dbOSTZ, tzI)
 				}
 			}
 		}
@@ -132,7 +132,7 @@ func calculateTZ(dbTZ, dbOSTZ string, noTZCheck bool, logger *slog.Logger) (*tim
 	//
 	// So if the given offset is the same as with the Local time zone,
 	// then keep the local.
-	//fmt.Printf("off=%d localOff=%d tz=%p\n", off, localOff, tz)
+	// fmt.Printf("off=%d localOff=%d tz=%p\n", off, localOff, tz)
 	if off == localOff {
 		return time.Local, off, nil
 	}

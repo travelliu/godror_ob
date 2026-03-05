@@ -1,8 +1,6 @@
-module github.com/godror/godror
+module github.com/travelliu/godror_ob
 
 go 1.23.0
-
-toolchain go1.24.1
 
 require (
 	github.com/UNO-SOFT/zlog v0.8.1
@@ -18,7 +16,6 @@ require (
 require (
 	github.com/VictoriaMetrics/easyproto v0.1.4 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
-	github.com/planetscale/vtprotobuf v0.6.0 // indirect
 	golang.org/x/term v0.10.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 )

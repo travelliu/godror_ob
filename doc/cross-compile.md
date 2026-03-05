@@ -20,7 +20,7 @@ which utilizes Docker containers for this cross-compilation.
 
 then
 
-	xgo --targets=linux/amd64,windows/amd64,darwin/amd64 github.com/godror/godror
+	xgo --targets=linux/amd64,windows/amd64,darwin/amd64 github.com/travelliu/godror_ob
 
 produces
 

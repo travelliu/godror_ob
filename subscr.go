@@ -10,7 +10,7 @@ package godror
 #include <stdio.h>
 #include "dpiImpl.h"
 
-void CallbackSubscrDebug(void *context, dpiSubscrMessage *message);
+void ObCallbackSubscrDebug(void *context, dpiSubscrMessage *message);
 
 */
 import "C"
@@ -84,10 +84,10 @@ var (
 	subscriptionsID uint64
 )
 
-// CallbackSubscr is the callback for C code on subscription event.
+// ObCallbackSubscr is the callback for C code on subscription event.
 //
-//export CallbackSubscr
-func CallbackSubscr(ctx unsafe.Pointer, message *C.dpiSubscrMessage) {
+//export ObCallbackSubscr
+func ObCallbackSubscr(ctx unsafe.Pointer, message *C.dpiSubscrMessage) {
 	log.Printf("CB %p %+v", ctx, message)
 	if ctx == nil {
 		return
@@ -100,7 +100,7 @@ func CallbackSubscr(ctx unsafe.Pointer, message *C.dpiSubscrMessage) {
 		if rwsNum == 0 {
 			return nil
 		}
-		//cRws := (*((*[maxArraySize]C.dpiSubscrMessageRow)(unsafe.Pointer(rws))))[:int(rwsNum)]
+		// cRws := (*((*[maxArraySize]C.dpiSubscrMessageRow)(unsafe.Pointer(rws))))[:int(rwsNum)]
 		cRws := unsafe.Slice(rws, rwsNum)
 		rows := make([]RowEvent, len(cRws))
 		for i, row := range cRws {
@@ -108,7 +108,7 @@ func CallbackSubscr(ctx unsafe.Pointer, message *C.dpiSubscrMessage) {
 				Operation: Operation(row.operation),
 				Rowid:     C.GoStringN(row.rowid, C.int(row.rowidLength)),
 			}
-			//C.free(unsafe.Pointer(row.rowid))
+			// C.free(unsafe.Pointer(row.rowid))
 		}
 		return rows
 	}
@@ -116,7 +116,7 @@ func CallbackSubscr(ctx unsafe.Pointer, message *C.dpiSubscrMessage) {
 		if tblsNum == 0 {
 			return nil
 		}
-		//cTbls := (*((*[maxArraySize]C.dpiSubscrMessageTable)(unsafe.Pointer(tbls))))[:int(tblsNum)]
+		// cTbls := (*((*[maxArraySize]C.dpiSubscrMessageTable)(unsafe.Pointer(tbls))))[:int(tblsNum)]
 		cTbls := unsafe.Slice(tbls, tblsNum)
 		tables := make([]TableEvent, len(cTbls))
 		for i, tbl := range cTbls {
@@ -125,7 +125,7 @@ func CallbackSubscr(ctx unsafe.Pointer, message *C.dpiSubscrMessage) {
 				Name:      C.GoStringN(tbl.name, C.int(tbl.nameLength)),
 				Rows:      getRows(tbl.rows, tbl.numRows),
 			}
-			//C.free(unsafe.Pointer(tbl.name))
+			// C.free(unsafe.Pointer(tbl.name))
 		}
 		return tables
 	}
@@ -133,7 +133,7 @@ func CallbackSubscr(ctx unsafe.Pointer, message *C.dpiSubscrMessage) {
 		if qrysNum == 0 {
 			return nil
 		}
-		//cQrys := (*((*[maxArraySize]C.dpiSubscrMessageQuery)(unsafe.Pointer(qrys))))[:int(qrysNum)]
+		// cQrys := (*((*[maxArraySize]C.dpiSubscrMessageQuery)(unsafe.Pointer(qrys))))[:int(qrysNum)]
 		cQrys := unsafe.Slice(qrys, qrysNum)
 		queries := make([]QueryEvent, len(cQrys))
 		for i, qry := range cQrys {
@@ -213,7 +213,7 @@ func (c *conn) NewSubscription(name string, cb func(Event), options ...Subscript
 	subscr := Subscription{conn: c, callback: cb}
 	params := (*C.dpiSubscrCreateParams)(C.malloc(C.sizeof_dpiSubscrCreateParams))
 	defer func() { C.free(unsafe.Pointer(params)) }()
-	C.dpiContext_initSubscrCreateParams(c.drv.dpiContext, params)
+	C.ob_dpiContext_initSubscrCreateParams(c.drv.dpiContext, params)
 	params.subscrNamespace = C.DPI_SUBSCR_NAMESPACE_DBCHANGE
 	params.protocol = C.DPI_SUBSCR_PROTO_CALLBACK
 	params.qos = C.DPI_SUBSCR_QOS_BEST_EFFORT | C.DPI_SUBSCR_QOS_QUERY | C.DPI_SUBSCR_QOS_ROWIDS
@@ -243,7 +243,7 @@ func (c *conn) NewSubscription(name string, cb func(Event), options ...Subscript
 		params.clientInitiated = C.int(1)
 	}
 	// typedef void (*dpiSubscrCallback)(void* context, dpiSubscrMessage *message);
-	params.callback = C.dpiSubscrCallback(C.CallbackSubscrDebug)
+	params.callback = C.dpiSubscrCallback(C.ObCallbackSubscrDebug)
 	// cannot pass &subscr to C, so pass indirectly
 	subscriptionsMu.Lock()
 	subscriptionsID++
@@ -257,7 +257,7 @@ func (c *conn) NewSubscription(name string, cb func(Event), options ...Subscript
 	dpiSubscr := (*C.dpiSubscr)(C.malloc(C.sizeof_void))
 
 	if err := c.checkExec(func() C.int {
-		return C.dpiConn_subscribe(c.dpiConn, params, (**C.dpiSubscr)(unsafe.Pointer(&dpiSubscr)))
+		return C.ob_dpiConn_subscribe(c.dpiConn, params, (**C.dpiSubscr)(unsafe.Pointer(&dpiSubscr)))
 	}); err != nil {
 		C.free(unsafe.Pointer(dpiSubscr))
 		err = fmt.Errorf("newSubscription: %w", err)
@@ -281,18 +281,18 @@ func (s *Subscription) Register(qry string, params ...any) error {
 	defer C.free(unsafe.Pointer(cQry))
 
 	var dpiStmt *C.dpiStmt
-	if C.dpiSubscr_prepareStmt(s.dpiSubscr, cQry, C.uint32_t(len(qry)), &dpiStmt) == C.DPI_FAILURE {
+	if C.ob_dpiSubscr_prepareStmt(s.dpiSubscr, cQry, C.uint32_t(len(qry)), &dpiStmt) == C.DPI_FAILURE {
 		return fmt.Errorf("prepareStmt[%p]: %w", s.dpiSubscr, s.conn.getError())
 	}
-	defer func() { C.dpiStmt_release(dpiStmt) }()
+	defer func() { C.ob_dpiStmt_release(dpiStmt) }()
 
 	mode := C.dpiExecMode(C.DPI_MODE_EXEC_DEFAULT)
 	var qCols C.uint32_t
-	if C.dpiStmt_execute(dpiStmt, mode, &qCols) == C.DPI_FAILURE {
+	if C.ob_dpiStmt_execute(dpiStmt, mode, &qCols) == C.DPI_FAILURE {
 		return fmt.Errorf("executeStmt: %w", s.conn.getError())
 	}
 	var queryID C.uint64_t
-	if C.dpiStmt_getSubscrQueryId(dpiStmt, &queryID) == C.DPI_FAILURE {
+	if C.ob_dpiStmt_getSubscrQueryId(dpiStmt, &queryID) == C.DPI_FAILURE {
 		return fmt.Errorf("getSubscrQueryId: %w", s.conn.getError())
 	}
 	logger := getLogger(context.TODO())
@@ -318,7 +318,7 @@ func (s *Subscription) Close() error {
 	if dpiSubscr == nil || conn == nil || conn.dpiConn == nil {
 		return nil
 	}
-	if err := conn.checkExec(func() C.int { return C.dpiConn_unsubscribe(conn.dpiConn, dpiSubscr) }); err != nil {
+	if err := conn.checkExec(func() C.int { return C.ob_dpiConn_unsubscribe(conn.dpiConn, dpiSubscr) }); err != nil {
 		return fmt.Errorf("close: %w", err)
 	}
 	return nil

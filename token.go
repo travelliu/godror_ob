@@ -19,8 +19,8 @@ import (
 	"runtime/cgo"
 	"unsafe"
 
-	"github.com/godror/godror/dsn"
-	"github.com/godror/godror/slog"
+	"github.com/travelliu/godror_ob/dsn"
+	"github.com/travelliu/godror_ob/slog"
 )
 
 // AccessToken Callback information.
@@ -29,10 +29,10 @@ type accessTokenCB struct {
 	callback func(context.Context, *dsn.AccessToken) error
 }
 
-// tokenCallbackHandler is the callback for C code on token expiry.
+// ObTokenCallbackHandler is the callback for C code on token expiry.
 //
-//export TokenCallbackHandler
-func TokenCallbackHandler(handle C.uintptr_t, accessToken *C.dpiAccessToken) {
+//export ObTokenCallbackHandler
+func ObTokenCallbackHandler(handle C.uintptr_t, accessToken *C.dpiAccessToken) {
 	h := cgo.Handle(handle)
 	tokenCB := h.Value().(accessTokenCB)
 	ctx := tokenCB.ctx
@@ -41,7 +41,7 @@ func TokenCallbackHandler(handle C.uintptr_t, accessToken *C.dpiAccessToken) {
 	}
 	logger := getLogger(ctx)
 	if logger != nil && logger.Enabled(ctx, slog.LevelDebug) {
-		logger.Debug("TokenCallbackHandler", "tokenCB", fmt.Sprintf("%p", tokenCB.callback), "accessToken", accessToken)
+		logger.Debug("ObTokenCallbackHandler", "tokenCB", fmt.Sprintf("%p", tokenCB.callback), "accessToken", accessToken)
 	}
 
 	// Call user function which provides the new token and privateKey.
@@ -72,10 +72,10 @@ func RegisterTokenCallback(poolCreateParams *C.dpiPoolCreateParams,
 	tokenCtx context.Context) unsafe.Pointer {
 
 	// typedef int (*dpiAccessTokenCallback)(void* context, dpiAccessToken *accessToken);
-	poolCreateParams.accessTokenCallback = C.dpiAccessTokenCallback(C.godrorTokenCallbackHandlerDebug)
+	poolCreateParams.accessTokenCallback = C.dpiAccessTokenCallback(C.godrorObTokenCallbackHandlerDebug)
 	tokenCB := accessTokenCB{callback: tokenGenFn, ctx: tokenCtx}
 	h := cgo.NewHandle(tokenCB)
-	wctx := C.godrorWrapHandle(C.uintptr_t(h))
+	wctx := C.ob_godrorWrapHandle(C.uintptr_t(h))
 	poolCreateParams.accessTokenCallbackContext = unsafe.Pointer(wctx)
 	return unsafe.Pointer(wctx)
 }

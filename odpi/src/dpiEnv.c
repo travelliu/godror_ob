@@ -30,13 +30,13 @@
 #include "dpiImpl.h"
 
 //-----------------------------------------------------------------------------
-// dpiEnv__getBaseDate() [INTERNAL]
+// ob_dpiEnv__getBaseDate() [INTERNAL]
 //   Return the base date (January 1, 1970 UTC) for the specified handle type.
 // OCI doesn't permit mixing and matching types so a separate bae date is
 // required for each of the three timestamp types. If the type has not been
 // populated already it is created.
 //-----------------------------------------------------------------------------
-int dpiEnv__getBaseDate(dpiEnv *env, uint32_t dataType, void **baseDate,
+int ob_dpiEnv__getBaseDate(dpiEnv *env, uint32_t dataType, void **baseDate,
         dpiError *error)
 {
     uint32_t descriptorType;
@@ -59,20 +59,20 @@ int dpiEnv__getBaseDate(dpiEnv *env, uint32_t dataType, void **baseDate,
             descriptorType = DPI_OCI_DTYPE_TIMESTAMP_LTZ;
             break;
         default:
-            return dpiError__set(error, "get base date",
+            return ob_dpiError__set(error, "get base date",
                     DPI_ERR_UNHANDLED_DATA_TYPE, dataType);
     }
 
     // if a base date has not been stored already, create it
     if (!*storedBaseDate) {
-        if (dpiOci__descriptorAlloc(env->handle, storedBaseDate,
+        if (ob_dpiOci__descriptorAlloc(env->handle, storedBaseDate,
                 descriptorType, "alloc base date descriptor", error) < 0)
             return DPI_FAILURE;
-        if (dpiOci__nlsCharSetConvert(env->handle, env->charsetId,
+        if (ob_dpiOci__nlsCharSetConvert(env->handle, env->charsetId,
                 timezoneBuffer, sizeof(timezoneBuffer), DPI_CHARSET_ID_ASCII,
                 "+00:00", 6, &timezoneLength, error) < 0)
             return DPI_FAILURE;
-        if (dpiOci__dateTimeConstruct(env->handle, *storedBaseDate, 1970, 1, 1,
+        if (ob_dpiOci__dateTimeConstruct(env->handle, *storedBaseDate, 1970, 1, 1,
                 0, 0, 0, 0, timezoneBuffer, timezoneLength, error) < 0)
             return DPI_FAILURE;
     }
@@ -83,45 +83,45 @@ int dpiEnv__getBaseDate(dpiEnv *env, uint32_t dataType, void **baseDate,
 
 
 //-----------------------------------------------------------------------------
-// dpiEnv__free() [INTERNAL]
+// ob_dpiEnv__free() [INTERNAL]
 //   Free the memory associated with the environment.
 //-----------------------------------------------------------------------------
-void dpiEnv__free(dpiEnv *env, dpiError *error)
+void ob_dpiEnv__free(dpiEnv *env, dpiError *error)
 {
     if (env->threaded)
-        dpiMutex__destroy(env->mutex);
+        ob_dpiMutex__destroy(env->mutex);
     if (env->handle && !env->externalHandle) {
-        dpiOci__handleFree(env->handle, DPI_OCI_HTYPE_ENV);
+        ob_dpiOci__handleFree(env->handle, DPI_OCI_HTYPE_ENV);
         env->handle = NULL;
     }
     if (env->errorHandles) {
-        dpiHandlePool__free(env->errorHandles);
+        ob_dpiHandlePool__free(env->errorHandles);
         env->errorHandles = NULL;
         error->handle = NULL;
     }
-    dpiUtils__freeMemory(env);
+    ob_dpiUtils__freeMemory(env);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiEnv__getCharacterSetIdAndName() [INTERNAL]
+// ob_dpiEnv__getCharacterSetIdAndName() [INTERNAL]
 //   Retrieve and store the IANA character set name for the attribute.
 //-----------------------------------------------------------------------------
-static int dpiEnv__getCharacterSetIdAndName(dpiEnv *env, uint16_t attribute,
+static int ob_dpiEnv__getCharacterSetIdAndName(dpiEnv *env, uint16_t attribute,
         uint16_t *charsetId, char *encoding, dpiError *error)
 {
     *charsetId = 0;
-    dpiOci__attrGet(env->handle, DPI_OCI_HTYPE_ENV, charsetId, NULL, attribute,
+    ob_dpiOci__attrGet(env->handle, DPI_OCI_HTYPE_ENV, charsetId, NULL, attribute,
             "get environment", error);
-    return dpiGlobal__lookupEncoding(*charsetId, encoding, error);
+    return ob_dpiGlobal__lookupEncoding(*charsetId, encoding, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiEnv__getEncodingInfo() [INTERNAL]
+// ob_dpiEnv__getEncodingInfo() [INTERNAL]
 //   Populate the structure with the encoding info.
 //-----------------------------------------------------------------------------
-int dpiEnv__getEncodingInfo(dpiEnv *env, dpiEncodingInfo *info)
+int ob_dpiEnv__getEncodingInfo(dpiEnv *env, dpiEncodingInfo *info)
 {
     info->encoding = env->encoding;
     info->maxBytesPerCharacter = env->maxBytesPerCharacter;
@@ -132,12 +132,12 @@ int dpiEnv__getEncodingInfo(dpiEnv *env, dpiEncodingInfo *info)
 
 
 //-----------------------------------------------------------------------------
-// dpiEnv__init() [INTERNAL]
+// ob_dpiEnv__init() [INTERNAL]
 //   Initialize the environment structure. If an external handle is provided it
 // is used directly; otherwise, a new OCI environment handle is created. In
 // either case, information about the environment is stored for later use.
 //-----------------------------------------------------------------------------
-int dpiEnv__init(dpiEnv *env, const dpiContext *context,
+int ob_dpiEnv__init(dpiEnv *env, const dpiContext *context,
         const dpiCommonCreateParams *params, void *externalHandle,
         dpiCreateMode createMode, dpiError *error)
 {
@@ -156,7 +156,7 @@ int dpiEnv__init(dpiEnv *env, const dpiContext *context,
     } else {
 
         // lookup encoding
-        if (params->encoding && dpiGlobal__lookupCharSet(params->encoding,
+        if (params->encoding && ob_dpiGlobal__lookupCharSet(params->encoding,
                 &env->charsetId, error) < 0)
             return DPI_FAILURE;
 
@@ -166,48 +166,48 @@ int dpiEnv__init(dpiEnv *env, const dpiContext *context,
                 strcmp(params->nencoding, params->encoding) == 0)
             env->ncharsetId = env->charsetId;
         else if (params->nencoding &&
-                dpiGlobal__lookupCharSet(params->nencoding,
+                ob_dpiGlobal__lookupCharSet(params->nencoding,
                         &env->ncharsetId, error) < 0)
             return DPI_FAILURE;
 
         // both charsetId and ncharsetId must be zero or both must be non-zero
         // use NLS routine to look up missing value, if needed
         if (env->charsetId && !env->ncharsetId) {
-            if (dpiOci__nlsEnvironmentVariableGet(DPI_OCI_NLS_NCHARSET_ID,
+            if (ob_dpiOci__nlsEnvironmentVariableGet(DPI_OCI_NLS_NCHARSET_ID,
                     &env->ncharsetId, error) < 0)
                 return DPI_FAILURE;
         } else if (!env->charsetId && env->ncharsetId) {
-            if (dpiOci__nlsEnvironmentVariableGet(DPI_OCI_NLS_CHARSET_ID,
+            if (ob_dpiOci__nlsEnvironmentVariableGet(DPI_OCI_NLS_CHARSET_ID,
                     &env->charsetId, error) < 0)
                 return DPI_FAILURE;
         }
 
         // create new environment handle
-        if (dpiOci__envNlsCreate(&env->handle, createMode | DPI_OCI_OBJECT,
+        if (ob_dpiOci__envNlsCreate(&env->handle, createMode | DPI_OCI_OBJECT,
                 env->charsetId, env->ncharsetId, error) < 0)
             return DPI_FAILURE;
 
     }
 
     // create the error handle pool
-    if (dpiHandlePool__create(&env->errorHandles, error) < 0)
+    if (ob_dpiHandlePool__create(&env->errorHandles, error) < 0)
         return DPI_FAILURE;
     error->env = env;
 
     // if threaded, create mutex for reference counts
     if (createMode & DPI_OCI_THREADED)
-        dpiMutex__initialize(env->mutex);
+        ob_dpiMutex__initialize(env->mutex);
 
     // determine encodings in use
-    if (dpiEnv__getCharacterSetIdAndName(env, DPI_OCI_ATTR_CHARSET_ID,
+    if (ob_dpiEnv__getCharacterSetIdAndName(env, DPI_OCI_ATTR_CHARSET_ID,
             &env->charsetId, env->encoding, error) < 0)
         return DPI_FAILURE;
-    if (dpiEnv__getCharacterSetIdAndName(env, DPI_OCI_ATTR_NCHARSET_ID,
+    if (ob_dpiEnv__getCharacterSetIdAndName(env, DPI_OCI_ATTR_NCHARSET_ID,
             &env->ncharsetId, env->nencoding, error) < 0)
         return DPI_FAILURE;
 
     // acquire max bytes per character
-    if (dpiOci__nlsNumericInfoGet(env->handle, &env->maxBytesPerCharacter,
+    if (ob_dpiOci__nlsNumericInfoGet(env->handle, &env->maxBytesPerCharacter,
             DPI_OCI_NLS_CHARSET_MAXBYTESZ, error) < 0)
         return DPI_FAILURE;
 
@@ -227,11 +227,11 @@ int dpiEnv__init(dpiEnv *env, const dpiContext *context,
 
     // enable SODA metadata cache, if applicable
     if (params->sodaMetadataCache) {
-        if (dpiUtils__checkClientVersionMulti(env->versionInfo, 19, 11, 21, 3,
+        if (ob_dpiUtils__checkClientVersionMulti(env->versionInfo, 19, 11, 21, 3,
                 error) < 0)
             return DPI_FAILURE;
         temp = 1;
-        if (dpiOci__attrSet(env->handle, DPI_OCI_HTYPE_ENV, &temp, 0,
+        if (ob_dpiOci__attrSet(env->handle, DPI_OCI_HTYPE_ENV, &temp, 0,
                 DPI_OCI_ATTR_SODA_METADATA_CACHE, "set SODA metadata cache",
                 error) < 0)
             return DPI_FAILURE;

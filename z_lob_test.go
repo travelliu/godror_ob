@@ -23,9 +23,9 @@ import (
 	"unicode/utf8"
 
 	"github.com/UNO-SOFT/zlog/v2"
-	godror "github.com/godror/godror"
-	"github.com/godror/godror/dsn"
 	"github.com/google/go-cmp/cmp"
+	godror "github.com/travelliu/godror_ob"
+	"github.com/travelliu/godror_ob/dsn"
 )
 
 func TestLoadXMLLOB(t *testing.T) {
@@ -135,7 +135,7 @@ func TestInsertLargeLOB(t *testing.T) {
 		1<<20 - 1, 1<<20 + 1,
 		2017371,
 		16<<20 + 1,
-		//1_073_741_822 + 1,
+		// 1_073_741_822 + 1,
 	} {
 		if testing.Short() && size > 1<<21 {
 			break
@@ -170,7 +170,7 @@ func TestInsertLargeLOB(t *testing.T) {
 }
 
 func TestCloseTempLOB(t *testing.T) {
-	//godror.SetLogger(godror.NewLogfmtLogger(os.Stdout))
+	// godror.SetLogger(godror.NewLogfmtLogger(os.Stdout))
 	P, err := dsn.Parse(testConStr)
 	if err != nil {
 		t.Fatal(err)
@@ -267,7 +267,7 @@ END;`
 	got := string(b)
 	t.Logf("sent %d bytes, got %d", len(want), len(got))
 	if d := cmp.Diff(want, got); d != "" {
-		//t.Fatal("mismatch")
+		// t.Fatal("mismatch")
 		t.Error("mismatch:", d)
 	}
 }
@@ -404,7 +404,7 @@ func TestLOBAppend(t *testing.T) {
 }
 
 func TestStatWithLOBs(t *testing.T) {
-	//defer tl.enableLogging(t)()
+	// defer tl.enableLogging(t)()
 	ctx, cancel := context.WithTimeout(testContext("StatWithLOBs"), 30*time.Second)
 	defer cancel()
 

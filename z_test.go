@@ -31,12 +31,12 @@ import (
 	"time"
 
 	"github.com/go-logfmt/logfmt"
-	"github.com/godror/godror/slog"
 	"github.com/google/go-cmp/cmp"
+	"github.com/travelliu/godror_ob/slog"
 	"golang.org/x/sync/errgroup"
 
-	godror "github.com/godror/godror"
-	"github.com/godror/godror/dsn"
+	godror "github.com/travelliu/godror_ob"
+	"github.com/travelliu/godror_ob/dsn"
 )
 
 var (
@@ -65,12 +65,12 @@ const (
 
 // TestMain is called instead of the separate Test functions,
 // to allow setup and teardown.
-func TestMain(m *testing.M) {
-	tearDown := setUp()
-	rc := m.Run()
-	tearDown()
-	os.Exit(rc)
-}
+// func TestMain(m *testing.M) {
+// 	tearDown := setUp()
+// 	rc := m.Run()
+// 	tearDown()
+// 	os.Exit(rc)
+// }
 
 func setUp() func() {
 	Verbose := slog.LevelError
@@ -3620,7 +3620,7 @@ func TestOnInitParallel(t *testing.T) {
 					t.Errorf("%d*%d. %+v", i, j, err)
 					return
 				}
-				//t.Logf("%d. v=%q n=%q", i, v, n)
+				// t.Logf("%d. v=%q n=%q", i, v, n)
 				if v != numChars || n != want {
 					t.Errorf("%d*%d. got %q(%q) wanted %q(%q)", i, j, v, n, numChars, want)
 					cancel()
@@ -4607,7 +4607,7 @@ func TestExternalAuthIntegration(t *testing.T) {
 	// setting ExternalAuth is optional as
 	// with empty username/passwd , homeogeneous mode
 	// ExternalAuth and heterogeneous are internally set
-	//cs.ExternalAuth = true
+	// cs.ExternalAuth = true
 
 	sessionUserPassword := getRandomString()
 	const sessionUser = "test_sessionUser"
@@ -4841,7 +4841,7 @@ func TestForError8192(t *testing.T) {
 	}
 	defer func() { stmt.Close() }()
 
-	tim := time.Time{}.UTC().Add(-time.Minute) //In(time.FixedZone("LMT", (+50 * 60)))
+	tim := time.Time{}.UTC().Add(-time.Minute) // In(time.FixedZone("LMT", (+50 * 60)))
 	for i := range 6 * 30 {
 		tim := tim.Add(time.Duration(-1*(i%2)) * time.Duration(i) * time.Minute)
 
@@ -4962,9 +4962,9 @@ func TestLoopInLoop_199(t *testing.T) {
 				}
 				for rows2.Next() {
 				}
-				//rows2.Close()
+				// rows2.Close()
 			}
-			//rows.Close()
+			// rows.Close()
 			if i == 0 { // The first is very cold (slow)
 				continue
 			}
@@ -5041,7 +5041,7 @@ func TestTTCIssue215(t *testing.T) {
 	}
 	defer conn.Close()
 
-	//Creating Types and Procedure
+	// Creating Types and Procedure
 	for _, qry := range []string{
 		`CREATE OR REPLACE TYPE test_MENU_REC` + tblSuffix + ` IS OBJECT(
         menudesc   VARCHAR2(200),

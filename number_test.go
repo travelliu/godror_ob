@@ -8,7 +8,7 @@ package godror_test
 import (
 	"testing"
 
-	godror "github.com/godror/godror"
+	godror "github.com/travelliu/godror_ob"
 )
 
 func TestNumberDeCompose(t *testing.T) {

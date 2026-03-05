@@ -8,7 +8,7 @@ services:
 go:
     - "1.13.3"
 
-go_import_path: github.com/godror/godror
+go_import_path: github.com/travelliu/godror_ob
 
 env:
     global:

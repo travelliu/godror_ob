@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.49.2]
 ### Fixed
-- https://github.com/godror/godror/issues/380
+- https://github.com/travelliu/godror_ob/issues/380
 
 ## [0.49.1]
 ### Changed
@@ -50,7 +50,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.48.1]
 ### Fixed
-- Fixed a nasty silent cgo (usage) bug for Go1.24 that borked object NUMBER retrieval - see https://github.com/godror/godror/issues/365
+- Fixed a nasty silent cgo (usage) bug for Go1.24 that borked object NUMBER retrieval - see https://github.com/travelliu/godror_ob/issues/365
 
 ## [0.48.0]
 ### Added
@@ -138,7 +138,7 @@ change cause SIGSEGV.
 - NumberAsFloat64 option to return every number as float64
 
 ## Changed
-- Log with slog (use github.com/godror/godror/slog shim or directly log/slog or golang.org/x/exp/slog)
+- Log with slog (use github.com/travelliu/godror_ob/slog shim or directly log/slog or golang.org/x/exp/slog)
 
 ## [v0.37.0]
 ### Changed
@@ -227,7 +227,7 @@ change cause SIGSEGV.
   behind the timestamppb tag
 
 ### Changed
-- Use dpiConn_setCallTimeout for faster recovers.
+- Use ob_dpiConn_setCallTimeout for faster recovers.
 - Faster setTraceTag, drv.init.
 - Buffer dpiLobReader.Read with chunk-sized reads for
   * avoiding io.ReadAll short read and

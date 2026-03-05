@@ -8,10 +8,10 @@ package godror
 /*
 #include "dpiImpl.h"
 
-//int dpiData_getRowidStringValue(dpiData *data, const char **value, uint32_t *valueLength) {
-//	return dpiRowid_getStringValue(data->value.asRowid, value, valueLength);
+//int ob_dpiData_getRowidStringValue(dpiData *data, const char **value, uint32_t *valueLength) {
+//	return ob_dpiRowid_getStringValue(data->value.asRowid, value, valueLength);
 //}
-//dpiRowid *dpiData_getRowid(dpiData *data) {
+//dpiRowid *ob_dpiData_getRowid(dpiData *data) {
 //	return data->value.asRowid;
 //}
 */
@@ -21,7 +21,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
-	"github.com/godror/godror/slog"
+	"github.com/travelliu/godror_ob/slog"
 	"io"
 	"math"
 	"reflect"
@@ -77,7 +77,7 @@ func (r *rows) Close() error {
 	r.fromData = false
 	for _, v := range vars[:cap(vars)] {
 		if v != nil {
-			C.dpiVar_release(v)
+			C.ob_dpiVar_release(v)
 		}
 	}
 	if nextRs != nil {
@@ -85,7 +85,7 @@ func (r *rows) Close() error {
 		if logger := getLogger(ctx); logger != nil && logger.Enabled(ctx, slog.LevelDebug) {
 			logger.Debug("rows Close", "nextRs", fmt.Sprintf("%p", nextRs))
 		}
-		C.dpiStmt_release(nextRs)
+		C.ob_dpiStmt_release(nextRs)
 	}
 	if st == nil || st.dpiStmt == nil {
 		return nil
@@ -94,7 +94,7 @@ func (r *rows) Close() error {
 	if fromData || st.dpiStmt.refCount < 2 {
 		return st.Close()
 	}
-	C.dpiStmt_release(st.dpiStmt)
+	C.ob_dpiStmt_release(st.dpiStmt)
 	return nil
 }
 
@@ -214,10 +214,10 @@ func (r *rows) ColumnTypeNullable(index int) (nullable, ok bool) {
 func (r *rows) ColumnTypePrecisionScale(index int) (precision, scale int64, ok bool) {
 	switch col := r.columns[index]; col.OracleType {
 	case
-		//C.DPI_ORACLE_TYPE_NATIVE_FLOAT, C.DPI_NATIVE_TYPE_FLOAT,
-		//C.DPI_ORACLE_TYPE_NATIVE_DOUBLE, C.DPI_NATIVE_TYPE_DOUBLE,
-		//C.DPI_ORACLE_TYPE_NATIVE_INT, C.DPI_NATIVE_TYPE_INT64,
-		//C.DPI_ORACLE_TYPE_NATIVE_UINT, C.DPI_NATIVE_TYPE_UINT64,
+		// C.DPI_ORACLE_TYPE_NATIVE_FLOAT, C.DPI_NATIVE_TYPE_FLOAT,
+		// C.DPI_ORACLE_TYPE_NATIVE_DOUBLE, C.DPI_NATIVE_TYPE_DOUBLE,
+		// C.DPI_ORACLE_TYPE_NATIVE_INT, C.DPI_NATIVE_TYPE_INT64,
+		// C.DPI_ORACLE_TYPE_NATIVE_UINT, C.DPI_NATIVE_TYPE_UINT64,
 		C.DPI_ORACLE_TYPE_NUMBER:
 		return int64(col.Precision), int64(col.Scale), true
 	case C.DPI_ORACLE_TYPE_TIMESTAMP, C.DPI_ORACLE_TYPE_TIMESTAMP_TZ, C.DPI_ORACLE_TYPE_TIMESTAMP_LTZ:
@@ -241,9 +241,9 @@ func (r *rows) ColumnTypeScanType(index int) reflect.Type {
 			return reflect.TypeOf(int64(0))
 		case C.DPI_NATIVE_TYPE_UINT64:
 			return reflect.TypeOf(uint64(0))
-		//case C.DPI_NATIVE_TYPE_FLOAT:
+		// case C.DPI_NATIVE_TYPE_FLOAT:
 		//	return reflect.TypeOf(float32(0))
-		//case C.DPI_NATIVE_TYPE_DOUBLE:
+		// case C.DPI_NATIVE_TYPE_DOUBLE:
 		//		return reflect.TypeOf(float64(0))
 		default:
 			return reflect.TypeOf(Number(""))
@@ -306,14 +306,14 @@ func (r *rows) Next(dest []driver.Value) error {
 	defer runtime.UnlockOSThread()
 
 	if r.fetched == 0 {
-		// Start the watchdog only once See issue #113 (https://github.com/godror/godror/issues/113)
+		// Start the watchdog only once See issue #113 (https://github.com/travelliu/godror_ob/issues/113)
 		if ctx := r.statement.ctx; ctx != nil {
 			// nil can be present when Next is issued on cursor returned from DB
 			if r.err = ctx.Err(); r.err != nil {
 				return r.err
 			}
 			if _, hasDeadline := r.statement.ctx.Deadline(); hasDeadline {
-				// handle deadline for dpiStmt_fetchRows. context reused from stmt
+				// handle deadline for ob_dpiStmt_fetchRows. context reused from stmt
 				cleanup, err := r.statement.handleDeadline(ctx)
 				if err != nil {
 					return err
@@ -331,7 +331,7 @@ func (r *rows) Next(dest []driver.Value) error {
 			start = time.Now()
 		}
 		err := r.statement.checkExecNoLOT(func() C.int {
-			return C.dpiStmt_fetchRows(r.dpiStmt, maxRows, &r.bufferRowIndex, &r.fetched, &moreRows)
+			return C.ob_dpiStmt_fetchRows(r.dpiStmt, maxRows, &r.bufferRowIndex, &r.fetched, &moreRows)
 		})
 		failed := err != nil
 		if debugRowsNext {
@@ -364,17 +364,17 @@ func (r *rows) Next(dest []driver.Value) error {
 				var n C.uint32_t
 				var data *C.dpiData
 				if err = r.statement.checkExecNoLOT(func() C.int {
-					return C.dpiVar_getReturnedData(r.vars[i], 0, &n, &data)
+					return C.ob_dpiVar_getReturnedData(r.vars[i], 0, &n, &data)
 				}); err != nil {
 					return fmt.Errorf("getReturnedData[%d]: %w", i, err)
 				}
 				r.data[i] = unsafe.Slice(data, n)
-				//fmt.Printf("data %d=%+v\n%+v\n", n, data, r.data[i][0])
+				// fmt.Printf("data %d=%+v\n%+v\n", n, data, r.data[i][0])
 			}
 		}
 
 	}
-	//fmt.Printf("data=%#v\n", r.data)
+	// fmt.Printf("data=%#v\n", r.data)
 
 	nullDate := r.statement.NullDate()
 	nass := r.statement.NumberAsString()
@@ -383,9 +383,9 @@ func (r *rows) Next(dest []driver.Value) error {
 	jsonStringOption := r.statement.JSONStringOption()
 	// fmt.Printf("%p.%[2]p stmtOptions=%+[2]v\n", r.statement, &r.statement.stmtOptions)
 
-	//fmt.Printf("bri=%d fetched=%d\n", r.bufferRowIndex, r.fetched)
-	//fmt.Printf("data=%#v\n", r.data[0][r.bufferRowIndex])
-	//fmt.Printf("VC=%d\n", C.DPI_ORACLE_TYPE_VARCHAR)
+	// fmt.Printf("bri=%d fetched=%d\n", r.bufferRowIndex, r.fetched)
+	// fmt.Printf("data=%#v\n", r.data[0][r.bufferRowIndex])
+	// fmt.Printf("VC=%d\n", C.DPI_ORACLE_TYPE_VARCHAR)
 	for i, col := range r.columns {
 		typ := col.OracleType
 		d := &r.data[i][r.bufferRowIndex]
@@ -396,19 +396,19 @@ func (r *rows) Next(dest []driver.Value) error {
 			C.DPI_ORACLE_TYPE_CHAR, C.DPI_ORACLE_TYPE_NCHAR,
 			C.DPI_ORACLE_TYPE_LONG_VARCHAR, C.DPI_ORACLE_TYPE_LONG_NVARCHAR,
 			C.DPI_ORACLE_TYPE_XMLTYPE:
-			//fmt.Printf("CHAR\n")
+			// fmt.Printf("CHAR\n")
 			if isNull {
 				dest[i] = ""
 				continue
 			}
-			//b := C.dpiData_getBytes(d)
+			// b := C.ob_dpiData_getBytes(d)
 			b := (*C.dpiBytes)(unsafe.Pointer(&d.value))
 			if b.length == 0 {
 				dest[i] = ""
 				continue
 			}
 			if b.length < 10 {
-				//bb := ((*[1 << 30]byte)((unsafe.Pointer(b.ptr))))[:int(b.length):int(b.length)]
+				// bb := ((*[1 << 30]byte)((unsafe.Pointer(b.ptr))))[:int(b.length):int(b.length)]
 				bb := unsafe.Slice((*byte)(unsafe.Pointer(b.ptr)), b.length)
 				dest[i] = string(bb)
 			} else {
@@ -422,7 +422,7 @@ func (r *rows) Next(dest []driver.Value) error {
 			}
 			switch col.NativeType {
 			case C.DPI_NATIVE_TYPE_INT64:
-				//dest[i] = int64(C.dpiData_getInt64(d))
+				// dest[i] = int64(C.ob_dpiData_getInt64(d))
 				i64 := *((*int64)(unsafe.Pointer(&d.value)))
 				if naf {
 					dest[i] = float64(i64)
@@ -430,7 +430,7 @@ func (r *rows) Next(dest []driver.Value) error {
 					dest[i] = i64
 				}
 			case C.DPI_NATIVE_TYPE_UINT64:
-				//dest[i] = uint64(C.dpiData_getUint64(d))
+				// dest[i] = uint64(C.ob_dpiData_getUint64(d))
 				u64 := *((*uint64)(unsafe.Pointer(&d.value)))
 				if naf {
 					dest[i] = float64(u64)
@@ -438,8 +438,8 @@ func (r *rows) Next(dest []driver.Value) error {
 					dest[i] = u64
 				}
 			case C.DPI_NATIVE_TYPE_FLOAT:
-				//dest[i] = float32(C.dpiData_getFloat(d))
-				//dest[i] = printFloat(float64(C.dpiData_getFloat(d)))
+				// dest[i] = float32(C.ob_dpiData_getFloat(d))
+				// dest[i] = printFloat(float64(C.ob_dpiData_getFloat(d)))
 				f64 := float64(*((*float32)(unsafe.Pointer(&d.value))))
 				if naf {
 					dest[i] = f64
@@ -447,8 +447,8 @@ func (r *rows) Next(dest []driver.Value) error {
 					dest[i] = printFloat(f64)
 				}
 			case C.DPI_NATIVE_TYPE_DOUBLE:
-				//dest[i] = float64(C.dpiData_getDouble(d))
-				//dest[i] = printFloat(float64(C.dpiData_getDouble(d)))
+				// dest[i] = float64(C.ob_dpiData_getDouble(d))
+				// dest[i] = printFloat(float64(C.ob_dpiData_getDouble(d)))
 				f64 := *((*float64)(unsafe.Pointer(&d.value)))
 				if naf {
 					dest[i] = f64
@@ -456,12 +456,12 @@ func (r *rows) Next(dest []driver.Value) error {
 					dest[i] = printFloat(f64)
 				}
 			case C.DPI_NATIVE_TYPE_BOOLEAN:
-				dest[i] = d.isNull != 0 && C.dpiData_getBool(d) != 0
+				dest[i] = d.isNull != 0 && C.ob_dpiData_getBool(d) != 0
 			default:
-				//b := C.dpiData_getBytes(d)
+				// b := C.ob_dpiData_getBytes(d)
 				b := (*C.dpiBytes)(unsafe.Pointer(&d.value))
-				//s := C.GoStringN(b.ptr, C.int(b.length))
-				//bb := ((*[1 << 30]byte)((unsafe.Pointer(b.ptr))))[:int(b.length):int(b.length)]
+				// s := C.GoStringN(b.ptr, C.int(b.length))
+				// bb := ((*[1 << 30]byte)((unsafe.Pointer(b.ptr))))[:int(b.length):int(b.length)]
 				bb := unsafe.Slice((*byte)(unsafe.Pointer(b.ptr)), b.length)
 
 				if nass {
@@ -482,12 +482,12 @@ func (r *rows) Next(dest []driver.Value) error {
 				continue
 			}
 			// ROWID as returned by OCIRowidToChar
-			//cRowid := C.dpiData_getRowid(d)
+			// cRowid := C.ob_dpiData_getRowid(d)
 			cRowid := *((**C.dpiRowid)(unsafe.Pointer(&d.value)))
 			var cBuf *C.char
 			var cLen C.uint32_t
 			if err := r.statement.checkExecNoLOT(func() C.int {
-				return C.dpiRowid_getStringValue(cRowid, &cBuf, &cLen)
+				return C.ob_dpiRowid_getStringValue(cRowid, &cBuf, &cLen)
 			}); err != nil {
 				return err
 			}
@@ -498,7 +498,7 @@ func (r *rows) Next(dest []driver.Value) error {
 				dest[i] = nil
 				continue
 			}
-			//b := C.dpiData_getBytes(d)
+			// b := C.ob_dpiData_getBytes(d)
 			b := (*C.dpiBytes)(unsafe.Pointer(&d.value))
 			if b.length == 0 {
 				dest[i] = []byte{}
@@ -510,28 +510,28 @@ func (r *rows) Next(dest []driver.Value) error {
 				dest[i] = nil
 				continue
 			}
-			//dest[i] = float32(C.dpiData_getFloat(d))
+			// dest[i] = float32(C.ob_dpiData_getFloat(d))
 			dest[i] = *((*float32)(unsafe.Pointer(&d.value)))
 		case C.DPI_ORACLE_TYPE_NATIVE_DOUBLE, C.DPI_NATIVE_TYPE_DOUBLE:
 			if isNull {
 				dest[i] = nil
 				continue
 			}
-			//dest[i] = float64(C.dpiData_getDouble(d))
+			// dest[i] = float64(C.ob_dpiData_getDouble(d))
 			dest[i] = *((*float64)(unsafe.Pointer(&d.value)))
 		case C.DPI_ORACLE_TYPE_NATIVE_INT, C.DPI_NATIVE_TYPE_INT64:
 			if isNull {
 				dest[i] = nil
 				continue
 			}
-			//dest[i] = int64(C.dpiData_getInt64(d))
+			// dest[i] = int64(C.ob_dpiData_getInt64(d))
 			dest[i] = *((*int64)(unsafe.Pointer(&d.value)))
 		case C.DPI_ORACLE_TYPE_NATIVE_UINT, C.DPI_NATIVE_TYPE_UINT64:
 			if isNull {
 				dest[i] = nil
 				continue
 			}
-			//dest[i] = uint64(C.dpiData_getUint64(d))
+			// dest[i] = uint64(C.ob_dpiData_getUint64(d))
 			dest[i] = *((*uint64)(unsafe.Pointer(&d.value)))
 		case C.DPI_ORACLE_TYPE_DATE, C.DPI_ORACLE_TYPE_TIMESTAMP,
 			C.DPI_ORACLE_TYPE_TIMESTAMP_TZ, C.DPI_ORACLE_TYPE_TIMESTAMP_LTZ,
@@ -541,7 +541,7 @@ func (r *rows) Next(dest []driver.Value) error {
 				dest[i] = nullDate
 				continue
 			}
-			//ts := C.dpiData_getTimestamp(d)
+			// ts := C.ob_dpiData_getTimestamp(d)
 			ts := *((*C.dpiTimestamp)(unsafe.Pointer(&d.value)))
 			tz := r.conn.Timezone()
 			if col.OracleType == C.DPI_ORACLE_TYPE_TIMESTAMP_TZ || col.OracleType == C.DPI_ORACLE_TYPE_TIMESTAMP_LTZ {
@@ -576,7 +576,7 @@ func (r *rows) Next(dest []driver.Value) error {
 				dest[i] = nil
 				continue
 			}
-			//ym := C.dpiData_getIntervalYM(d)
+			// ym := C.ob_dpiData_getIntervalYM(d)
 			ym := *((*C.dpiIntervalYM)(unsafe.Pointer(&d.value)))
 			dest[i] = strconv.Itoa(int(ym.years)) + "-" + strconv.Itoa(int(ym.months))
 
@@ -594,13 +594,13 @@ func (r *rows) Next(dest []driver.Value) error {
 				continue
 			}
 			rdr := &dpiLobReader{
-				drv: r.drv, dpiLob: C.dpiData_getLOB(d),
+				drv: r.drv, dpiLob: C.ob_dpiData_getLOB(d),
 				IsClob: isClob,
 			}
 			if isClob && (r.ClobAsString() || !r.LobAsReader()) {
 				sb := stringBuilders.Get()
 				_, err := io.Copy(sb, rdr)
-				C.dpiLob_close(rdr.dpiLob)
+				C.ob_dpiLob_close(rdr.dpiLob)
 				if err != nil {
 					stringBuilders.Put(sb)
 					return err
@@ -616,17 +616,17 @@ func (r *rows) Next(dest []driver.Value) error {
 				dest[i] = nil
 				continue
 			}
-			st := &statement{conn: r.conn, dpiStmt: C.dpiData_getStmt(d),
+			st := &statement{conn: r.conn, dpiStmt: C.ob_dpiData_getStmt(d),
 				stmtOptions: r.statement.stmtOptions, // inherit parent statement's options
 			}
 			var colCount C.uint32_t
 			if err := r.statement.checkExecNoLOT(func() C.int {
-				return C.dpiStmt_getNumQueryColumns(st.dpiStmt, &colCount)
+				return C.ob_dpiStmt_getNumQueryColumns(st.dpiStmt, &colCount)
 			}); err != nil {
 				if logger != nil {
 					logger.Error("Next.getNumQueryColumns", "st", fmt.Sprintf("%p", st.dpiStmt), "error", err)
 				}
-				//C.dpiStmt_release(st.dpiStmt)
+				// C.ob_dpiStmt_release(st.dpiStmt)
 				return fmt.Errorf("getNumQueryColumns: %w", err)
 			}
 			st.Lock()
@@ -648,15 +648,15 @@ func (r *rows) Next(dest []driver.Value) error {
 				dest[i] = nil
 				continue
 			}
-			//dest[i] = C.dpiData_getBool(d) == 1
+			// dest[i] = C.ob_dpiData_getBool(d) == 1
 			dest[i] = *((*C.int)(unsafe.Pointer(&d.value))) == 1
 
-		case C.DPI_ORACLE_TYPE_OBJECT: //Default type used for named type columns in the database. Data is transferred to/from Oracle in Oracle's internal format.
+		case C.DPI_ORACLE_TYPE_OBJECT: // Default type used for named type columns in the database. Data is transferred to/from Oracle in Oracle's internal format.
 			if isNull {
 				dest[i] = nil
 				continue
 			}
-			o, err := wrapObject(r.conn, col.ObjectType, C.dpiData_getObject(d))
+			o, err := wrapObject(r.conn, col.ObjectType, C.ob_dpiData_getObject(d))
 			if err != nil {
 				return err
 			}
@@ -706,7 +706,7 @@ func (r *rows) Next(dest []driver.Value) error {
 				err        error
 			)
 			if err = r.checkExec(func() C.int {
-				return C.dpiVector_getValue(C.dpiData_getVector(d),
+				return C.ob_dpiVector_getValue(C.ob_dpiData_getVector(d),
 					&vectorInfo)
 			}); err != nil {
 				return err
@@ -720,7 +720,7 @@ func (r *rows) Next(dest []driver.Value) error {
 			return fmt.Errorf("unsupported column type %d", typ)
 		}
 
-		//fmt.Printf("dest[%d]=%#v\n", i, dest[i])
+		// fmt.Printf("dest[%d]=%#v\n", i, dest[i])
 	}
 	r.bufferRowIndex++
 	r.fetched--
@@ -792,10 +792,10 @@ func (r *rows) getImplicitResult() {
 		st = r.statement
 		r.origSt = st
 	}
-	if err := r.checkExec(func() C.int { return C.dpiStmt_getImplicitResult(st.dpiStmt, &r.nextRs) }); err != nil {
+	if err := r.checkExec(func() C.int { return C.ob_dpiStmt_getImplicitResult(st.dpiStmt, &r.nextRs) }); err != nil {
 		r.nextRsErr = fmt.Errorf("getImplicitResult: %w", err)
 	}
-	C.dpiStmt_addRef(r.nextRs)
+	C.ob_dpiStmt_addRef(r.nextRs)
 }
 func (r *rows) HasNextResultSet() bool {
 	if r == nil || r.statement == nil || r.conn == nil {
@@ -829,12 +829,12 @@ func (r *rows) NextResultSet() error {
 
 	var n C.uint32_t
 	logger := getLogger(context.TODO())
-	if err := r.checkExec(func() C.int { return C.dpiStmt_getNumQueryColumns(st.dpiStmt, &n) }); err != nil {
+	if err := r.checkExec(func() C.int { return C.ob_dpiStmt_getNumQueryColumns(st.dpiStmt, &n) }); err != nil {
 		err = fmt.Errorf("getNumQueryColumns: %+v: %w", err, io.EOF)
 		if logger != nil {
 			logger.Error("NextResultSet.getNumQueryColumns", "st", fmt.Sprintf("%p", st.dpiStmt), "error", err)
 		}
-		//C.dpiStmt_release(st.dpiStmt)
+		// C.ob_dpiStmt_release(st.dpiStmt)
 		return err
 	}
 	// keep the originam statement for the succeeding NextResultSet calls.

@@ -7,7 +7,7 @@
 Just run:
 
 ```bash
-go get github.com/godror/godror
+go get github.com/travelliu/godror_ob
 ```
 
 Then install Oracle Client libraries (see below) and you're ready to go!

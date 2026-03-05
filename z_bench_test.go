@@ -16,19 +16,19 @@ import (
 	"testing"
 	"time"
 
-	godror "github.com/godror/godror"
+	godror "github.com/travelliu/godror_ob"
 )
 
 // go install && go test -c && ./godror.v2.test -test.run=^$ -test.bench=Insert25 -test.cpuprofile=/tmp/insert25.prof && go tool pprof ./godror.v2.test /tmp/insert25.prof
 
 func BenchmarkPlSQLArrayInsert25(b *testing.B) {
 	defer func() {
-		//testDb.Exec("DROP TABLE tst_bench_25_tbl")
+		// testDb.Exec("DROP TABLE tst_bench_25_tbl")
 		testDb.Exec("DROP PACKAGE tst_bench_25")
 	}()
 
 	for _, qry := range []string{
-		//`DROP TABLE tst_bench_25_tbl`,
+		// `DROP TABLE tst_bench_25_tbl`,
 		/*`CREATE TABLE tst_bench_25_tbl (dt DATE, st VARCHAR2(255),
 		  ip NUMBER(12), zone NUMBER(3), plan NUMBER(3), banner NUMBER(3),
 		  referrer VARCHAR2(255), country VARCHAR2(80), region VARCHAR2(10))`,*/
@@ -129,7 +129,7 @@ END tst_bench_25;`,
 			if strings.Contains(err.Error(), "PLS-00905") || strings.Contains(err.Error(), "ORA-06508") {
 				b.Log(godror.GetCompileErrors(ctx, testDb, false))
 			}
-			//b.Log(dates, keys, ips, zones, plans, banners, referrers, countries, regions)
+			// b.Log(dates, keys, ips, zones, plans, banners, referrers, countries, regions)
 			b.Fatal(err)
 		}
 	}
@@ -253,7 +253,7 @@ END tst_bench_inout;`,
 			if strings.Contains(err.Error(), "PLS-00905") || strings.Contains(err.Error(), "ORA-06508") {
 				b.Log(godror.GetCompileErrors(ctx, testDb, false))
 			}
-			//b.Log(dates, keys, ips, zones, plans, banners, referrers, countries, regions)
+			// b.Log(dates, keys, ips, zones, plans, banners, referrers, countries, regions)
 			b.Fatal(err)
 		}
 	}

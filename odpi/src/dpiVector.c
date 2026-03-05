@@ -30,26 +30,26 @@
 #include "dpiImpl.h"
 
 // forward declarations of internal functions only used in this file
-static void dpiVector__clearDimensions(dpiVector *vector);
+static void ob_dpiVector__clearDimensions(dpiVector *vector);
 
 //-----------------------------------------------------------------------------
-// dpiVector__allocate() [INTERNAL]
+// ob_dpiVector__allocate() [INTERNAL]
 //   Allocate and initialize a vector object.
 //-----------------------------------------------------------------------------
-int dpiVector__allocate(dpiConn *conn, dpiVector **vector, dpiError *error)
+int ob_dpiVector__allocate(dpiConn *conn, dpiVector **vector, dpiError *error)
 {
     dpiVector *tempVector;
 
-    if (dpiUtils__checkClientVersion(conn->env->versionInfo, 23, 4, error) < 0)
+    if (ob_dpiUtils__checkClientVersion(conn->env->versionInfo, 23, 4, error) < 0)
         return DPI_FAILURE;
-    if (dpiGen__allocate(DPI_HTYPE_VECTOR, conn->env, (void**) &tempVector,
+    if (ob_dpiGen__allocate(DPI_HTYPE_VECTOR, conn->env, (void**) &tempVector,
             error) < 0)
         return DPI_FAILURE;
-    dpiGen__setRefCount(conn, error, 1);
+    ob_dpiGen__setRefCount(conn, error, 1);
     tempVector->conn = conn;
-    if (dpiOci__descriptorAlloc(conn->env->handle, &tempVector->handle,
+    if (ob_dpiOci__descriptorAlloc(conn->env->handle, &tempVector->handle,
             DPI_OCI_DTYPE_VECTOR, "allocate vector descriptor", error) < 0) {
-        dpiVector__free(tempVector, error);
+        ob_dpiVector__free(tempVector, error);
         return DPI_FAILURE;
     }
 
@@ -59,42 +59,42 @@ int dpiVector__allocate(dpiConn *conn, dpiVector **vector, dpiError *error)
 
 
 //-----------------------------------------------------------------------------
-// dpiVector__clearDimensions() [INTERNAL]
+// ob_dpiVector__clearDimensions() [INTERNAL]
 //   Clear the dimensions cached in the vector.
 //-----------------------------------------------------------------------------
-static void dpiVector__clearDimensions(dpiVector *vector)
+static void ob_dpiVector__clearDimensions(dpiVector *vector)
 {
     if (vector->dimensions) {
-        dpiUtils__freeMemory(vector->dimensions);
+        ob_dpiUtils__freeMemory(vector->dimensions);
         vector->dimensions = NULL;
     }
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiVector__free() [INTERNAL]
+// ob_dpiVector__free() [INTERNAL]
 //   Free the vector object contents.
 //-----------------------------------------------------------------------------
-void dpiVector__free(dpiVector *vector, dpiError *error)
+void ob_dpiVector__free(dpiVector *vector, dpiError *error)
 {
     if (vector->handle) {
-        dpiOci__descriptorFree(vector->handle, DPI_OCI_DTYPE_VECTOR);
+        ob_dpiOci__descriptorFree(vector->handle, DPI_OCI_DTYPE_VECTOR);
         vector->handle = NULL;
     }
     if (vector->conn) {
-        dpiGen__setRefCount(vector->conn, error, -1);
+        ob_dpiGen__setRefCount(vector->conn, error, -1);
         vector->conn = NULL;
     }
-    dpiVector__clearDimensions(vector);
-    dpiUtils__freeMemory(vector);
+    ob_dpiVector__clearDimensions(vector);
+    ob_dpiUtils__freeMemory(vector);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiVector__getValue() [INTERNAL]
+// ob_dpiVector__getValue() [INTERNAL]
 //   Gets information about the vector.
 //-----------------------------------------------------------------------------
-int dpiVector__getValue(dpiVector *vector, dpiVectorInfo *info,
+int ob_dpiVector__getValue(dpiVector *vector, dpiVectorInfo *info,
         dpiError *error)
 {
     uint32_t numElements, flags;
@@ -103,13 +103,13 @@ int dpiVector__getValue(dpiVector *vector, dpiVectorInfo *info,
     if (!vector->dimensions) {
 
         // determine the format of the vector
-        if (dpiOci__attrGet(vector->handle, DPI_OCI_DTYPE_VECTOR,
+        if (ob_dpiOci__attrGet(vector->handle, DPI_OCI_DTYPE_VECTOR,
                 &vector->format, 0, DPI_OCI_ATTR_VECTOR_DATA_FORMAT,
                 "get vector format", error) < 0)
             return DPI_FAILURE;
 
         // determine the number of dimensions in the vector
-        if (dpiOci__attrGet(vector->handle, DPI_OCI_DTYPE_VECTOR,
+        if (ob_dpiOci__attrGet(vector->handle, DPI_OCI_DTYPE_VECTOR,
                 &vector->numDimensions, 0, DPI_OCI_ATTR_VECTOR_DIMENSION,
                 "get number of vector dimensions", error) < 0)
             return DPI_FAILURE;
@@ -131,24 +131,24 @@ int dpiVector__getValue(dpiVector *vector, dpiVectorInfo *info,
                 vector->dimensionSize = sizeof(int8_t);
                 break;
             default:
-                return dpiError__set(error, "check vector format",
+                return ob_dpiError__set(error, "check vector format",
                         DPI_ERR_UNSUPPORTED_VECTOR_FORMAT, vector->format);
         }
 
         // determine if the vector is SPARSE or DENSE
-        if (dpiOci__attrGet(vector->handle, DPI_OCI_DTYPE_VECTOR, &flags, 0,
+        if (ob_dpiOci__attrGet(vector->handle, DPI_OCI_DTYPE_VECTOR, &flags, 0,
                 DPI_OCI_ATTR_VECTOR_PROPERTY, "get vector flags", error) < 0)
             return DPI_FAILURE;
 
         // if vector is sparse, determine the number of sparse dimensions
         if (flags & DPI_OCI_ATTR_VECTOR_COL_PROPERTY_IS_SPARSE) {
-            if (dpiOci__attrGet(vector->handle, DPI_OCI_DTYPE_VECTOR,
+            if (ob_dpiOci__attrGet(vector->handle, DPI_OCI_DTYPE_VECTOR,
                     &vector->numSparseValues, 0,
                     DPI_OCI_ATTR_VECTOR_SPARSE_DIMENSION,
                     "get number of sparse vector dimensions", error) < 0)
                 return DPI_FAILURE;
             numElements = vector->numSparseValues;
-            if (dpiUtils__allocateMemory(numElements, sizeof(uint32_t), 0,
+            if (ob_dpiUtils__allocateMemory(numElements, sizeof(uint32_t), 0,
                     "allocate sparse vector indices",
                     (void**) &vector->sparseIndices, error) < 0)
                 return DPI_FAILURE;
@@ -160,16 +160,16 @@ int dpiVector__getValue(dpiVector *vector, dpiVectorInfo *info,
         }
 
         // allocate a buffer for the dimensions
-        if (dpiUtils__allocateMemory(numElements, vector->dimensionSize, 0,
+        if (ob_dpiUtils__allocateMemory(numElements, vector->dimensionSize, 0,
                 "allocate vector dimensions", &vector->dimensions, error) < 0)
             return DPI_FAILURE;
 
         // populate buffer with array data
         if (vector->numSparseValues > 0) {
-            if (dpiOci__vectorToSparseArray(vector, error) < 0)
+            if (ob_dpiOci__vectorToSparseArray(vector, error) < 0)
                 return DPI_FAILURE;
         } else {
-            if (dpiOci__vectorToArray(vector, error) < 0)
+            if (ob_dpiOci__vectorToArray(vector, error) < 0)
                 return DPI_FAILURE;
         }
 
@@ -187,58 +187,58 @@ int dpiVector__getValue(dpiVector *vector, dpiVectorInfo *info,
 
 
 //-----------------------------------------------------------------------------
-// dpiVector_addRef() [PUBLIC]
+// ob_dpiVector_addRef() [PUBLIC]
 //   Add a reference to the vector object.
 //-----------------------------------------------------------------------------
-int dpiVector_addRef(dpiVector *vector)
+int ob_dpiVector_addRef(dpiVector *vector)
 {
-    return dpiGen__addRef(vector, DPI_HTYPE_VECTOR, __func__);
+    return ob_dpiGen__addRef(vector, DPI_HTYPE_VECTOR, __func__);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiVector_getValue() [PUBLIC]
+// ob_dpiVector_getValue() [PUBLIC]
 //   Returns information about the vector to the caller.
 //-----------------------------------------------------------------------------
-int dpiVector_getValue(dpiVector *vector, dpiVectorInfo *info)
+int ob_dpiVector_getValue(dpiVector *vector, dpiVectorInfo *info)
 {
     dpiError error;
     int status;
 
-    if (dpiGen__startPublicFn(vector, DPI_HTYPE_VECTOR, __func__, &error) < 0)
+    if (ob_dpiGen__startPublicFn(vector, DPI_HTYPE_VECTOR, __func__, &error) < 0)
         return DPI_FAILURE;
     DPI_CHECK_PTR_NOT_NULL(vector, info)
-    status = dpiVector__getValue(vector, info, &error);
-    return dpiGen__endPublicFn(vector, status, &error);
+    status = ob_dpiVector__getValue(vector, info, &error);
+    return ob_dpiGen__endPublicFn(vector, status, &error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiVector_release() [PUBLIC]
+// ob_dpiVector_release() [PUBLIC]
 //   Release a reference to the vector object.
 //-----------------------------------------------------------------------------
-int dpiVector_release(dpiVector *vector)
+int ob_dpiVector_release(dpiVector *vector)
 {
-    return dpiGen__release(vector, DPI_HTYPE_VECTOR, __func__);
+    return ob_dpiGen__release(vector, DPI_HTYPE_VECTOR, __func__);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiVector_setValue() [PUBLIC]
+// ob_dpiVector_setValue() [PUBLIC]
 //   Sets the vector value from the supplied information.
 //-----------------------------------------------------------------------------
-int dpiVector_setValue(dpiVector *vector, dpiVectorInfo *info)
+int ob_dpiVector_setValue(dpiVector *vector, dpiVectorInfo *info)
 {
     dpiError error;
     int status;
 
-    if (dpiGen__startPublicFn(vector, DPI_HTYPE_VECTOR, __func__, &error) < 0)
+    if (ob_dpiGen__startPublicFn(vector, DPI_HTYPE_VECTOR, __func__, &error) < 0)
         return DPI_FAILURE;
     DPI_CHECK_PTR_NOT_NULL(vector, info)
     if (info->numSparseValues > 0) {
-        status = dpiOci__vectorFromSparseArray(vector, info, &error);
+        status = ob_dpiOci__vectorFromSparseArray(vector, info, &error);
     } else {
-        status = dpiOci__vectorFromArray(vector, info, &error);
+        status = ob_dpiOci__vectorFromArray(vector, info, &error);
     }
-    return dpiGen__endPublicFn(vector, status, &error);
+    return ob_dpiGen__endPublicFn(vector, status, &error);
 }

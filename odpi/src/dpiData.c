@@ -38,10 +38,10 @@
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__fromOracleDate() [INTERNAL]
+// ob_dpiDataBuffer__fromOracleDate() [INTERNAL]
 //   Populate the data from an dpiOciDate structure.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__fromOracleDate(dpiDataBuffer *data,
+int ob_dpiDataBuffer__fromOracleDate(dpiDataBuffer *data,
         dpiOciDate *oracleValue)
 {
     dpiTimestamp *timestamp = &data->asTimestamp;
@@ -60,104 +60,104 @@ int dpiDataBuffer__fromOracleDate(dpiDataBuffer *data,
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__fromOracleDateAsDouble() [INTERNAL]
+// ob_dpiDataBuffer__fromOracleDateAsDouble() [INTERNAL]
 //   Populate the data from an dpiOciDate structure as a double value (number
 // of milliseconds since January 1, 1970).
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__fromOracleDateAsDouble(dpiDataBuffer *data,
+int ob_dpiDataBuffer__fromOracleDateAsDouble(dpiDataBuffer *data,
         dpiEnv *env, dpiError *error, dpiOciDate *oracleValue)
 {
     void *timestamp;
     int status;
 
     // allocate and populate a timestamp with the value of the date
-    if (dpiOci__descriptorAlloc(env->handle, &timestamp,
+    if (ob_dpiOci__descriptorAlloc(env->handle, &timestamp,
             DPI_OCI_DTYPE_TIMESTAMP, "alloc timestamp", error) < 0)
         return DPI_FAILURE;
-    if (dpiOci__dateTimeConstruct(env->handle, timestamp, oracleValue->year,
+    if (ob_dpiOci__dateTimeConstruct(env->handle, timestamp, oracleValue->year,
             oracleValue->month, oracleValue->day, oracleValue->hour,
             oracleValue->minute, oracleValue->second, 0, NULL, 0, error) < 0) {
-        dpiOci__descriptorFree(timestamp, DPI_OCI_DTYPE_TIMESTAMP);
+        ob_dpiOci__descriptorFree(timestamp, DPI_OCI_DTYPE_TIMESTAMP);
         return DPI_FAILURE;
     }
 
     // now calculate the number of milliseconds since January 1, 1970
-    status = dpiDataBuffer__fromOracleTimestampAsDouble(data,
+    status = ob_dpiDataBuffer__fromOracleTimestampAsDouble(data,
             DPI_ORACLE_TYPE_TIMESTAMP, env, error, timestamp);
-    dpiOci__descriptorFree(timestamp, DPI_OCI_DTYPE_TIMESTAMP);
+    ob_dpiOci__descriptorFree(timestamp, DPI_OCI_DTYPE_TIMESTAMP);
     return status;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__fromOracleIntervalDS() [INTERNAL]
+// ob_dpiDataBuffer__fromOracleIntervalDS() [INTERNAL]
 //   Populate the data from an OCIInterval structure (days/seconds).
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__fromOracleIntervalDS(dpiDataBuffer *data, dpiEnv *env,
+int ob_dpiDataBuffer__fromOracleIntervalDS(dpiDataBuffer *data, dpiEnv *env,
         dpiError *error, void *oracleValue)
 {
     dpiIntervalDS *interval = &data->asIntervalDS;
 
-    return dpiOci__intervalGetDaySecond(env->handle, &interval->days,
+    return ob_dpiOci__intervalGetDaySecond(env->handle, &interval->days,
             &interval->hours, &interval->minutes, &interval->seconds,
             &interval->fseconds, oracleValue, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__fromOracleIntervalYM() [INTERNAL]
+// ob_dpiDataBuffer__fromOracleIntervalYM() [INTERNAL]
 //   Populate the data from an OCIInterval structure (years/months).
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__fromOracleIntervalYM(dpiDataBuffer *data, dpiEnv *env,
+int ob_dpiDataBuffer__fromOracleIntervalYM(dpiDataBuffer *data, dpiEnv *env,
         dpiError *error, void *oracleValue)
 {
     dpiIntervalYM *interval = &data->asIntervalYM;
 
-    return dpiOci__intervalGetYearMonth(env->handle, &interval->years,
+    return ob_dpiOci__intervalGetYearMonth(env->handle, &interval->years,
             &interval->months, oracleValue, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__fromOracleNumberAsDouble() [INTERNAL]
+// ob_dpiDataBuffer__fromOracleNumberAsDouble() [INTERNAL]
 //   Populate the data from an OCINumber structure as a double.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__fromOracleNumberAsDouble(dpiDataBuffer *data,
+int ob_dpiDataBuffer__fromOracleNumberAsDouble(dpiDataBuffer *data,
         dpiError *error, void *oracleValue)
 {
-    return dpiOci__numberToReal(&data->asDouble, oracleValue, error);
+    return ob_dpiOci__numberToReal(&data->asDouble, oracleValue, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__fromOracleNumberAsInteger() [INTERNAL]
+// ob_dpiDataBuffer__fromOracleNumberAsInteger() [INTERNAL]
 //   Populate the data from an OCINumber structure as an integer.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__fromOracleNumberAsInteger(dpiDataBuffer *data,
+int ob_dpiDataBuffer__fromOracleNumberAsInteger(dpiDataBuffer *data,
         dpiError *error, void *oracleValue)
 {
-    return dpiOci__numberToInt(oracleValue, &data->asInt64, sizeof(int64_t),
+    return ob_dpiOci__numberToInt(oracleValue, &data->asInt64, sizeof(int64_t),
             DPI_OCI_NUMBER_SIGNED, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__fromOracleNumberAsUnsignedInteger() [INTERNAL]
+// ob_dpiDataBuffer__fromOracleNumberAsUnsignedInteger() [INTERNAL]
 //   Populate the data from an OCINumber structure as an unsigned integer.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__fromOracleNumberAsUnsignedInteger(dpiDataBuffer *data,
+int ob_dpiDataBuffer__fromOracleNumberAsUnsignedInteger(dpiDataBuffer *data,
         dpiError *error, void *oracleValue)
 {
-    return dpiOci__numberToInt(oracleValue, &data->asUint64, sizeof(uint64_t),
+    return ob_dpiOci__numberToInt(oracleValue, &data->asUint64, sizeof(uint64_t),
             DPI_OCI_NUMBER_UNSIGNED, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__fromOracleNumberAsText() [INTERNAL]
+// ob_dpiDataBuffer__fromOracleNumberAsText() [INTERNAL]
 //   Populate the data from an OCINumber structure as text.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__fromOracleNumberAsText(dpiDataBuffer *data, dpiEnv *env,
+int ob_dpiDataBuffer__fromOracleNumberAsText(dpiDataBuffer *data, dpiEnv *env,
         dpiError *error, void *oracleValue)
 {
     uint8_t *target, numDigits, digits[DPI_NUMBER_MAX_DIGITS];
@@ -168,7 +168,7 @@ int dpiDataBuffer__fromOracleNumberAsText(dpiDataBuffer *data, dpiEnv *env,
     int isNegative;
 
     // parse the OCINumber structure
-    if (dpiUtils__parseOracleNumber(oracleValue, &isNegative,
+    if (ob_dpiUtils__parseOracleNumber(oracleValue, &isNegative,
             &decimalPointIndex, &numDigits, digits, error) < 0)
         return DPI_FAILURE;
 
@@ -188,7 +188,7 @@ int dpiDataBuffer__fromOracleNumberAsText(dpiDataBuffer *data, dpiEnv *env,
     // verify that the provided buffer is large enough
     bytes = &data->asBytes;
     if (numBytes > bytes->length)
-        return dpiError__set(error, "check number to text size",
+        return ob_dpiError__set(error, "check number to text size",
                 DPI_ERR_BUFFER_SIZE_TOO_SMALL, bytes->length);
     bytes->length = numBytes;
 
@@ -271,23 +271,23 @@ int dpiDataBuffer__fromOracleNumberAsText(dpiDataBuffer *data, dpiEnv *env,
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__fromOracleTimestamp() [INTERNAL]
+// ob_dpiDataBuffer__fromOracleTimestamp() [INTERNAL]
 //   Populate the data from an OCIDateTime structure.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__fromOracleTimestamp(dpiDataBuffer *data, dpiEnv *env,
+int ob_dpiDataBuffer__fromOracleTimestamp(dpiDataBuffer *data, dpiEnv *env,
         dpiError *error, void *oracleValue, int withTZ)
 {
     dpiTimestamp *timestamp = &data->asTimestamp;
 
-    if (dpiOci__dateTimeGetDate(env->handle, oracleValue, &timestamp->year,
+    if (ob_dpiOci__dateTimeGetDate(env->handle, oracleValue, &timestamp->year,
             &timestamp->month, &timestamp->day, error) < 0)
         return DPI_FAILURE;
-    if (dpiOci__dateTimeGetTime(env->handle, oracleValue, &timestamp->hour,
+    if (ob_dpiOci__dateTimeGetTime(env->handle, oracleValue, &timestamp->hour,
             &timestamp->minute, &timestamp->second, &timestamp->fsecond,
             error) < 0)
         return DPI_FAILURE;
     if (withTZ) {
-        if (dpiOci__dateTimeGetTimeZoneOffset(env->handle, oracleValue,
+        if (ob_dpiOci__dateTimeGetTimeZoneOffset(env->handle, oracleValue,
                 &timestamp->tzHourOffset, &timestamp->tzMinuteOffset,
                 error) < 0)
             return DPI_FAILURE;
@@ -300,11 +300,11 @@ int dpiDataBuffer__fromOracleTimestamp(dpiDataBuffer *data, dpiEnv *env,
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__fromOracleTimestampAsDouble() [INTERNAL]
+// ob_dpiDataBuffer__fromOracleTimestampAsDouble() [INTERNAL]
 //   Populate the data from an OCIDateTime structure as a double value (number
 // of milliseconds since January 1, 1970).
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__fromOracleTimestampAsDouble(dpiDataBuffer *data,
+int ob_dpiDataBuffer__fromOracleTimestampAsDouble(dpiDataBuffer *data,
         uint32_t dataType, dpiEnv *env, dpiError *error, void *oracleValue)
 {
     int32_t day, hour, minute, second, fsecond;
@@ -312,25 +312,25 @@ int dpiDataBuffer__fromOracleTimestampAsDouble(dpiDataBuffer *data,
     int status;
 
     // determine the base date to use for the given data type
-    if (dpiEnv__getBaseDate(env, dataType, &baseDate, error) < 0)
+    if (ob_dpiEnv__getBaseDate(env, dataType, &baseDate, error) < 0)
         return DPI_FAILURE;
 
     // allocate interval to use in calculation
-    if (dpiOci__descriptorAlloc(env->handle, &interval,
+    if (ob_dpiOci__descriptorAlloc(env->handle, &interval,
             DPI_OCI_DTYPE_INTERVAL_DS, "alloc interval", error) < 0)
         return DPI_FAILURE;
 
     // subtract dates to determine interval between date and base date
-    if (dpiOci__dateTimeSubtract(env->handle, oracleValue, baseDate, interval,
+    if (ob_dpiOci__dateTimeSubtract(env->handle, oracleValue, baseDate, interval,
             error) < 0) {
-        dpiOci__descriptorFree(interval, DPI_OCI_DTYPE_INTERVAL_DS);
+        ob_dpiOci__descriptorFree(interval, DPI_OCI_DTYPE_INTERVAL_DS);
         return DPI_FAILURE;
     }
 
     // get the days, hours, minutes and seconds from the interval
-    status = dpiOci__intervalGetDaySecond(env->handle, &day, &hour, &minute,
+    status = ob_dpiOci__intervalGetDaySecond(env->handle, &day, &hour, &minute,
             &second, &fsecond, interval, error);
-    dpiOci__descriptorFree(interval, DPI_OCI_DTYPE_INTERVAL_DS);
+    ob_dpiOci__descriptorFree(interval, DPI_OCI_DTYPE_INTERVAL_DS);
     if (status < 0)
         return DPI_FAILURE;
 
@@ -343,10 +343,10 @@ int dpiDataBuffer__fromOracleTimestampAsDouble(dpiDataBuffer *data,
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__toOracleDate() [INTERNAL]
+// ob_dpiDataBuffer__toOracleDate() [INTERNAL]
 //   Populate the data in an dpiOciDate structure.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__toOracleDate(dpiDataBuffer *data, dpiOciDate *oracleValue)
+int ob_dpiDataBuffer__toOracleDate(dpiDataBuffer *data, dpiOciDate *oracleValue)
 {
     dpiTimestamp *timestamp = &data->asTimestamp;
 
@@ -361,103 +361,103 @@ int dpiDataBuffer__toOracleDate(dpiDataBuffer *data, dpiOciDate *oracleValue)
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__toOracleDateFromDouble() [INTERNAL]
+// ob_dpiDataBuffer__toOracleDateFromDouble() [INTERNAL]
 //   Populate the data in an dpiOciDate structure given a double (number of
 // milliseconds since January 1, 1970).
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__toOracleDateFromDouble(dpiDataBuffer *data, dpiEnv *env,
+int ob_dpiDataBuffer__toOracleDateFromDouble(dpiDataBuffer *data, dpiEnv *env,
         dpiError *error, dpiOciDate *oracleValue)
 {
     uint32_t fsecond;
     void *timestamp;
 
     // allocate a descriptor to acquire a timestamp
-    if (dpiOci__descriptorAlloc(env->handle, &timestamp,
+    if (ob_dpiOci__descriptorAlloc(env->handle, &timestamp,
             DPI_OCI_DTYPE_TIMESTAMP, "alloc timestamp", error) < 0)
         return DPI_FAILURE;
-    if (dpiDataBuffer__toOracleTimestampFromDouble(data,
+    if (ob_dpiDataBuffer__toOracleTimestampFromDouble(data,
             DPI_ORACLE_TYPE_TIMESTAMP, env, error, timestamp) < 0) {
-        dpiOci__descriptorFree(timestamp, DPI_OCI_DTYPE_TIMESTAMP);
+        ob_dpiOci__descriptorFree(timestamp, DPI_OCI_DTYPE_TIMESTAMP);
         return DPI_FAILURE;
     }
 
     // populate date structure
-    if (dpiOci__dateTimeGetDate(env->handle, timestamp, &oracleValue->year,
+    if (ob_dpiOci__dateTimeGetDate(env->handle, timestamp, &oracleValue->year,
             &oracleValue->month, &oracleValue->day, error) < 0) {
-        dpiOci__descriptorFree(timestamp, DPI_OCI_DTYPE_TIMESTAMP);
+        ob_dpiOci__descriptorFree(timestamp, DPI_OCI_DTYPE_TIMESTAMP);
         return DPI_FAILURE;
     }
-    if (dpiOci__dateTimeGetTime(env->handle, timestamp, &oracleValue->hour,
+    if (ob_dpiOci__dateTimeGetTime(env->handle, timestamp, &oracleValue->hour,
             &oracleValue->minute, &oracleValue->second, &fsecond, error) < 0) {
-        dpiOci__descriptorFree(timestamp, DPI_OCI_DTYPE_TIMESTAMP);
+        ob_dpiOci__descriptorFree(timestamp, DPI_OCI_DTYPE_TIMESTAMP);
         return DPI_FAILURE;
     }
 
-    dpiOci__descriptorFree(timestamp, DPI_OCI_DTYPE_TIMESTAMP);
+    ob_dpiOci__descriptorFree(timestamp, DPI_OCI_DTYPE_TIMESTAMP);
     return DPI_SUCCESS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__toOracleIntervalDS() [INTERNAL]
+// ob_dpiDataBuffer__toOracleIntervalDS() [INTERNAL]
 //   Populate the data in an OCIInterval structure (days/seconds).
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__toOracleIntervalDS(dpiDataBuffer *data, dpiEnv *env,
+int ob_dpiDataBuffer__toOracleIntervalDS(dpiDataBuffer *data, dpiEnv *env,
         dpiError *error, void *oracleValue)
 {
     dpiIntervalDS *interval = &data->asIntervalDS;
 
-    return dpiOci__intervalSetDaySecond(env->handle, interval->days,
+    return ob_dpiOci__intervalSetDaySecond(env->handle, interval->days,
             interval->hours, interval->minutes, interval->seconds,
             interval->fseconds, oracleValue, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__toOracleIntervalYM() [INTERNAL]
+// ob_dpiDataBuffer__toOracleIntervalYM() [INTERNAL]
 //   Populate the data in an OCIInterval structure (years/months).
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__toOracleIntervalYM(dpiDataBuffer *data, dpiEnv *env,
+int ob_dpiDataBuffer__toOracleIntervalYM(dpiDataBuffer *data, dpiEnv *env,
         dpiError *error, void *oracleValue)
 {
     dpiIntervalYM *interval = &data->asIntervalYM;
 
-    return dpiOci__intervalSetYearMonth(env->handle, interval->years,
+    return ob_dpiOci__intervalSetYearMonth(env->handle, interval->years,
             interval->months, oracleValue, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__toOracleNumberFromDouble() [INTERNAL]
+// ob_dpiDataBuffer__toOracleNumberFromDouble() [INTERNAL]
 //   Populate the data in an OCINumber structure from a double.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__toOracleNumberFromDouble(dpiDataBuffer *data,
+int ob_dpiDataBuffer__toOracleNumberFromDouble(dpiDataBuffer *data,
         dpiError *error, void *oracleValue)
 {
     if (isnan(data->asDouble))
-        return dpiError__set(error, "convert double to Oracle number",
+        return ob_dpiError__set(error, "convert double to Oracle number",
                 DPI_ERR_NAN);
-    return dpiOci__numberFromReal(data->asDouble, oracleValue, error);
+    return ob_dpiOci__numberFromReal(data->asDouble, oracleValue, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__toOracleNumberFromInteger() [INTERNAL]
+// ob_dpiDataBuffer__toOracleNumberFromInteger() [INTERNAL]
 //   Populate the data in an OCINumber structure from an integer.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__toOracleNumberFromInteger(dpiDataBuffer *data,
+int ob_dpiDataBuffer__toOracleNumberFromInteger(dpiDataBuffer *data,
         dpiError *error, void *oracleValue)
 {
-    return dpiOci__numberFromInt(&data->asInt64, sizeof(int64_t),
+    return ob_dpiOci__numberFromInt(&data->asInt64, sizeof(int64_t),
             DPI_OCI_NUMBER_SIGNED, oracleValue, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__toOracleNumberFromText() [INTERNAL]
+// ob_dpiDataBuffer__toOracleNumberFromText() [INTERNAL]
 //   Populate the data in an OCINumber structure from text.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__toOracleNumberFromText(dpiDataBuffer *data, dpiEnv *env,
+int ob_dpiDataBuffer__toOracleNumberFromText(dpiDataBuffer *data, dpiEnv *env,
         dpiError *error, void *oracleValue)
 {
     uint8_t numDigits, digits[DPI_NUMBER_AS_TEXT_CHARS], *source, *target, i;
@@ -468,7 +468,7 @@ int dpiDataBuffer__toOracleNumberFromText(dpiDataBuffer *data, dpiEnv *env,
     int8_t ociExponent;
 
     // parse the string into its constituent components
-    if (dpiUtils__parseNumberString(value->ptr, value->length, env->charsetId,
+    if (ob_dpiUtils__parseNumberString(value->ptr, value->length, env->charsetId,
             &isNegative, &decimalPointIndex, &numDigits, digits, error) < 0)
         return DPI_FAILURE;
 
@@ -535,22 +535,22 @@ int dpiDataBuffer__toOracleNumberFromText(dpiDataBuffer *data, dpiEnv *env,
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__toOracleNumberFromUnsignedInteger() [INTERNAL]
+// ob_dpiDataBuffer__toOracleNumberFromUnsignedInteger() [INTERNAL]
 //   Populate the data in an OCINumber structure from an integer.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__toOracleNumberFromUnsignedInteger(dpiDataBuffer *data,
+int ob_dpiDataBuffer__toOracleNumberFromUnsignedInteger(dpiDataBuffer *data,
         dpiError *error, void *oracleValue)
 {
-    return dpiOci__numberFromInt(&data->asUint64, sizeof(uint64_t),
+    return ob_dpiOci__numberFromInt(&data->asUint64, sizeof(uint64_t),
             DPI_OCI_NUMBER_UNSIGNED, oracleValue, error);
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__toOracleTimestamp() [INTERNAL]
+// ob_dpiDataBuffer__toOracleTimestamp() [INTERNAL]
 //   Populate the data in an OCIDateTime structure.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__toOracleTimestamp(dpiDataBuffer *data, dpiEnv *env,
+int ob_dpiDataBuffer__toOracleTimestamp(dpiDataBuffer *data, dpiEnv *env,
         dpiError *error, void *oracleValue, int withTZ)
 {
     dpiTimestamp *timestamp = &data->asTimestamp;
@@ -565,7 +565,7 @@ int dpiDataBuffer__toOracleTimestamp(dpiDataBuffer *data, dpiEnv *env,
                 abs(timestamp->tzHourOffset), abs(timestamp->tzMinuteOffset));
         tzOffset = tzOffsetBuffer;
     }
-    return dpiOci__dateTimeConstruct(env->handle, oracleValue, timestamp->year,
+    return ob_dpiOci__dateTimeConstruct(env->handle, oracleValue, timestamp->year,
             timestamp->month, timestamp->day, timestamp->hour,
             timestamp->minute, timestamp->second, timestamp->fsecond, tzOffset,
             tzOffsetLength, error);
@@ -573,11 +573,11 @@ int dpiDataBuffer__toOracleTimestamp(dpiDataBuffer *data, dpiEnv *env,
 
 
 //-----------------------------------------------------------------------------
-// dpiDataBuffer__toOracleTimestampFromDouble() [INTERNAL]
+// ob_dpiDataBuffer__toOracleTimestampFromDouble() [INTERNAL]
 //   Populate the data in an OCIDateTime structure, given the number of
 // milliseconds since January 1, 1970.
 //-----------------------------------------------------------------------------
-int dpiDataBuffer__toOracleTimestampFromDouble(dpiDataBuffer *data,
+int ob_dpiDataBuffer__toOracleTimestampFromDouble(dpiDataBuffer *data,
         uint32_t dataType, dpiEnv *env, dpiError *error, void *oracleValue)
 {
     int32_t day, hour, minute, second, fsecond;
@@ -586,11 +586,11 @@ int dpiDataBuffer__toOracleTimestampFromDouble(dpiDataBuffer *data,
     double ms;
 
     // determine the base date to use for the given data type
-    if (dpiEnv__getBaseDate(env, dataType, &baseDate, error) < 0)
+    if (ob_dpiEnv__getBaseDate(env, dataType, &baseDate, error) < 0)
         return DPI_FAILURE;
 
     // allocate interval to use in calculation
-    if (dpiOci__descriptorAlloc(env->handle, &interval,
+    if (ob_dpiOci__descriptorAlloc(env->handle, &interval,
             DPI_OCI_DTYPE_INTERVAL_DS, "alloc interval", error) < 0)
         return DPI_FAILURE;
 
@@ -605,194 +605,194 @@ int dpiDataBuffer__toOracleTimestampFromDouble(dpiDataBuffer *data,
     second = (int32_t) (ms / DPI_MS_SECOND);
     ms = ms - (second * DPI_MS_SECOND);
     fsecond = (int32_t)(ms * DPI_MS_FSECOND);
-    if (dpiOci__intervalSetDaySecond(env->handle, day, hour, minute, second,
+    if (ob_dpiOci__intervalSetDaySecond(env->handle, day, hour, minute, second,
             fsecond, interval, error) < 0) {
-        dpiOci__descriptorFree(interval, DPI_OCI_DTYPE_INTERVAL_DS);
+        ob_dpiOci__descriptorFree(interval, DPI_OCI_DTYPE_INTERVAL_DS);
         return DPI_FAILURE;
     }
 
     // add the interval to the base date
-    status = dpiOci__dateTimeIntervalAdd(env->handle, baseDate, interval,
+    status = ob_dpiOci__dateTimeIntervalAdd(env->handle, baseDate, interval,
             oracleValue, error);
-    dpiOci__descriptorFree(interval, DPI_OCI_DTYPE_INTERVAL_DS);
+    ob_dpiOci__descriptorFree(interval, DPI_OCI_DTYPE_INTERVAL_DS);
     return status;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getBool() [PUBLIC]
+// ob_dpiData_getBool() [PUBLIC]
 //   Return the boolean portion of the data.
 //-----------------------------------------------------------------------------
-int dpiData_getBool(dpiData *data)
+int ob_dpiData_getBool(dpiData *data)
 {
     return data->value.asBoolean;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getBytes() [PUBLIC]
+// ob_dpiData_getBytes() [PUBLIC]
 //   Return the bytes portion of the data.
 //-----------------------------------------------------------------------------
-dpiBytes *dpiData_getBytes(dpiData *data)
+dpiBytes *ob_dpiData_getBytes(dpiData *data)
 {
     return &data->value.asBytes;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getDouble() [PUBLIC]
+// ob_dpiData_getDouble() [PUBLIC]
 //   Return the double portion of the data.
 //-----------------------------------------------------------------------------
-double dpiData_getDouble(dpiData *data)
+double ob_dpiData_getDouble(dpiData *data)
 {
     return data->value.asDouble;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getFloat() [PUBLIC]
+// ob_dpiData_getFloat() [PUBLIC]
 //   Return the float portion of the data.
 //-----------------------------------------------------------------------------
-float dpiData_getFloat(dpiData *data)
+float ob_dpiData_getFloat(dpiData *data)
 {
     return data->value.asFloat;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getInt64() [PUBLIC]
+// ob_dpiData_getInt64() [PUBLIC]
 //   Return the integer portion of the data.
 //-----------------------------------------------------------------------------
-int64_t dpiData_getInt64(dpiData *data)
+int64_t ob_dpiData_getInt64(dpiData *data)
 {
     return data->value.asInt64;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getIntervalDS() [PUBLIC]
+// ob_dpiData_getIntervalDS() [PUBLIC]
 //   Return the interval (days/seconds) portion of the data.
 //-----------------------------------------------------------------------------
-dpiIntervalDS *dpiData_getIntervalDS(dpiData *data)
+dpiIntervalDS *ob_dpiData_getIntervalDS(dpiData *data)
 {
     return &data->value.asIntervalDS;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getIntervalYM() [PUBLIC]
+// ob_dpiData_getIntervalYM() [PUBLIC]
 //   Return the interval (years/months) portion of the data.
 //-----------------------------------------------------------------------------
-dpiIntervalYM *dpiData_getIntervalYM(dpiData *data)
+dpiIntervalYM *ob_dpiData_getIntervalYM(dpiData *data)
 {
     return &data->value.asIntervalYM;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getIsNull() [PUBLIC]
+// ob_dpiData_getIsNull() [PUBLIC]
 //   Return a boolean indicating if the value is null or not.
 //-----------------------------------------------------------------------------
-int dpiData_getIsNull(dpiData *data)
+int ob_dpiData_getIsNull(dpiData *data)
 {
     return data->isNull;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getLOB() [PUBLIC]
+// ob_dpiData_getLOB() [PUBLIC]
 //   Return the LOB portion of the data.
 //-----------------------------------------------------------------------------
-dpiLob *dpiData_getLOB(dpiData *data)
+dpiLob *ob_dpiData_getLOB(dpiData *data)
 {
     return data->value.asLOB;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getJson() [PUBLIC]
+// ob_dpiData_getJson() [PUBLIC]
 //   Return the JSON portion of the data.
 //-----------------------------------------------------------------------------
-dpiJson *dpiData_getJson(dpiData *data)
+dpiJson *ob_dpiData_getJson(dpiData *data)
 {
     return data->value.asJson;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getJsonArray() [PUBLIC]
+// ob_dpiData_getJsonArray() [PUBLIC]
 //   Return the JSON Array portion of the data.
 //-----------------------------------------------------------------------------
-dpiJsonArray *dpiData_getJsonArray(dpiData *data)
+dpiJsonArray *ob_dpiData_getJsonArray(dpiData *data)
 {
     return &data->value.asJsonArray;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getJsonObject() [PUBLIC]
+// ob_dpiData_getJsonObject() [PUBLIC]
 //   Return the JSON Object portion of the data.
 //-----------------------------------------------------------------------------
-dpiJsonObject *dpiData_getJsonObject(dpiData *data)
+dpiJsonObject *ob_dpiData_getJsonObject(dpiData *data)
 {
     return &data->value.asJsonObject;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getObject() [PUBLIC]
+// ob_dpiData_getObject() [PUBLIC]
 //   Return the object portion of the data.
 //-----------------------------------------------------------------------------
-dpiObject *dpiData_getObject(dpiData *data)
+dpiObject *ob_dpiData_getObject(dpiData *data)
 {
     return data->value.asObject;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getStmt() [PUBLIC]
+// ob_dpiData_getStmt() [PUBLIC]
 //   Return the statement portion of the data.
 //-----------------------------------------------------------------------------
-dpiStmt *dpiData_getStmt(dpiData *data)
+dpiStmt *ob_dpiData_getStmt(dpiData *data)
 {
     return data->value.asStmt;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getTimestamp() [PUBLIC]
+// ob_dpiData_getTimestamp() [PUBLIC]
 //   Return the timestamp portion of the data.
 //-----------------------------------------------------------------------------
-dpiTimestamp *dpiData_getTimestamp(dpiData *data)
+dpiTimestamp *ob_dpiData_getTimestamp(dpiData *data)
 {
     return &data->value.asTimestamp;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_getUint64() [PUBLIC]
+// ob_dpiData_getUint64() [PUBLIC]
 //   Return the unsigned integer portion of the data.
 //-----------------------------------------------------------------------------
-uint64_t dpiData_getUint64(dpiData *data)
+uint64_t ob_dpiData_getUint64(dpiData *data)
 {
     return data->value.asUint64;
 }
 
 //-----------------------------------------------------------------------------
-// dpiData_getVector() [PUBLIC]
+// ob_dpiData_getVector() [PUBLIC]
 //   Return the VECTOR portion of the data.
 //-----------------------------------------------------------------------------
-dpiVector *dpiData_getVector(dpiData *data)
+dpiVector *ob_dpiData_getVector(dpiData *data)
 {
     return data->value.asVector;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setBool() [PUBLIC]
+// ob_dpiData_setBool() [PUBLIC]
 //   Set the boolean portion of the data.
 //-----------------------------------------------------------------------------
-void dpiData_setBool(dpiData *data, int value)
+void ob_dpiData_setBool(dpiData *data, int value)
 {
     data->isNull = 0;
     data->value.asBoolean = value;
@@ -800,10 +800,10 @@ void dpiData_setBool(dpiData *data, int value)
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setBytes() [PUBLIC]
+// ob_dpiData_setBytes() [PUBLIC]
 //   Set the bytes portion of the data.
 //-----------------------------------------------------------------------------
-void dpiData_setBytes(dpiData *data, char *ptr, uint32_t length)
+void ob_dpiData_setBytes(dpiData *data, char *ptr, uint32_t length)
 {
     data->isNull = 0;
     data->value.asBytes.ptr = ptr;
@@ -812,10 +812,10 @@ void dpiData_setBytes(dpiData *data, char *ptr, uint32_t length)
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setDouble() [PUBLIC]
+// ob_dpiData_setDouble() [PUBLIC]
 //   Set the double portion of the data.
 //-----------------------------------------------------------------------------
-void dpiData_setDouble(dpiData *data, double value)
+void ob_dpiData_setDouble(dpiData *data, double value)
 {
     data->isNull = 0;
     data->value.asDouble = value;
@@ -823,10 +823,10 @@ void dpiData_setDouble(dpiData *data, double value)
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setFloat() [PUBLIC]
+// ob_dpiData_setFloat() [PUBLIC]
 //   Set the float portion of the data.
 //-----------------------------------------------------------------------------
-void dpiData_setFloat(dpiData *data, float value)
+void ob_dpiData_setFloat(dpiData *data, float value)
 {
     data->isNull = 0;
     data->value.asFloat = value;
@@ -834,10 +834,10 @@ void dpiData_setFloat(dpiData *data, float value)
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setInt64() [PUBLIC]
+// ob_dpiData_setInt64() [PUBLIC]
 //   Set the integer portion of the data.
 //-----------------------------------------------------------------------------
-void dpiData_setInt64(dpiData *data, int64_t value)
+void ob_dpiData_setInt64(dpiData *data, int64_t value)
 {
     data->isNull = 0;
     data->value.asInt64 = value;
@@ -845,10 +845,10 @@ void dpiData_setInt64(dpiData *data, int64_t value)
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setIntervalDS() [PUBLIC]
+// ob_dpiData_setIntervalDS() [PUBLIC]
 //   Set the interval (days/seconds) portion of the data.
 //-----------------------------------------------------------------------------
-void dpiData_setIntervalDS(dpiData *data, int32_t days, int32_t hours,
+void ob_dpiData_setIntervalDS(dpiData *data, int32_t days, int32_t hours,
         int32_t minutes, int32_t seconds, int32_t fseconds)
 {
     dpiIntervalDS *interval = &data->value.asIntervalDS;
@@ -863,10 +863,10 @@ void dpiData_setIntervalDS(dpiData *data, int32_t days, int32_t hours,
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setIntervalYM() [PUBLIC]
+// ob_dpiData_setIntervalYM() [PUBLIC]
 //   Set the interval (years/months) portion of the data.
 //-----------------------------------------------------------------------------
-void dpiData_setIntervalYM(dpiData *data, int32_t years, int32_t months)
+void ob_dpiData_setIntervalYM(dpiData *data, int32_t years, int32_t months)
 {
     dpiIntervalYM *interval = &data->value.asIntervalYM;
 
@@ -877,10 +877,10 @@ void dpiData_setIntervalYM(dpiData *data, int32_t years, int32_t months)
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setLOB() [PUBLIC]
+// ob_dpiData_setLOB() [PUBLIC]
 //   Set the LOB portion of the data.
 //-----------------------------------------------------------------------------
-void dpiData_setLOB(dpiData *data, dpiLob *lob)
+void ob_dpiData_setLOB(dpiData *data, dpiLob *lob)
 {
     data->isNull = 0;
     data->value.asLOB = lob;
@@ -888,20 +888,20 @@ void dpiData_setLOB(dpiData *data, dpiLob *lob)
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setNull() [PUBLIC]
+// ob_dpiData_setNull() [PUBLIC]
 //   Set the data to be treated as a null value.
 //-----------------------------------------------------------------------------
-void dpiData_setNull(dpiData *data)
+void ob_dpiData_setNull(dpiData *data)
 {
     data->isNull = 1;
 }
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setObject() [PUBLIC]
+// ob_dpiData_setObject() [PUBLIC]
 //   Set the object portion of the data.
 //-----------------------------------------------------------------------------
-void dpiData_setObject(dpiData *data, dpiObject *obj)
+void ob_dpiData_setObject(dpiData *data, dpiObject *obj)
 {
     data->isNull = 0;
     data->value.asObject = obj;
@@ -909,10 +909,10 @@ void dpiData_setObject(dpiData *data, dpiObject *obj)
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setStmt() [PUBLIC]
+// ob_dpiData_setStmt() [PUBLIC]
 //   Set the statement portion of the data.
 //-----------------------------------------------------------------------------
-void dpiData_setStmt(dpiData *data, dpiStmt *obj)
+void ob_dpiData_setStmt(dpiData *data, dpiStmt *obj)
 {
     data->isNull = 0;
     data->value.asStmt = obj;
@@ -920,10 +920,10 @@ void dpiData_setStmt(dpiData *data, dpiStmt *obj)
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setTimestamp() [PUBLIC]
+// ob_dpiData_setTimestamp() [PUBLIC]
 //   Set the timestamp portion of the data.
 //-----------------------------------------------------------------------------
-void dpiData_setTimestamp(dpiData *data, int16_t year, uint8_t month,
+void ob_dpiData_setTimestamp(dpiData *data, int16_t year, uint8_t month,
         uint8_t day, uint8_t hour, uint8_t minute, uint8_t second,
         uint32_t fsecond, int8_t tzHourOffset, int8_t tzMinuteOffset)
 {
@@ -943,10 +943,10 @@ void dpiData_setTimestamp(dpiData *data, int16_t year, uint8_t month,
 
 
 //-----------------------------------------------------------------------------
-// dpiData_setUint64() [PUBLIC]
+// ob_dpiData_setUint64() [PUBLIC]
 //   Set the unsigned integer portion of the data.
 //-----------------------------------------------------------------------------
-void dpiData_setUint64(dpiData *data, uint64_t value)
+void ob_dpiData_setUint64(dpiData *data, uint64_t value)
 {
     data->isNull = 0;
     data->value.asUint64 = value;

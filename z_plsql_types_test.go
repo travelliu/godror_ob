@@ -23,8 +23,8 @@ import (
 	"time"
 
 	"github.com/UNO-SOFT/zlog/v2"
-	godror "github.com/godror/godror"
 	"github.com/google/go-cmp/cmp"
+	godror "github.com/travelliu/godror_ob"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -137,7 +137,7 @@ type MyTable struct {
 func (t MyTable) ObjectTypeName() string { return "TEST_PKG_TYPES.MY_TABLE" }
 
 func (t *MyTable) Scan(src any) error {
-	//fmt.Printf("Scan(%T(%#v))\n", src, src)
+	// fmt.Printf("Scan(%T(%#v))\n", src, src)
 	t.Items = t.Items[:0]
 	// fmt.Printf("MyTableScan(%[1]p (%#[1]v))\n", src)
 	obj, ok := src.(*godror.Object)
@@ -174,12 +174,12 @@ func (t *MyTable) Scan(src any) error {
 		}
 
 		o := data.GetObject()
-		//fmt.Printf("%d. data=%#v => o=%#v\n", i, data, o)
+		// fmt.Printf("%d. data=%#v => o=%#v\n", i, data, o)
 
 		var item MyRecord
 		err = item.Scan(o)
 		o.Close()
-		//fmt.Printf("%d. item=%#v: %+v\n", i, item, err)
+		// fmt.Printf("%d. item=%#v: %+v\n", i, item, err)
 		if err != nil {
 			return err
 		}
@@ -604,7 +604,7 @@ func TestPlSqlTypes(t *testing.T) {
 				ok = false
 			}
 			if !ok {
-				godror.ReadDbmsOutput(ctx, t.Output(), cx)
+				// godror.ReadDbmsOutput(ctx, t.Output(), cx)
 			}
 		}
 	})
@@ -887,12 +887,12 @@ END;`
 	if err = prepExec(ctx, testCon, crea); err != nil {
 		t.Fatal(err)
 	}
-	//defer prepExec(ctx, testCon, "DROP PACKAGE test_pkg_obj")
+	// defer prepExec(ctx, testCon, "DROP PACKAGE test_pkg_obj")
 	if err = prepExec(ctx, testCon, crea2); err != nil {
 		t.Fatal(err)
 	}
 
-	//defer tl.enableLogging(t)()
+	// defer tl.enableLogging(t)()
 	clientVersion, _ := godror.ClientVersion(ctx, testDb)
 	serverVersion, _ := godror.ServerVersion(ctx, testDb)
 	t.Logf("clientVersion: %#v, serverVersion: %#v", clientVersion, serverVersion)
@@ -1241,7 +1241,7 @@ END;`
 	})
 }
 
-// See https://github.com/godror/godror/issues/179
+// See https://github.com/travelliu/godror_ob/issues/179
 func TestObjectTypeClose(t *testing.T) {
 	ctx, cancel := context.WithTimeout(testContext("ObjectTypeClose"), 30*time.Second)
 	defer cancel()
@@ -1293,7 +1293,7 @@ func TestObjectTypeClose(t *testing.T) {
 	}
 }
 
-// See https://github.com/godror/godror/issues/180
+// See https://github.com/travelliu/godror_ob/issues/180
 func TestSubObjectTypeClose(t *testing.T) {
 	ctx, cancel := context.WithTimeout(testContext("SubObjectTypeClose"), 30*time.Second)
 	defer cancel()
